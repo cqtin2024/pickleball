@@ -1,0 +1,1495 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pickleball Tournament V11.4.0</title>
+    <link id="favicon" rel="icon" type="image/png">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #e6f3ff;
+            margin: 0;
+            padding: 20px;
+            color: #333;
+        }
+        h1 {
+            text-align: center;
+            color: #007bff;
+            margin-bottom: 10px;
+        }
+        #tournamentLogoPreview {
+            display: block;
+            margin: 10px auto;
+            max-width: 150px;
+            max-height: 150px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        nav {
+            background-color: #ffffff;
+            padding: 10px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            overflow-x: auto;
+            white-space: nowrap;
+        }
+        nav button {
+            padding: 10px 20px;
+            margin: 5px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        nav button:hover {
+            background-color: #0056b3;
+        }
+        .tab {
+            display: none;
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .tab.active {
+            display: block;
+        }
+        form {
+            display: grid;
+            gap: 15px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        label {
+            font-weight: 500;
+            margin-bottom: 5px;
+            display: block;
+        }
+        input, select, textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+        input:focus, select:focus, textarea:focus {
+            border-color: #007bff;
+            outline: none;
+            box-shadow: 0 0 5px rgba(0,123,255,0.3);
+        }
+        button[type="submit"], button[type="button"] {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        button[type="submit"]:hover, button[type="button"]:hover {
+            background-color: #0056b3;
+        }
+        .delete-button {
+            background-color: #dc3545;
+        }
+        .delete-button:hover {
+            background-color: #c82333;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background-color: #fff;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+        th {
+            background-color: #f8f9fa;
+            font-weight: 700;
+        }
+        .table-container {
+            overflow-x: auto;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 2000;
+        }
+        .modal-content {
+            background: white;
+            margin: 10% auto;
+            padding: 20px;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 600px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        .modal-content form {
+            display: grid;
+            gap: 10px;
+        }
+        .modal-content button {
+            margin-top: 10px;
+        }
+        #groupAssignment {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        .group-box {
+            border: 1px solid #ddd;
+            padding: 10px;
+            border-radius: 5px;
+            min-width: 200px;
+            min-height: 100px;
+        }
+        .team-list {
+            list-style-type: none;
+            padding: 0;
+            min-height: 50px;
+        }
+        .team-list li {
+            margin-bottom: 5px;
+            cursor: pointer;
+            padding: 5px;
+            background-color: #f9f9f9;
+            border-radius: 3px;
+        }
+        .team-list li.dragging {
+            opacity: 0.5;
+            background-color: #f0f0f0;
+        }
+        .team-list li.selected {
+            background-color: #007bff;
+            color: white;
+        }
+        @media (max-width: 768px) {
+            body { padding: 10px; }
+            h1 { font-size: 24px; }
+            nav { padding: 5px; }
+            nav button { font-size: 14px; padding: 8px 12px; margin: 3px; }
+            .tab { padding: 15px; }
+            input, select, textarea { font-size: 14px; padding: 8px; }
+            button[type="submit"], button[type="button"] { font-size: 14px; padding: 8px 16px; }
+            .modal-content { margin: 20% auto; width: 95%; }
+            #tournamentLogoPreview { max-width: 100px; max-height: 100px; }
+        }
+        @media (max-width: 480px) {
+            nav { display: flex; flex-wrap: nowrap; overflow-x: auto; }
+            nav button { flex: 0 0 auto; }
+            th, td { font-size: 12px; padding: 8px; }
+        }
+    </style>
+</head>
+<body>
+    <div id="resultModal" class="modal">
+        <div class="modal-content">
+            <h2>Nhập Kết Quả Trận Đấu</h2>
+            <form id="resultForm">
+                <div>
+                    <label>Đội A</label>
+                    <input type="number" min="0" name="teamASet1" placeholder="Set 1">
+                    <input type="number" min="0" name="teamASet2" placeholder="Set 2">
+                    <input type="number" min="0" name="teamASet3" placeholder="Set 3">
+                </div>
+                <div>
+                    <label>Đội B</label>
+                    <input type="number" min="0" name="teamBSet1" placeholder="Set 1">
+                    <input type="number" min="0" name="teamBSet2" placeholder="Set 2">
+                    <input type="number" min="0" name="teamBSet3" placeholder="Set 3">
+                </div>
+                <button type="button" onclick="document.getElementById('resultModal').style.display='none'">Hủy</button>
+                <button type="submit">Lưu Kết Quả</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="editPlayerModal" class="modal">
+        <div class="modal-content">
+            <h2>Sửa Thông tin Người chơi</h2>
+            <form id="editPlayerForm">
+                <input type="hidden" id="editPlayerIndex">
+                <div>
+                    <label>Tên</label>
+                    <input id="editPlayerName" type="text" required>
+                </div>
+                <div>
+                    <label>Giới tính</label>
+                    <select id="editPlayerGender"><option>Nam</option><option>Nữ</option></select>
+                </div>
+                <div>
+                    <label>Rating</label>
+                    <input id="editPlayerRating" type="number" min="0" step="0.1">
+                </div>
+                <div>
+                    <label>Email</label>
+                    <input id="editPlayerEmail" type="email">
+                </div>
+                <button type="button" onclick="document.getElementById('editPlayerModal').style.display='none'">Hủy</button>
+                <button type="button" onclick="saveEditPlayer()">Lưu</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="editTeamModal" class="modal">
+        <div class="modal-content">
+            <h2>Sửa Thông tin Đội</h2>
+            <form id="editTeamForm">
+                <input type="hidden" id="editTeamIndex">
+                <div>
+                    <label>Tên Đội</label>
+                    <input id="editTeamName" type="text" required>
+                </div>
+                <div>
+                    <label>Nội dung thi đấu</label>
+                    <select id="editTeamMatchType" required>
+                        <option value="mm">Nam - Nam</option>
+                        <option value="mf">Nam - Nữ</option>
+                        <option value="ff">Nữ - Nữ</option>
+                        <option value="mixed_mm_mf">Hỗn hợp Nam - Nam + Nam - Nữ</option>
+                    </select>
+                </div>
+                <div>
+                    <label>Chọn Người chơi</label>
+                    <select id="editTeamPlayers" multiple></select>
+                </div>
+                <button type="button" onclick="document.getElementById('editTeamModal').style.display='none'">Hủy</button>
+                <button type="button" onclick="saveEditTeam()">Lưu</button>
+            </form>
+        </div>
+    </div>
+
+    <h1>Pickleball Tournament V11.3.0</h1>
+    <img id="tournamentLogoPreview" alt="Logo Preview" style="display: none;">
+    <nav>
+        <button onclick="showTab('config')">1. Cấu hình & Sân</button>
+        <button onclick="showTab('players')">2. Người chơi & Đội</button>
+        <button onclick="showTab('schedule')">3. Lịch Trận đấu</button>
+        <button onclick="showTab('track')">🔴 Theo Dõi & Nhập điểm</button>
+        <button onclick="showTab('rankings')">4. Xếp Hạng & Vòng KO</button>
+        <button onclick="showTab('finance')">5. Tài trợ & Thu chi</button>
+        <button onclick="showTab('test')">Test & Random</button>
+        <button onclick="exportTournament()">Xuất Giải (JSON)</button>
+        <button onclick="loadTournament()">Tải Giải</button>
+    </nav>
+
+    <div id="config" class="tab">
+        <h2>1. Thông tin Giải đấu & BTC</h2>
+        <form id="tournamentForm">
+            <div>
+                <label>Tên Giải đấu</label>
+                <input id="tournamentName" type="text" required placeholder="Nhập tên giải đấu">
+            </div>
+            <div>
+                <label>Ngày tổ chức</label>
+                <input id="tournamentDate" type="date" required>
+            </div>
+            <div>
+                <label>Luật thi đấu (Tóm tắt)</label>
+                <textarea id="tournamentRules" required placeholder="Nhập tóm tắt luật"></textarea>
+            </div>
+            <div>
+                <label>Số người tối đa mỗi Đội</label>
+                <input id="maxPlayersPerTeam" type="number" min="2" value="2" readonly>
+            </div>
+            <div>
+                <label>Số đội tối đa mỗi Bảng (Vòng bảng)</label>
+                <input id="maxTeamsPerGroup" type="number" min="1" required>
+            </div>
+            <h3>Ban Tổ Chức</h3>
+            <table id="btcTable">
+                <tr><th>Tên</th><th>Vai trò</th><th>SĐT</th><th>Email</th><th>Hành động</th></tr>
+            </table>
+            <div>
+                <label>Tên</label>
+                <input id="btcName" type="text">
+                <label>Vai trò</label>
+                <input id="btcRole" type="text">
+                <label>SĐT</label>
+                <input id="btcPhone" type="tel">
+                <label>Email</label>
+                <input id="btcEmail" type="email">
+                <button type="button" onclick="addBtc()">Thêm</button>
+            </div>
+            <button type="button" onclick="saveTournamentConfig()">Lưu Cấu hình Chung</button>
+        </form>
+
+        <h2>2. Thông tin Sân thi đấu & Lệ phí</h2>
+        <form>
+            <h3>Sân thi đấu</h3>
+            <div>
+                <label>Tên Sân/Địa điểm</label>
+                <input type="text" required>
+            </div>
+            <div>
+                <label>Địa chỉ chi tiết</label>
+                <input type="text" required>
+            </div>
+            <div>
+                <label>Link Google Map</label>
+                <input type="url" placeholder="https://maps.google.com/...">
+            </div>
+            <div>
+                <label>Người liên hệ</label>
+                <input type="text">
+            </div>
+            <div>
+                <label>SĐT liên hệ</label>
+                <input type="tel">
+            </div>
+            <h3>Lệ phí & Thanh toán</h3>
+            <div>
+                <label>Số tiền Lệ phí/Đội (VNĐ)</label>
+                <input type="number" min="0">
+                <p>Đây là khoản thu sẽ tự động thêm vào mục Thu chi.</p>
+            </div>
+            <div>
+                <label>Upload QR Code Thanh toán</label>
+                <input type="file" accept="image/*">
+            </div>
+            <div>
+                <label>QR Code Preview</label>
+                <img src="" alt="QR Code Preview">
+            </div>
+            <button type="submit">Lưu Thông tin Sân & Lệ phí</button>
+        </form>
+    </div>
+
+    <div id="players" class="tab">
+        <h2>1. Danh sách Người chơi / Đăng ký</h2>
+        <form id="playerForm">
+            <div>
+                <label>Tên</label>
+                <input id="playerName" type="text" required>
+                <label>Giới tính</label>
+                <select id="playerGender"><option>Nam</option><option>Nữ</option></select>
+                <label>Rating</label>
+                <input id="playerRating" type="number" min="0" step="0.1">
+                <label>Email</label>
+                <input id="playerEmail" type="email">
+                <button type="button" onclick="addPlayer()">Thêm</button>
+            </div>
+        </form>
+        <p id="totalPlayers">Tổng số người chơi: 0</p>
+        <button>Ẩn/Hiện Danh sách Chi tiết</button>
+        <div class="table-container">
+            <table id="playersTable">
+                <tr><th>STT</th><th>Tên</th><th>Giới tính</th><th>Rating</th><th>Email</th><th>Hành động</th></tr>
+            </table>
+        </div>
+
+        <h2>2. Quản lý Đội thi đấu</h2>
+        <p>Sử dụng Rating trung bình để sắp xếp đội (sẽ được cập nhật khi thêm thành viên).</p>
+        <form id="teamForm">
+            <div>
+                <label>Tên Đội</label>
+                <input id="teamName" type="text" required>
+                <label>Nội dung thi đấu</label>
+                <select id="teamMatchType" required>
+                    <option value="mm">Nam - Nam</option>
+                    <option value="mf">Nam - Nữ</option>
+                    <option value="ff">Nữ - Nữ</option>
+                    <option value="mixed_mm_mf">Hỗn hợp Nam - Nam + Nam - Nữ</option>
+                </select>
+                <label>Chọn Người chơi</label>
+                <select id="teamPlayers" multiple></select>
+                <button type="button" onclick="addTeam()">Thêm Đội</button>
+            </div>
+        </form>
+        <div>
+            <label>Loại Đội Ngẫu nhiên</label>
+            <select id="randomTeamType">
+                <option value="mm">Nam - Nam</option>
+                <option value="mf">Nam - Nữ</option>
+                <option value="ff">Nữ - Nữ</option>
+                <option value="mixed_mm_mf">Hỗn hợp Nam - Nam + Nam - Nữ</option>
+            </select>
+            <button onclick="generateRandomTeam(document.getElementById('randomTeamType').value)">Tạo Đội Ngẫu nhiên</button>
+        </div>
+        <p id="totalTeams">Tổng số đội: 0</p>
+        <div class="table-container">
+            <table id="teamsTable">
+                <tr><th>STT</th><th>Tên Đội</th><th>Thành viên</th><th>Nội dung</th><th>Rating TB</th><th>Hành động</th></tr>
+            </table>
+        </div>
+    </div>
+
+    <div id="schedule" class="tab">
+        <h2>1. Chia Bảng & Tạo Trận đấu Vòng Bảng</h2>
+        <button>Chia Bảng Tự động</button>
+        <button>Chia Bảng Bằng Tay</button>
+        <button>Chia Bảng Kết Hợp</button>
+        <button>Tạo Lịch Trận đấu</button>
+        <p>Tổng số bảng: 0 | Tổng số trận: 0</p>
+
+        <h2>2. Danh sách Trận đấu (Vòng Bảng)</h2>
+        <div class="table-container">
+            <table>
+                <tr><th>Bảng</th><th>Trận</th><th>Đội A</th><th>Đội B</th><th>Kết quả (Sets)</th><th>Người thắng</th><th>Hành động (Nhập điểm)</th></tr>
+            </table>
+        </div>
+    </div>
+
+    <div id="track" class="tab">
+        <h2>🔴 Theo Dõi & Nhập Kết Quả Nhanh (Trận đấu chưa hoàn thành)</h2>
+        <form>
+            <select>
+                <option>Tất cả các loại</option>
+                <option>Vòng bảng</option>
+                <option>Vòng loại trực tiếp</option>
+            </select>
+            <input type="text" placeholder="Tìm kiếm trận đấu">
+        </form>
+        <p>Không có trận đấu đang chờ kết quả.</p>
+    </div>
+
+    <div id="rankings" class="tab">
+        <h2>1. Cấu hình Vòng loại trực tiếp (KO)</h2>
+        <p>Sau khi hoàn thành vòng bảng, nhấn <b>"Lựa chọn Đội & Tạo Vòng KO"</b>.</p>
+        <form>
+            <div>
+                <label>Số đội vào Vòng KO từ mỗi bảng</label>
+                <input id="num_teams_per_group" type="number" min="1" required>
+            </div>
+            <div>
+                <label>Kích thước Vòng KO (VD: 8, 16, 32)</label>
+                <input id="ko_size" type="number" min="8" step="8" required>
+            </div>
+            <h3>Cấu hình Sets Scoring cho Vòng KO</h3>
+            <div>
+                <h4>Cấu hình Mặc định (Tất cả các vòng)</h4>
+                <label>Sets (Best of)</label>
+                <input type="number" min="1">
+                <label>Target Points</label>
+                <input type="number" min="1">
+                <label>Rule</label>
+                <select>
+                    <option>Win by 2 (VD: 11-9)</option>
+                    <option>Chạm mốc (VD: 11-10)</option>
+                </select>
+            </div>
+            <div>
+                <h4>Cấu hình Bán kết (Nếu khác Mặc định)</h4>
+                <label>Sets (Best of)</label>
+                <input type="number" min="1">
+                <label>Target Points</label>
+                <input type="number" min="1">
+                <label>Rule</label>
+                <select>
+                    <option>Dùng Mặc định</option>
+                    <option>Win by 2</option>
+                    <option>Chạm mốc</option>
+                </select>
+            </div>
+            <div>
+                <h4>Cấu hình Chung kết (Nếu khác Mặc định)</h4>
+                <label>Sets (Best of)</label>
+                <input type="number" min="1">
+                <label>Target Points</label>
+                <input type="number" min="1">
+                <label>Rule</label>
+                <select>
+                    <option>Dùng Mặc định</option>
+                    <option>Win by 2</option>
+                    <option>Chạm mốc</option>
+                </select>
+            </div>
+            <button type="submit">Lưu Cấu hình KO</button>
+            <button type="button">Lựa chọn Đội & Tạo Vòng KO</button>
+        </form>
+
+        <h2>2. Cây Thi đấu Vòng KO</h2>
+        <p>Cây thi đấu sẽ được hiển thị sau khi tạo Vòng KO.</p>
+
+        <h2>3. Xếp hạng Chung cuộc</h2>
+        <p>Xếp hạng sẽ được hiển thị sau khi hoàn thành Vòng KO.</p>
+    </div>
+
+    <div id="finance" class="tab">
+        <h2>1. Danh sách Nhà Tài Trợ</h2>
+        <form>
+            <div>
+                <label>Tên Nhà tài trợ</label>
+                <input type="text">
+                <label>Số tiền</label>
+                <input type="number" min="0">
+                <label>Upload Logo</label>
+                <input type="file" accept="image/*">
+                <button type="button">Thêm</button>
+            </div>
+        </form>
+        <p>Tổng tiền tài trợ: 0</p>
+
+        <h2>2. Kế hoạch Thu chi Giải đấu</h2>
+        <button>Tính lại Tổng kết</button>
+        <div class="table-container">
+            <table>
+                <tr><th>Mục chi phí/doanh thu</th><th>Dự kiến (VNĐ)</th><th>Thực tế (VNĐ)</th><th>Loại</th><th>Hành động</th></tr>
+                <tr>
+                    <td><input type="text"></td>
+                    <td><input type="number" min="0"></td>
+                    <td><input type="number" min="0"></td>
+                    <td><select><option>Thu</option><option>Chi</option></select></td>
+                    <td><button type="button">Thêm</button></td>
+                </tr>
+            </table>
+        </div>
+        <div>
+            <p>Tổng Doanh thu Dự kiến: 0</p>
+            <p>Tổng Chi phí Dự kiến: 0</p>
+            <p>Lợi nhuận Dự kiến: 0</p>
+            <p>Tổng Doanh thu Thực tế: 0</p>
+            <p>Tổng Chi phí Thực tế: 0</p>
+            <p>Lợi nhuận Thực tế: 0</p>
+        </div>
+    </div>
+
+    <div id="test" class="tab">
+        <h2>1. Chức năng Test & Tạo dữ liệu ngẫu nhiên</h2>
+        <button onclick="generateRandomPlayers(20)">Tạo 20 Người chơi Ngẫu nhiên</button>
+        <button onclick="generateRandomTeams(10)">Tạo 10 Đội Ngẫu nhiên</button>
+        <button onclick="generateRandomGroupResults()">Tạo Kết quả Vòng Bảng Ngẫu nhiên</button>
+        <button onclick="generateRandomKOResults()">Tạo Kết quả KO Ngẫu nhiên</button>
+        <p>* Các chức năng này chỉ dùng để kiểm tra, sẽ ghi đè dữ liệu hiện tại.</p>
+
+        <h2>1.1 Tạo Dữ liệu Mẫu Random</h2>
+        <button onclick="generateRandomTournament()">Tạo Dữ liệu Mẫu Thông tin Giải Đấu</button>
+        <button onclick="generateRandomBTC()">Tạo Danh sách Mẫu Ban Tổ Chức</button>
+        <div>
+            <label>Số lượng Người chơi</label>
+            <input id="numPlayers" type="number" min="1" value="20">
+            <button onclick="generateRandomPlayers(document.getElementById('numPlayers').value)">Tạo Người chơi Ngẫu nhiên</button>
+        </div>
+
+        <h2>2. Xuất dữ liệu giải đấu (CSV)</h2>
+        <button onclick="exportCSV('btc')">Xuất BTC</button>
+        <button onclick="exportCSV('players')">Xuất Người chơi</button>
+        <button onclick="exportCSV('teams')">Xuất Đội</button>
+        <button onclick="exportCSV('sponsors')">Xuất Tài trợ</button>
+        <button onclick="exportCSV('finance')">Xuất Thu chi</button>
+        <button onclick="exportCSV('schedule')">Xuất Lịch thi đấu</button>
+
+        <h2>3. Import dữ liệu giải đấu (CSV)</h2>
+        <div>
+            <label>Import BTC</label>
+            <input type="file" id="import_btc" accept=".csv">
+            <button onclick="importCSV('btc')">Import</button>
+        </div>
+        <div>
+            <label>Import Người chơi</label>
+            <input type="file" id="import_players" accept=".csv">
+            <button onclick="importCSV('players')">Import</button>
+        </div>
+        <div>
+            <label>Import Đội</label>
+            <input type="file" id="import_teams" accept=".csv">
+            <button onclick="importCSV('teams')">Import</button>
+        </div>
+        <div>
+            <label>Import Tài trợ</label>
+            <input type="file" id="import_sponsors" accept=".csv">
+            <button onclick="importCSV('sponsors')">Import</button>
+        </div>
+        <div>
+            <label>Import Thu chi</label>
+            <input type="file" id="import_finance" accept=".csv">
+            <button onclick="importCSV('finance')">Import</button>
+        </div>
+        <div>
+            <label>Import Lịch thi đấu</label>
+            <input type="file" id="import_schedule" accept=".csv">
+            <button onclick="importCSV('schedule')">Import</button>
+        </div>
+
+        <h2>4. Xuất/Import toàn bộ thông tin giải đấu (JSON)</h2>
+        <button onclick="exportFullTournamentJSON()">Xuất Toàn bộ Giải (JSON)</button>
+        <div>
+            <label>Import Toàn bộ Giải</label>
+            <input type="file" id="import_full" accept=".json">
+            <button onclick="importFullTournamentJSON()">Import</button>
+        </div>
+
+        <h2>5. Xóa Dữ liệu Theo Phần</h2>
+        <p>* Xóa dữ liệu từng phần với ràng buộc xác nhận. Lưu ý: Không thể hoàn tác, và có thể ảnh hưởng đến các phần phụ thuộc (ví dụ: xóa người chơi có thể ảnh hưởng đến đội).</p>
+        <button class="delete-button" onclick="deleteSection('btc')">Xóa BTC</button>
+        <button class="delete-button" onclick="deleteSection('players')">Xóa Người chơi</button>
+        <button class="delete-button" onclick="deleteSection('teams')">Xóa Đội</button>
+        <button class="delete-button" onclick="deleteSection('sponsors')">Xóa Tài trợ</button>
+        <button class="delete-button" onclick="deleteSection('finance')">Xóa Thu chi</button>
+        <button class="delete-button" onclick="deleteSection('schedule')">Xóa Lịch thi đấu</button>
+
+        <h2>6. Khác</h2>
+        <button class="delete-button" onclick="clearAllData()">Xóa Toàn bộ Dữ liệu Giải đấu</button>
+        <p>Xóa tất cả dữ liệu đã lưu trữ (không thể hoàn tác).</p>
+    </div>
+
+    <script>
+        // Hàm hiển thị tab
+        function showTab(tabId) {
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+        }
+
+        // Hàm validate cấu hình vòng KO
+        function validateKO() {
+            const koSize = parseInt(document.getElementById('ko_size').value);
+            if (koSize < 8 || koSize % 8 !== 0) {
+                alert('Kích thước Vòng KO phải là bội của 8 (VD: 8, 16, 32).');
+                return false;
+            }
+            return true;
+        }
+
+        // Hàm cập nhật favicon
+        function updateFavicon(logoData) {
+            const favicon = document.getElementById('favicon');
+            if (logoData) {
+                favicon.href = logoData;
+            } else {
+                favicon.href = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsQAAA7EAZUrDhsAAABUSURBVFhH7Y5BDgAhDAO7/f9/fQ2MIBsHLvJ0gDIiAOB3t4Du7h3Q3b0Dujs3gO7uHdDdHVB3dwfo7t4B3d0doLt7B3R37wDu7h3Q3b0Dujs3gO7uHdDdHVD37wEYSG4l9O8CggAAAABJRU5ErkJggg==';
+            }
+        }
+
+        // Hàm xử lý tải lên logo
+        function handleLogoUpload(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const logoData = e.target.result;
+                    document.getElementById('tournamentLogoPreview').src = logoData;
+                    document.getElementById('tournamentLogoPreview').style.display = 'block';
+                    updateFavicon(logoData);
+                    const config = JSON.parse(localStorage.getItem('tournamentConfig') || '{}');
+                    config.logo = logoData;
+                    localStorage.setItem('tournamentConfig', JSON.stringify(config));
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        // Hàm xử lý tải lên QR code
+        function handleQRUpload(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const qrData = e.target.result;
+                    document.getElementById('paymentQRPreview').src = qrData;
+                    document.getElementById('paymentQRPreview').style.display = 'block';
+                    const config = JSON.parse(localStorage.getItem('tournamentConfig') || '{}');
+                    config.paymentQR = qrData;
+                    localStorage.setItem('tournamentConfig', JSON.stringify(config));
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        // Hàm lưu cấu hình giải đấu và sân thi đấu
+        function saveTournamentConfig() {
+            const venueMapLink = document.getElementById('venueMapLink').value.trim();
+            const venueContactPhone = document.getElementById('venueContactPhone').value.trim();
+            const registrationFee = parseFloat(document.getElementById('registrationFee').value) || 0;
+
+            // Validation
+            if (!document.getElementById('tournamentName').value.trim()) {
+                alert('Tên giải đấu là bắt buộc!');
+                return;
+            }
+            if (!document.getElementById('tournamentDate').value) {
+                alert('Ngày tổ chức là bắt buộc!');
+                return;
+            }
+            if (!document.getElementById('tournamentRules').value.trim()) {
+                alert('Luật thi đấu là bắt buộc!');
+                return;
+            }
+            if (!document.getElementById('maxTeamsPerGroup').value) {
+                alert('Số đội tối đa mỗi bảng là bắt buộc!');
+                return;
+            }
+            if (!document.getElementById('venueName').value.trim()) {
+                alert('Tên sân/địa điểm là bắt buộc!');
+                return;
+            }
+            if (!document.getElementById('venueAddress').value.trim()) {
+                alert('Địa chỉ chi tiết là bắt buộc!');
+                return;
+            }
+            if (venueMapLink && !/^https?:\/\/(www\.)?google\.com\/maps/.test(venueMapLink)) {
+                alert('Link Google Map không hợp lệ!');
+                return;
+            }
+            if (venueContactPhone && !/^\+?\d{9,12}$/.test(venueContactPhone)) {
+                alert('Số điện thoại liên hệ không hợp lệ!');
+                return;
+            }
+            if (registrationFee < 0) {
+                alert('Lệ phí không được âm!');
+                return;
+            }
+
+            const config = {
+                name: document.getElementById('tournamentName').value.trim(),
+                date: document.getElementById('tournamentDate').value,
+                rules: document.getElementById('tournamentRules').value.trim(),
+                maxPlayersPerTeam: parseInt(document.getElementById('maxPlayersPerTeam').value) || 2,
+                maxTeamsPerGroup: parseInt(document.getElementById('maxTeamsPerGroup').value) || 4,
+                logo: document.getElementById('tournamentLogoPreview').src,
+                venue: {
+                    name: document.getElementById('venueName').value.trim(),
+                    address: document.getElementById('venueAddress').value.trim(),
+                    mapLink: venueMapLink,
+                    contactPerson: document.getElementById('venueContactPerson').value.trim(),
+                    contactPhone: venueContactPhone
+                },
+                registrationFee: registrationFee,
+                paymentQR: document.getElementById('paymentQRPreview').src
+            };
+            localStorage.setItem('tournamentConfig', JSON.stringify(config));
+            loadVenueTable();
+            alert('Đã lưu cấu hình giải đấu và sân thi đấu!');
+        }
+
+        // Hàm tải cấu hình giải đấu và sân thi đấu
+        function loadTournamentConfig() {
+            const config = JSON.parse(localStorage.getItem('tournamentConfig') || '{}');
+            if (config) {
+                document.getElementById('tournamentName').value = config.name || '';
+                document.getElementById('tournamentDate').value = config.date || '';
+                document.getElementById('tournamentRules').value = config.rules || '';
+                document.getElementById('maxPlayersPerTeam').value = config.maxPlayersPerTeam || 2;
+                document.getElementById('maxTeamsPerGroup').value = config.maxTeamsPerGroup || '';
+                if (config.logo) {
+                    document.getElementById('tournamentLogoPreview').src = config.logo;
+                    document.getElementById('tournamentLogoPreview').style.display = 'block';
+                    updateFavicon(config.logo);
+                }
+                if (config.venue) {
+                    document.getElementById('venueName').value = config.venue.name || '';
+                    document.getElementById('venueAddress').value = config.venue.address || '';
+                    document.getElementById('venueMapLink').value = config.venue.mapLink || '';
+                    document.getElementById('venueContactPerson').value = config.venue.contactPerson || '';
+                    document.getElementById('venueContactPhone').value = config.venue.contactPhone || '';
+                }
+                document.getElementById('registrationFee').value = config.registrationFee || '';
+                if (config.paymentQR) {
+                    document.getElementById('paymentQRPreview').src = config.paymentQR;
+                    document.getElementById('paymentQRPreview').style.display = 'block';
+                }
+                loadVenueTable();
+            }
+        }
+
+        // Hàm tải bảng thông tin sân thi đấu
+        function loadVenueTable() {
+            const table = document.getElementById('venueTable');
+            table.innerHTML = '<tr><th>Tên Sân</th><th>Địa chỉ</th><th>Link Google Map</th><th>Người liên hệ</th><th>SĐT liên hệ</th></tr>';
+            const config = JSON.parse(localStorage.getItem('tournamentConfig') || '{}');
+            if (config.venue) {
+                const row = table.insertRow();
+                row.innerHTML = `
+                    <td>${config.venue.name || ''}</td>
+                    <td>${config.venue.address || ''}</td>
+                    <td><a href="${config.venue.mapLink || '#'}" target="_blank">${config.venue.mapLink ? 'Xem bản đồ' : ''}</a></td>
+                    <td>${config.venue.contactPerson || ''}</td>
+                    <td>${config.venue.contactPhone || ''}</td>
+                `;
+            } else {
+                const row = table.insertRow();
+                row.innerHTML = `<td colspan="5" class="no-data">Chưa có thông tin sân thi đấu.</td>`;
+            }
+        }
+
+        // Mảng tên Việt Nam mẫu
+        const vietnameseNames = [
+            'Nguyễn Văn', 'Trần Thị', 'Lê Văn', 'Phạm Thị', 'Vũ Văn', 'Hoàng Thị', 'Bùi Văn', 'Đặng Thị', 'Ngô Văn', 'Đỗ Thị',
+            'Trần Văn', 'Nguyễn Thị', 'Phan Văn', 'Lý Thị', 'Hồ Văn', 'Võ Thị', 'Đoàn Văn', 'Đinh Thị', 'Tô Văn', 'Bùi Thị'
+        ];
+
+        // Mảng vai trò BTC mẫu
+        const btcRoles = ['Trưởng BTC', 'Phó BTC', 'Thư ký', 'Trọng tài chính', 'Trợ lý'];
+
+        // Hàm tạo dữ liệu mẫu thông tin giải đấu
+        function generateRandomTournament() {
+            document.getElementById('tournamentName').value = 'Giải Pickleball Random ' + Math.floor(Math.random() * 1000);
+            document.getElementById('tournamentDate').value = new Date(Date.now() + Math.floor(Math.random() * 30 * 24 * 60 * 60 * 1000)).toISOString().split('T')[0];
+            document.getElementById('tournamentRules').value = 'Luật thi đấu mẫu: Best of 3 sets, win by 2 points.';
+            document.getElementById('maxPlayersPerTeam').value = 2;
+            document.getElementById('maxTeamsPerGroup').value = Math.floor(Math.random() * 4) + 4;
+            document.getElementById('venueName').value = 'Sân Pickleball ' + Math.floor(Math.random() * 100);
+            document.getElementById('venueAddress').value = '123 Đường Giải Đấu, Quận 1, TP.HCM';
+            document.getElementById('venueMapLink').value = 'https://maps.google.com/maps?q=123+Đường+Giải+Đấu';
+            document.getElementById('venueContactPerson').value = vietnameseNames[Math.floor(Math.random() * vietnameseNames.length)];
+            document.getElementById('venueContactPhone').value = '0' + Math.floor(Math.random() * 1000000000).toString().padStart(9, '0');
+            document.getElementById('registrationFee').value = Math.floor(Math.random() * 1000000);
+            document.getElementById('tournamentLogoPreview').style.display = 'none';
+            document.getElementById('paymentQRPreview').style.display = 'none';
+            saveTournamentConfig();
+            alert('Đã tạo dữ liệu mẫu thông tin giải đấu!');
+        }
+
+        // Hàm tạo danh sách mẫu BTC
+        function generateRandomBTC() {
+            const btcList = [];
+            for (let i = 0; i < 5; i++) {
+                btcList.push({
+                    name: vietnameseNames[Math.floor(Math.random() * vietnameseNames.length)] + ' ' + String.fromCharCode(65 + i),
+                    role: btcRoles[Math.floor(Math.random() * btcRoles.length)],
+                    phone: '0' + Math.floor(Math.random() * 1000000000).toString().padStart(9, '0'),
+                    email: 'btc' + i + '@example.com'
+                });
+            }
+            localStorage.setItem('btc', JSON.stringify(btcList));
+            loadBtcTable();
+            alert('Đã tạo danh sách mẫu ban tổ chức!');
+        }
+
+        // Hàm tải bảng BTC
+        function loadBtcTable() {
+            const table = document.getElementById('btcTable');
+            table.innerHTML = '<tr><th>Tên</th><th>Vai trò</th><th>SĐT</th><th>Email</th><th>Hành động</th></tr>';
+            const btc = JSON.parse(localStorage.getItem('btc') || '[]');
+            btc.forEach((member, index) => {
+                const row = table.insertRow();
+                row.innerHTML = `<td>${member.name}</td><td>${member.role}</td><td>${member.phone}</td><td>${member.email}</td><td><button onclick="deleteBtc(${index})">Xóa</button></td>`;
+            });
+        }
+
+        // Hàm thêm BTC
+        function addBtc() {
+            const btc = JSON.parse(localStorage.getItem('btc') || '[]');
+            const name = document.getElementById('btcName').value.trim();
+            if (!name) {
+                alert('Tên thành viên BTC là bắt buộc!');
+                return;
+            }
+            btc.push({
+                name: name,
+                role: document.getElementById('btcRole').value,
+                phone: document.getElementById('btcPhone').value,
+                email: document.getElementById('btcEmail').value
+            });
+            localStorage.setItem('btc', JSON.stringify(btc));
+            loadBtcTable();
+            document.getElementById('btcName').value = '';
+            document.getElementById('btcRole').value = '';
+            document.getElementById('btcPhone').value = '';
+            document.getElementById('btcEmail').value = '';
+        }
+
+        // Hàm xóa BTC
+        function deleteBtc(index) {
+            const btc = JSON.parse(localStorage.getItem('btc') || '[]');
+            btc.splice(index, 1);
+            localStorage.setItem('btc', JSON.stringify(btc));
+            loadBtcTable();
+        }
+
+        // Hàm tạo người chơi ngẫu nhiên
+        function generateRandomPlayers(num) {
+            const players = [];
+            for (let i = 0; i < num; i++) {
+                players.push({
+                    name: vietnameseNames[Math.floor(Math.random() * vietnameseNames.length)] + ' ' + (i + 1),
+                    gender: Math.random() > 0.5 ? 'Nam' : 'Nữ',
+                    rating: (Math.random() * 4 + 1).toFixed(1),
+                    email: 'player' + i + '@example.com'
+                });
+            }
+            localStorage.setItem('players', JSON.stringify(players));
+            loadPlayersTable();
+            loadPlayerSelect();
+            alert(`Đã tạo ${num} người chơi ngẫu nhiên!`);
+        }
+
+        // Hàm tải bảng người chơi
+        function loadPlayersTable() {
+            const table = document.getElementById('playersTable');
+            table.innerHTML = '<tr><th>STT</th><th>Tên</th><th>Giới tính</th><th>Rating</th><th>Email</th><th>Hành động</th></tr>';
+            const players = JSON.parse(localStorage.getItem('players') || '[]');
+            document.getElementById('totalPlayers').innerText = 'Tổng số người chơi: ' + players.length;
+            players.forEach((player, index) => {
+                const row = table.insertRow();
+                row.innerHTML = `<td>${index + 1}</td><td>${player.name}</td><td>${player.gender}</td><td>${player.rating}</td><td>${player.email}</td><td><button onclick="editPlayer(${index})">Sửa</button> <button onclick="deletePlayer(${index})">Xóa</button></td>`;
+            });
+        }
+
+        // Hàm thêm người chơi
+        function addPlayer() {
+            const name = document.getElementById('playerName').value.trim();
+            const rating = parseFloat(document.getElementById('playerRating').value) || 0;
+            const email = document.getElementById('playerEmail').value.trim();
+            if (!name) {
+                alert('Tên người chơi là bắt buộc!');
+                return;
+            }
+            if (rating < 0) {
+                alert('Rating phải lớn hơn hoặc bằng 0!');
+                return;
+            }
+            if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                alert('Email không hợp lệ!');
+                return;
+            }
+            const players = JSON.parse(localStorage.getItem('players') || '[]');
+            players.push({
+                name: name,
+                gender: document.getElementById('playerGender').value,
+                rating: rating,
+                email: email
+            });
+            localStorage.setItem('players', JSON.stringify(players));
+            loadPlayersTable();
+            loadPlayerSelect();
+            document.getElementById('playerForm').reset();
+        }
+
+        // Hàm sửa người chơi
+        function editPlayer(index) {
+            const players = JSON.parse(localStorage.getItem('players') || '[]');
+            const player = players[index];
+            document.getElementById('editPlayerIndex').value = index;
+            document.getElementById('editPlayerName').value = player.name;
+            document.getElementById('editPlayerGender').value = player.gender;
+            document.getElementById('editPlayerRating').value = player.rating;
+            document.getElementById('editPlayerEmail').value = player.email;
+            document.getElementById('editPlayerModal').style.display = 'block';
+        }
+
+        // Hàm lưu sửa người chơi với validation
+        function saveEditPlayer() {
+            const index = parseInt(document.getElementById('editPlayerIndex').value);
+            const name = document.getElementById('editPlayerName').value.trim();
+            const rating = parseFloat(document.getElementById('editPlayerRating').value) || 0;
+            const email = document.getElementById('editPlayerEmail').value.trim();
+            if (!name) {
+                alert('Tên người chơi là bắt buộc!');
+                return;
+            }
+            if (rating < 0) {
+                alert('Rating phải lớn hơn hoặc bằng 0!');
+                return;
+            }
+            if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                alert('Email không hợp lệ!');
+                return;
+            }
+            const players = JSON.parse(localStorage.getItem('players') || '[]');
+            if (players.some((p, i) => p.name === name && i !== index)) {
+                alert('Tên người chơi đã tồn tại!');
+                return;
+            }
+            players[index] = {
+                name: name,
+                gender: document.getElementById('editPlayerGender').value,
+                rating: rating,
+                email: email
+            };
+            localStorage.setItem('players', JSON.stringify(players));
+            document.getElementById('editPlayerModal').style.display = 'none';
+            loadPlayersTable();
+            loadPlayerSelect();
+        }
+
+        // Hàm xóa người chơi
+        function deletePlayer(index) {
+            const players = JSON.parse(localStorage.getItem('players') || '[]');
+            const player = players[index];
+            const teams = JSON.parse(localStorage.getItem('teams') || '[]');
+            const isInTeam = teams.some(team => team.members.some(member => member.name === player.name));
+            if (isInTeam) {
+                alert('Không thể xóa người chơi vì họ đang thuộc một đội!');
+                return;
+            }
+            players.splice(index, 1);
+            localStorage.setItem('players', JSON.stringify(players));
+            loadPlayersTable();
+            loadPlayerSelect();
+        }
+
+        // Hàm tải select người chơi cho thêm/sửa đội
+        function loadPlayerSelect(selectId = 'teamPlayers') {
+            const select = document.getElementById(selectId);
+            select.innerHTML = '';
+            const players = JSON.parse(localStorage.getItem('players') || '[]');
+            const teams = JSON.parse(localStorage.getItem('teams') || '[]');
+            const usedPlayerNames = new Set(teams.flatMap(team => team.members.map(member => member.name)));
+            players.forEach((player, index) => {
+                if (!usedPlayerNames.has(player.name)) {
+                    const option = document.createElement('option');
+                    option.value = index;
+                    option.text = player.name + ' (' + player.gender + ', Rating: ' + player.rating + ')';
+                    select.appendChild(option);
+                }
+            });
+        }
+
+        // Hàm kiểm tra giới tính của đội
+        function validateTeamGender(members, matchType) {
+            if (members.length !== 2) return false;
+            const genders = members.map(m => m.gender);
+            if (matchType === 'mm') {
+                return genders.every(g => g === 'Nam');
+            } else if (matchType === 'mf') {
+                return genders.includes('Nam') && genders.includes('Nữ');
+            } else if (matchType === 'ff') {
+                return genders.every(g => g === 'Nữ');
+            } else if (matchType === 'mixed_mm_mf') {
+                return true;
+            }
+            return false;
+        }
+
+        // Hàm kiểm tra người chơi đã thuộc đội nào chưa
+        function isPlayerInTeam(playerName) {
+            const teams = JSON.parse(localStorage.getItem('teams') || '[]');
+            return teams.some(team => team.members.some(member => member.name === playerName));
+        }
+
+        // Hàm thêm đội với validation
+        function addTeam() {
+            const name = document.getElementById('teamName').value.trim();
+            const matchType = document.getElementById('teamMatchType').value;
+            if (!name) {
+                alert('Tên đội là bắt buộc!');
+                return;
+            }
+            const selectedPlayers = Array.from(document.getElementById('teamPlayers').selectedOptions).map(opt => parseInt(opt.value));
+            if (selectedPlayers.length !== 2) {
+                alert('Phải chọn đúng 2 người chơi cho mỗi đội!');
+                return;
+            }
+            const players = JSON.parse(localStorage.getItem('players') || '[]');
+            const teamMembers = selectedPlayers.map(idx => players[idx]);
+            if (!validateTeamGender(teamMembers, matchType)) {
+                alert('Thành viên đội không phù hợp với nội dung thi đấu!');
+                return;
+            }
+            const avgRating = teamMembers.reduce((sum, p) => sum + parseFloat(p.rating), 0) / teamMembers.length || 0;
+            const teams = JSON.parse(localStorage.getItem('teams') || '[]');
+            teams.push({
+                name: name,
+                matchType: matchType,
+                members: teamMembers,
+                avgRating: avgRating.toFixed(2)
+            });
+            localStorage.setItem('teams', JSON.stringify(teams));
+            loadTeamsTable();
+            loadPlayerSelect();
+            document.getElementById('teamForm').reset();
+        }
+
+        // Hàm tạo đội ngẫu nhiên
+        function generateRandomTeam(type) {
+            const players = JSON.parse(localStorage.getItem('players') || '[]');
+            const teams = JSON.parse(localStorage.getItem('teams') || '[]');
+            const usedPlayerNames = new Set(teams.flatMap(team => team.members.map(member => member.name)));
+            const availableMales = players.filter(p => p.gender === 'Nam' && !usedPlayerNames.has(p.name)).slice();
+            const availableFemales = players.filter(p => p.gender === 'Nữ' && !usedPlayerNames.has(p.name)).slice();
+            let selected = [];
+
+            if (type === 'mm') {
+                if (availableMales.length < 2) return alert('Không đủ người chơi nam chưa được gán!');
+                selected.push(availableMales.splice(Math.floor(Math.random() * availableMales.length), 1)[0]);
+                selected.push(availableMales.splice(Math.floor(Math.random() * availableMales.length), 1)[0]);
+            } else if (type === 'mf') {
+                if (availableMales.length < 1 || availableFemales.length < 1) return alert('Không đủ người chơi nam hoặc nữ chưa được gán!');
+                selected.push(availableMales.splice(Math.floor(Math.random() * availableMales.length), 1)[0]);
+                selected.push(availableFemales.splice(Math.floor(Math.random() * availableFemales.length), 1)[0]);
+            } else if (type === 'ff') {
+                if (availableFemales.length < 2) return alert('Không đủ người chơi nữ chưa được gán!');
+                selected.push(availableFemales.splice(Math.floor(Math.random() * availableFemales.length), 1)[0]);
+                selected.push(availableFemales.splice(Math.floor(Math.random() * availableFemales.length), 1)[0]);
+            } else if (type === 'mixed_mm_mf') {
+                const subType = Math.random() > 0.5 ? 'mm' : 'mf';
+                generateRandomTeam(subType);
+                return;
+            }
+
+            const avgRating = selected.reduce((sum, p) => sum + parseFloat(p.rating), 0) / selected.length || 0;
+            teams.push({
+                name: 'Đội Ngẫu nhiên ' + (teams.length + 1),
+                matchType: type,
+                members: selected,
+                avgRating: avgRating.toFixed(2)
+            });
+            localStorage.setItem('teams', JSON.stringify(teams));
+            loadTeamsTable();
+            loadPlayerSelect();
+            alert('Đã tạo đội ngẫu nhiên!');
+        }
+
+        // Hàm tải bảng đội
+        function loadTeamsTable() {
+            const table = document.getElementById('teamsTable');
+            table.innerHTML = '<tr><th>STT</th><th>Tên Đội</th><th>Thành viên</th><th>Nội dung</th><th>Rating TB</th><th>Hành động</th></tr>';
+            const teams = JSON.parse(localStorage.getItem('teams') || '[]');
+            document.getElementById('totalTeams').innerText = 'Tổng số đội: ' + teams.length;
+            teams.forEach((team, index) => {
+                const row = table.insertRow();
+                const membersNames = team.members.map(m => m.name).join(', ');
+                const matchTypeText = team.matchType === 'mm' ? 'Nam - Nam' : 
+                                      team.matchType === 'mf' ? 'Nam - Nữ' : 
+                                      team.matchType === 'ff' ? 'Nữ - Nữ' : 'Hỗn hợp Nam - Nam + Nam - Nữ';
+                row.innerHTML = `<td>${index + 1}</td><td>${team.name}</td><td>${membersNames}</td><td>${matchTypeText}</td><td>${team.avgRating}</td><td><button onclick="editTeam(${index})">Sửa</button> <button onclick="deleteTeam(${index})">Xóa</button></td>`;
+            });
+        }
+
+        // Hàm sửa đội
+        function editTeam(index) {
+            const teams = JSON.parse(localStorage.getItem('teams') || '[]');
+            const team = teams[index];
+            document.getElementById('editTeamIndex').value = index;
+            document.getElementById('editTeamName').value = team.name;
+            document.getElementById('editTeamMatchType').value = team.matchType;
+            loadPlayerSelect('editTeamPlayers');
+            const select = document.getElementById('editTeamPlayers');
+            Array.from(select.options).forEach(opt => {
+                opt.selected = team.members.some(m => m.name === opt.text.split(' (')[0]);
+            });
+            team.members.forEach(member => {
+                const option = document.createElement('option');
+                option.value = -1;
+                option.text = member.name + ' (' + member.gender + ', Rating: ' + member.rating + ')';
+                option.selected = true;
+                select.appendChild(option);
+            });
+            document.getElementById('editTeamModal').style.display = 'block';
+        }
+
+        // Hàm lưu sửa đội với validation
+        function saveEditTeam() {
+            const index = parseInt(document.getElementById('editTeamIndex').value);
+            const name = document.getElementById('editTeamName').value.trim();
+            const matchType = document.getElementById('editTeamMatchType').value;
+            if (!name) {
+                alert('Tên đội là bắt buộc!');
+                return;
+            }
+            const selectedPlayers = Array.from(document.getElementById('editTeamPlayers').selectedOptions).map(opt => {
+                const name = opt.text.split(' (')[0];
+                const players = JSON.parse(localStorage.getItem('players') || '[]');
+                return players.find(p => p.name === name) || { name, gender: opt.text.includes('Nam') ? 'Nam' : 'Nữ', rating: parseFloat(opt.text.match(/Rating: (\d+\.\d)/)[1]) };
+            });
+            if (selectedPlayers.length !== 2) {
+                alert('Phải chọn đúng 2 người chơi cho mỗi đội!');
+                return;
+            }
+            if (!validateTeamGender(selectedPlayers, matchType)) {
+                alert('Thành viên đội không phù hợp với nội dung thi đấu!');
+                return;
+            }
+            const avgRating = selectedPlayers.reduce((sum, p) => sum + parseFloat(p.rating), 0) / selectedPlayers.length || 0;
+            const teams = JSON.parse(localStorage.getItem('teams') || '[]');
+            teams[index] = {
+                name: name,
+                matchType: matchType,
+                members: selectedPlayers,
+                avgRating: avgRating.toFixed(2)
+            };
+            localStorage.setItem('teams', JSON.stringify(teams));
+            document.getElementById('editTeamModal').style.display = 'none';
+            loadTeamsTable();
+            loadPlayerSelect();
+        }
+
+        // Hàm xóa đội
+        function deleteTeam(index) {
+            const teams = JSON.parse(localStorage.getItem('teams') || '[]');
+            teams.splice(index, 1);
+            localStorage.setItem('teams', JSON.stringify(teams));
+            loadTeamsTable();
+            loadPlayerSelect();
+        }
+
+        // Hàm tạo đội ngẫu nhiên (nhiều đội)
+        function generateRandomTeams(num) {
+            const types = ['mm', 'mf', 'ff', 'mixed_mm_mf'];
+            for (let i = 0; i < num; i++) {
+                const type = types[Math.floor(Math.random() * types.length)];
+                generateRandomTeam(type);
+            }
+        }
+
+        // Hàm tạo kết quả vòng bảng ngẫu nhiên (giả định)
+        function generateRandomGroupResults() {
+            alert('Tạo kết quả vòng bảng ngẫu nhiên...');
+        }
+
+        // Hàm tạo kết quả KO ngẫu nhiên (giả định)
+        function generateRandomKOResults() {
+            alert('Tạo kết quả KO ngẫu nhiên...');
+        }
+
+        // Hàm xuất toàn bộ giải JSON
+        function exportFullTournamentJSON() {
+            const allData = {};
+            ['tournamentConfig', 'btc', 'players', 'teams', 'sponsors', 'finance', 'schedule', 'groups', 'matches'].forEach(key => {
+                allData[key] = localStorage.getItem(key) || null;
+            });
+            const blob = new Blob([JSON.stringify(allData)], {type: 'application/json'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'tournament.json';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        // Hàm import toàn bộ giải JSON
+        function importFullTournamentJSON() {
+            const fileInput = document.getElementById('import_full');
+            const file = fileInput.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const data = JSON.parse(e.target.result);
+                    Object.keys(data).forEach(key => {
+                        localStorage.setItem(key, data[key]);
+                    });
+                    loadTournamentConfig();
+                    alert('Đã import toàn bộ dữ liệu giải đấu thành công!');
+                    location.reload();
+                };
+                reader.readAsText(file);
+            } else {
+                alert('Vui lòng chọn file JSON!');
+            }
+        }
+
+        // Hàm xuất CSV
+        function exportCSV(type) {
+            const data = localStorage.getItem(type);
+            if (data) {
+                let csvContent = "data:text/csv;charset=utf-8,";
+                if (type === 'teams') {
+                    const teams = JSON.parse(data);
+                    csvContent += "Name,MatchType,Members,AvgRating\n";
+                    teams.forEach(team => {
+                        const members = team.members.map(m => m.name).join(';');
+                        csvContent += `${team.name},${team.matchType},${members},${team.avgRating}\n`;
+                    });
+                } else {
+                    csvContent += convertToCSV(JSON.parse(data));
+                }
+                const encodedUri = encodeURI(csvContent);
+                const link = document.createElement("a");
+                link.setAttribute("href", encodedUri);
+                link.setAttribute("download", `${type}.csv`);
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            } else {
+                alert(`Không có dữ liệu cho ${type}!`);
+            }
+        }
+
+        // Hàm hỗ trợ chuyển JSON sang CSV
+        function convertToCSV(objArray) {
+            if (!Array.isArray(objArray)) return '';
+            const array = [Object.keys(objArray[0])].concat(objArray);
+            return array.map(it => Object.values(it).toString()).join('\n');
+        }
+
+        // Hàm import CSV
+        function importCSV(type) {
+            const fileInput = document.getElementById(`import_${type}`);
+            const file = fileInput.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const csvData = e.target.result;
+                    let jsonData;
+                    if (type === 'teams') {
+                        jsonData = convertTeamCSVToJSON(csvData);
+                    } else {
+                        jsonData = convertCSVToJSON(csvData);
+                    }
+                    localStorage.setItem(type, JSON.stringify(jsonData));
+                    alert(`Đã import ${type} từ CSV thành công!`);
+                    location.reload();
+                };
+                reader.readAsText(file);
+            } else {
+                alert('Vui lòng chọn file CSV!');
+            }
+        }
+
+        // Hàm chuyển CSV sang JSON cho đội
+        function convertTeamCSVToJSON(csv) {
+            const lines = csv.split('\n');
+            const result = [];
+            const headers = lines[0].split(',');
+            for (let i = 1; i < lines.length; i++) {
+                if (!lines[i]) continue;
+                const obj = {};
+                const currentline = lines[i].split(',');
+                obj[headers[0]] = currentline[0];
+                obj[headers[1]] = currentline[1];
+                const memberNames = currentline[2].split(';');
+                const players = JSON.parse(localStorage.getItem('players') || '[]');
+                obj.members = memberNames.map(name => players.find(p => p.name === name)).filter(m => m);
+                obj.avgRating = currentline[3];
+                result.push(obj);
+            }
+            return result;
+        }
+
+        // Hàm chuyển CSV sang JSON
+        function convertCSVToJSON(csv) {
+            const lines = csv.split('\n');
+            const result = [];
+            const headers = lines[0].split(',');
+            for (let i = 1; i < lines.length; i++) {
+                if (!lines[i]) continue;
+                const obj = {};
+                const currentline = lines[i].split(',');
+                for (let j = 0; j < headers.length; j++) {
+                    obj[headers[j]] = currentline[j];
+                }
+                result.push(obj);
+            }
+            return result;
+        }
+
+        // Hàm xóa từng phần với thông báo chi tiết
+        function deleteSection(section) {
+            const sectionNames = {
+                tournamentConfig: 'Cấu hình Giải đấu & Sân',
+                btc: 'Ban Tổ Chức',
+                players: 'Người chơi',
+                teams: 'Đội',
+                sponsors: 'Tài trợ',
+                finance: 'Thu chi',
+                schedule: 'Lịch thi đấu',
+                groups: 'Bảng đấu',
+                matches: 'Trận đấu'
+            };
+            if (confirm(`Bạn chắc chắn muốn xóa dữ liệu ${sectionNames[section] || section}? Điều này có thể ảnh hưởng đến các phần phụ thuộc và không thể hoàn tác.`)) {
+                localStorage.removeItem(section);
+                if (section === 'tournamentConfig') {
+                    document.getElementById('tournamentLogoPreview').style.display = 'none';
+                    document.getElementById('paymentQRPreview').style.display = 'none';
+                    updateFavicon(null);
+                    loadVenueTable();
+                }
+                alert(`Đã xóa dữ liệu ${sectionNames[section] || section}!`);
+                location.reload();
+            }
+        }
+
+        // Hàm xóa toàn bộ với thông báo chi tiết
+        function clearAllData() {
+            const sections = ['tournamentConfig', 'btc', 'players', 'teams', 'sponsors', 'finance', 'schedule', 'groups', 'matches'];
+            const sectionNames = {
+                tournamentConfig: 'Cấu hình Giải đấu & Sân',
+                btc: 'Ban Tổ Chức',
+                players: 'Người chơi',
+                teams: 'Đội',
+                sponsors: 'Tài trợ',
+                finance: 'Thu chi',
+                schedule: 'Lịch thi đấu',
+                groups: 'Bảng đấu',
+                matches: 'Trận đấu'
+            };
+            const existingSections = sections.filter(section => localStorage.getItem(section));
+            const sectionDisplayNames = existingSections.map(section => sectionNames[section] || section);
+            if (existingSections.length === 0) {
+                alert('Không có dữ liệu để xóa!');
+                return;
+            }
+            if (confirm(`Bạn chắc chắn muốn xóa toàn bộ dữ liệu, bao gồm các phần: ${sectionDisplayNames.join(', ')}? Điều này không thể hoàn tác.`)) {
+                existingSections.forEach(section => localStorage.removeItem(section));
+                document.getElementById('tournamentLogoPreview').style.display = 'none';
+                document.getElementById('paymentQRPreview').style.display = 'none';
+                updateFavicon(null);
+                loadVenueTable();
+                alert(`Đã xóa các phần dữ liệu: ${sectionDisplayNames.join(', ')}`);
+                location.reload();
+            }
+        }
+
+        // Hàm xuất và tải giải đấu
+        function exportTournament() {
+            exportFullTournamentJSON();
+        }
+        function loadTournament() {
+            importFullTournamentJSON();
+        }
+
+        // Tải dữ liệu khi load trang
+        window.onload = function() {
+            loadBtcTable();
+            loadPlayersTable();
+            loadPlayerSelect('teamPlayers');
+            loadPlayerSelect('editTeamPlayers');
+            loadTeamsTable();
+            loadTournamentConfig();
+            loadVenueTable();
+            loadGroupTable();
+            loadMatchTable();
+            document.getElementById('tournamentLogo').addEventListener('change', handleLogoUpload);
+            document.getElementById('paymentQR').addEventListener('change', handleQRUpload);
+        }
+    </script>
+</body>
+</html>
