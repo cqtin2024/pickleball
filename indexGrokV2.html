@@ -1,0 +1,1051 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pickleball Tournament Manager</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .tab-button {
+            transition: all 0.3s ease;
+        }
+        .tab-button.active {
+            transform: scale(1.05);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .match-row input, .final-set-row input {
+            width: 4rem;
+            transition: border-color 0.3s ease;
+        }
+        .match-row input:focus, .final-set-row input:focus {
+            border-color: #3b82f6;
+            outline: none;
+        }
+        .error-message {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .tooltip {
+            position: relative;
+        }
+        .tooltip:hover::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #1f2937;
+            color: white;
+            padding: 0.5rem;
+            border-radius: 0.25rem;
+            white-space: nowrap;
+            z-index: 10;
+        }
+        .loading-spinner {
+            display: none;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+            margin-left: 1rem;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <header class="bg-blue-600 text-white p-4 shadow-md">
+        <h1 class="text-2xl font-bold text-center">Pickleball Tournament Manager</h1>
+    </header>
+    <div class="container mx-auto p-4">
+        <div class="tabs flex space-x-2 mb-6">
+            <button class="tab-button px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 active" onclick="showTab('players')">Players/Teams</button>
+            <button class="tab-button px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600" onclick="showTab('round')">Round</button>
+            <button class="tab-button px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600" onclick="showTab('final')">Final</button>
+        </div>
+        <div id="players" class="tab-content bg-white p-6 rounded-lg shadow-md active">
+            <h2 class="text-xl font-semibold mb-4">Players/Teams</h2>
+            <p class="text-gray-600 mb-4">Enter 6 female and 18 male players. Teams are updated automatically with fixed pairings.</p>
+            <div>
+                <h3 class="text-lg font-medium mb-2">Female Players (6)</h3>
+                <div id="female-players" class="grid grid-cols-2 md:grid-cols-3 gap-2">
+                    <input type="text" value="F1" oninput="updateTeams()" class="border rounded p-2 focus:border-blue-500">
+                    <input type="text" value="F2" oninput="updateTeams()" class="border rounded p-2 focus:border-blue-500">
+                    <input type="text" value="F3" oninput="updateTeams()" class="border rounded p-2 focus:border-blue-500">
+                    <input type="text" value="F4" oninput="updateTeams()" class="border rounded p-2 focus:border-blue-500">
+                    <input type="text" value="F5" oninput="updateTeams()" class="border rounded p-2 focus:border-blue-500">
+                    <input type="text" value="F6" oninput="updateTeams()" class="border rounded p-2 focus:border-blue-500">
+                </div>
+                <h3 class="text-lg font-medium mt-4 mb-2">Male Players (18)</h3>
+                <div id="male-players" class="grid grid-cols-2 md:grid-cols-6 gap-2">
+                    <input type="text" value="M1" oninput="updateTeams()" class="border rounded p-2 focus:border-blue-500">
+                    <input type="text" value="M2" oninput="updateTeams()" class="border rounded p-2 focus:border-blue-500">
+                    <input type="text" value="M3" oninput="updateTeams()" class="border rounded p-2 focus:border-blue-500">
+                    <input type="text" value="M4" oninput="updateTeams()" class="border rounded p-2 focus:border-blue-500">
+                    <input type="text" value="M5" oninput="updateTeams()" class="border rounded p-2 focus:border-blue-500">
+                    <input type="text" value="M6" oninput="updateTeams()" class="border rounded p-2 focus:border-blue-500">
+                    <input type="text" value="M7" oninput="updateTeams()" class="border rounded p-2 focus:border-blue-500">
+                    <input type="text" value="M8" oninput="updateTeams()" class="border rounded p-2 focus:border-blue-500">
+                    <input type="text" value="M9" oninput="updateTeams()" class="border rounded p-2 focus:border-blue-500">
+                    <input type="text" value="M10" oninput="updateTeams()" class="border rounded p-2 focus:border-blue-500">
+                    <input type="text" value="M11" oninput="updateTeams()" class="border rounded p-2 focus:border-blue-500">
+                    <input type="text" value="M12" oninput="updateTeams()" class="border rounded p-2 focus:border-blue-500">
+                    <input type="text" value="M13" oninput="updateTeams()" class="border rounded p-2 focus:border-blue-500">
+                    <input type="text" value="M14" oninput="updateTeams()" class="border rounded p-2 focus:border-blue-500">
+                    <input type="text" value="M15" oninput="updateTeams()" class="border rounded p-2 focus:border-blue-500">
+                    <input type="text" value="M16" oninput="updateTeams()" class="border rounded p-2 focus:border-blue-500">
+                    <input type="text" value="M17" oninput="updateTeams()" class="border rounded p-2 focus:border-blue-500">
+                    <input type="text" value="M18" oninput="updateTeams()" class="border rounded p-2 focus:border-blue-500">
+                </div>
+                <div class="flex flex-wrap gap-2 mt-4">
+                    <button onclick="exportToJson()" class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 flex items-center gap-2 tooltip" data-tooltip="Export all data to JSON">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H3a2 2 0 01-2-2V3a2 2 0 012-2h18a2 2 0 012 2v16a2 2 0 01-2 2z"></path></svg>
+                        Export JSON
+                    </button>
+                    <button onclick="exportToCsv()" class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 flex items-center gap-2 tooltip" data-tooltip="Export all data to CSV">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H3a2 2 0 01-2-2V3a2 2 0 012-2h18a2 2 0 012 2v16a2 2 0 01-2 2z"></path></svg>
+                        Export CSV
+                    </button>
+                    <button onclick="exportPlayersCsv()" class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 flex items-center gap-2 tooltip" data-tooltip="Export players list">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H3a2 2 0 01-2-2V3a2 2 0 012-2h18a2 2 0 012 2v16a2 2 0 01-2 2z"></path></svg>
+                        Export Players
+                    </button>
+                    <button onclick="exportTeamsCsv()" class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 flex items-center gap-2 tooltip" data-tooltip="Export teams list">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H3a2 2 0 01-2-2V3a2 2 0 012-2h18a2 2 0 012 2v16a2 2 0 01-2 2z"></path></svg>
+                        Export Teams
+                    </button>
+                    <button onclick="exportMatchesCsv()" class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 flex items-center gap-2 tooltip" data-tooltip="Export matches list">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H3a2 2 0 01-2-2V3a2 2 0 012-2h18a2 2 0 012 2v16a2 2 0 01-2 2z"></path></svg>
+                        Export Matches
+                    </button>
+                    <input type="file" id="import-json" accept=".json" onchange="importFromJson()" class="border rounded p-2">
+                    <input type="file" id="import-csv" accept=".csv" onchange="importFromCsv()" class="border rounded p-2">
+                </div>
+                <p class="error-message text-red-500 mt-2" id="players-error"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg></p>
+            </div>
+            <h3 class="text-lg font-medium mt-6 mb-2">Table A (Nam-Nữ)</h3>
+            <div id="table-a" class="bg-gray-50 p-4 rounded-lg"></div>
+            <h3 class="text-lg font-medium mt-4 mb-2">Table B (Nam-Nam)</h3>
+            <div id="table-b" class="bg-gray-50 p-4 rounded-lg"></div>
+        </div>
+        <div id="round" class="tab-content bg-white p-6 rounded-lg shadow-md">
+            <h2 class="text-xl font-semibold mb-4">Round</h2>
+            <div class="flex items-center">
+                <button onclick="simulateRoundMatches()" class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 flex items-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.2A1 1 0 0010 9.768v4.464a1 1 0 001.555.832l3.197-2.2a1 1 0 000-1.664z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    Simulate Round Matches
+                </button>
+                <div id="round-loading" class="loading-spinner"></div>
+            </div>
+            <h3 class="text-lg font-medium mt-6 mb-2">Table A Matches</h3>
+            <table class="w-full border-collapse">
+                <thead><tr class="bg-blue-500 text-white"><th class="p-2">Team 1</th><th class="p-2">Score</th><th class="p-2">Team 2</th><th class="p-2">Score</th></tr></thead>
+                <tbody id="matches-a"></tbody>
+            </table>
+            <h3 class="text-lg font-medium mt-6 mb-2">Table B Matches</h3>
+            <table class="w-full border-collapse">
+                <thead><tr class="bg-blue-500 text-white"><th class="p-2">Team 1</th><th class="p-2">Score</th><th class="p-2">Team 2</th><th class="p-2">Score</th></tr></thead>
+                <tbody id="matches-b"></tbody>
+            </table>
+            <p class="error-message text-red-500 mt-2" id="round-error"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg></p>
+            <h3 class="text-lg font-medium mt-6 mb-2">Standings</h3>
+            <h4 class="text-md font-medium mb-2">Table A</h4>
+            <table class="w-full border-collapse">
+                <thead><tr class="bg-blue-500 text-white"><th class="p-2">Team</th><th class="p-2">Wins</th><th class="p-2">Losses</th><th class="p-2">Points For</th><th class="p-2">Points Against</th></tr></thead>
+                <tbody id="standings-a"></tbody>
+            </table>
+            <h4 class="text-md font-medium mt-4 mb-2">Table B</h4>
+            <table class="w-full border-collapse">
+                <thead><tr class="bg-blue-500 text-white"><th class="p-2">Team</th><th class="p-2">Wins</th><th class="p-2">Losses</th><th class="p-2">Points For</th><th class="p-2">Points Against</th></tr></thead>
+                <tbody id="standings-b"></tbody>
+            </table>
+        </div>
+        <div id="final" class="tab-content bg-white p-6 rounded-lg shadow-md">
+            <h2 class="text-xl font-semibold mb-4">Final</h2>
+            <div id="final-candidates" class="mb-4"></div>
+            <label class="flex items-center gap-2 mb-4">
+                <input type="checkbox" id="third-place-check" onchange="toggleThirdPlace()" class="h-5 w-5">
+                Include Third Place Match
+            </label>
+            <div id="third-place-options" class="mb-4" style="display: none;">
+                <label class="flex items-center gap-2">
+                    Third Place Mode:
+                    <select id="third-place-mode" class="border rounded p-2">
+                        <option value="touch_15">Touch 15</option>
+                        <option value="win_by_2_max_15">Win by 2, Max 15</option>
+                    </select>
+                </label>
+            </div>
+            <h3 class="text-lg font-medium mb-2">Third Place Match</h3>
+            <div id="third-place-match" class="bg-gray-50 p-4 rounded-lg mb-4"></div>
+            <h3 class="text-lg font-medium mb-2">Final Match</h3>
+            <table class="w-full border-collapse">
+                <thead><tr class="bg-blue-500 text-white"><th class="p-2">Set</th><th class="p-2">Team 1</th><th class="p-2">Score</th><th class="p-2">Team 2</th><th class="p-2">Score</th></tr></thead>
+                <tbody id="final-match"></tbody>
+            </table>
+            <div class="flex items-center mt-4">
+                <button id="submit-final" style="display: none;" onclick="submitFinalScores()" class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 flex items-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                    Submit Final Scores
+                </button>
+                <div id="final-loading" class="loading-spinner"></div>
+            </div>
+            <p class="error-message text-red-500 mt-2" id="final-error"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg></p>
+            <h3 class="text-lg font-medium mt-6 mb-2">Results</h3>
+            <div id="final-results" class="bg-gray-50 p-4 rounded-lg"></div>
+        </div>
+    </div>
+
+    <script>
+        let females = ['F1', 'F2', 'F3', 'F4', 'F5', 'F6'];
+        let males = ['M1', 'M2', 'M3', 'M4', 'M5', 'M6', 'M7', 'M8', 'M9', 'M10', 'M11', 'M12', 'M13', 'M14', 'M15', 'M16', 'M17', 'M18'];
+        let mixedTeams = [];
+        let maleTeams = [];
+        let tableA = {};
+        let tableB = {};
+        let matchesA = [];
+        let matchesB = [];
+        let finalResults = {};
+        let finalMatchSets = [];
+        let thirdPlaceMatch = null;
+        let finalTeams = [];
+
+        function roundRobin(teams) {
+            if (teams.length % 2) teams.push(null);
+            const n = teams.length;
+            const schedule = [];
+            for (let round = 0; round < n - 1; round++) {
+                const roundMatches = [];
+                for (let i = 0; i < n / 2; i++) {
+                    const t1 = teams[i];
+                    const t2 = teams[n - 1 - i];
+                    if (t1 && t2) roundMatches.push([t1, t2, null, null]);
+                }
+                schedule.push(roundMatches);
+                teams = [teams[0], ...teams.slice(-1), ...teams.slice(1, -1)];
+            }
+            return schedule.flat();
+        }
+
+        function showTab(tabId) {
+            document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            document.querySelector(`[onclick="showTab('${tabId}')"]`).classList.add('active');
+        }
+
+        function updateTeams() {
+            const femaleInputs = document.querySelectorAll('#female-players input');
+            const maleInputs = document.querySelectorAll('#male-players input');
+            females = Array.from(femaleInputs).map(input => input.value.trim()).filter(v => v);
+            males = Array.from(maleInputs).map(input => input.value.trim()).filter(v => v);
+            
+            if (females.length !== 6 || males.length !== 18) {
+                document.getElementById('players-error').innerHTML = '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg> Require exactly 6 females and 18 males.';
+                mixedTeams = [];
+                maleTeams = [];
+                tableA = {};
+                tableB = {};
+                matchesA = [];
+                matchesB = [];
+                finalResults = {};
+                finalMatchSets = [];
+                thirdPlaceMatch = null;
+                finalTeams = [];
+                document.getElementById('table-a').innerHTML = '';
+                document.getElementById('table-b').innerHTML = '';
+                document.querySelector('#matches-a').innerHTML = '';
+                document.querySelector('#matches-b').innerHTML = '';
+                document.querySelector('#standings-a').innerHTML = '';
+                document.querySelector('#standings-b').innerHTML = '';
+                document.getElementById('third-place-match').innerHTML = '';
+                document.getElementById('final-match').innerHTML = '';
+                document.getElementById('final-results').innerHTML = '';
+                document.getElementById('final-candidates').innerHTML = '';
+                document.getElementById('submit-final').style.display = 'none';
+                return;
+            }
+            
+            document.getElementById('players-error').innerHTML = '';
+            const prevMixedTeams = [...mixedTeams];
+            const prevMaleTeams = [...maleTeams];
+            mixedTeams = [];
+            maleTeams = [];
+            tableA = {};
+            tableB = {};
+            
+            // Form mixed teams (fixed: female i with male i)
+            for (let i = 0; i < 6; i++) {
+                const teamName = `${females[i]}-${males[i]}`;
+                mixedTeams.push(teamName);
+                tableA[teamName] = { wins: 0, losses: 0, points_for: 0, points_against: 0 };
+            }
+            
+            // Form male teams (fixed: males 6+i with 6+i+1)
+            const remainingMales = males.slice(6);
+            for (let i = 0; i < 12; i += 2) {
+                const teamName = `${remainingMales[i]}-${remainingMales[i+1]}`;
+                maleTeams.push(teamName);
+                tableB[teamName] = { wins: 0, losses: 0, points_for: 0, points_against: 0 };
+            }
+            
+            // Update match team names or reset if invalid
+            if (prevMixedTeams.length && matchesA.length) {
+                matchesA = matchesA.map(match => {
+                    const oldTeam1 = match[0];
+                    const oldTeam2 = match[1];
+                    const idx1 = prevMixedTeams.findIndex(t => t === oldTeam1);
+                    const idx2 = prevMixedTeams.findIndex(t => t === oldTeam2);
+                    const newTeam1 = idx1 !== -1 && idx1 < mixedTeams.length ? mixedTeams[idx1] : null;
+                    const newTeam2 = idx2 !== -1 && idx2 < mixedTeams.length ? mixedTeams[idx2] : null;
+                    if (newTeam1 && newTeam2 && tableA[newTeam1] && tableA[newTeam2]) {
+                        return [newTeam1, newTeam2, match[2], match[3]];
+                    }
+                    return null;
+                }).filter(match => match !== null);
+            }
+            if (prevMaleTeams.length && matchesB.length) {
+                matchesB = matchesB.map(match => {
+                    const oldTeam1 = match[0];
+                    const oldTeam2 = match[1];
+                    const idx1 = prevMaleTeams.findIndex(t => t === oldTeam1);
+                    const idx2 = prevMaleTeams.findIndex(t => t === oldTeam2);
+                    const newTeam1 = idx1 !== -1 && idx1 < maleTeams.length ? maleTeams[idx1] : null;
+                    const newTeam2 = idx2 !== -1 && idx2 < maleTeams.length ? maleTeams[idx2] : null;
+                    if (newTeam1 && newTeam2 && tableB[newTeam1] && tableB[newTeam2]) {
+                        return [newTeam1, newTeam2, match[2], match[3]];
+                    }
+                    return null;
+                }).filter(match => match !== null);
+            }
+            
+            // Reset matches if team structure has changed significantly
+            if (matchesA.length !== roundRobin([...mixedTeams]).length || matchesA.some(match => !tableA[match[0]] || !tableA[match[1]])) {
+                matchesA = roundRobin([...mixedTeams]);
+            }
+            if (matchesB.length !== roundRobin([...maleTeams]).length || matchesB.some(match => !tableB[match[0]] || !tableB[match[1]])) {
+                matchesB = roundRobin([...maleTeams]);
+            }
+            
+            // Update final teams and results
+            if (finalResults.champion) {
+                const prevTeams = [...prevMixedTeams, ...prevMaleTeams];
+                const newTeams = [...mixedTeams, ...maleTeams];
+                const idxChampion = prevTeams.findIndex(t => t === finalResults.champion);
+                finalResults.champion = idxChampion !== -1 && idxChampion < newTeams.length ? newTeams[idxChampion] : null;
+            }
+            if (finalResults.runner_up) {
+                const prevTeams = [...prevMixedTeams, ...prevMaleTeams];
+                const newTeams = [...mixedTeams, ...maleTeams];
+                const idxRunnerUp = prevTeams.findIndex(t => t === finalResults.runner_up);
+                finalResults.runner_up = idxRunnerUp !== -1 && idxRunnerUp < newTeams.length ? newTeams[idxRunnerUp] : null;
+            }
+            if (finalResults.third) {
+                const prevTeams = [...prevMixedTeams, ...prevMaleTeams];
+                const newTeams = [...mixedTeams, ...maleTeams];
+                const idxThird = prevTeams.findIndex(t => t === finalResults.third);
+                finalResults.third = idxThird !== -1 && idxThird < newTeams.length ? newTeams[idxThird] : null;
+            }
+            if (finalResults.fourth) {
+                const prevTeams = [...prevMixedTeams, ...prevMaleTeams];
+                const newTeams = [...mixedTeams, ...maleTeams];
+                const idxFourth = prevTeams.findIndex(t => t === finalResults.fourth);
+                finalResults.fourth = idxFourth !== -1 && idxFourth < newTeams.length ? newTeams[idxFourth] : null;
+            }
+            if (thirdPlaceMatch) {
+                const prevTeams = [...prevMixedTeams, ...prevMaleTeams];
+                const newTeams = [...mixedTeams, ...maleTeams];
+                const idxTeam1 = prevTeams.findIndex(t => t === thirdPlaceMatch[0]);
+                const idxTeam2 = prevTeams.findIndex(t => t === thirdPlaceMatch[1]);
+                if (idxTeam1 !== -1 && idxTeam2 !== -1 && idxTeam1 < newTeams.length && idxTeam2 < newTeams.length) {
+                    thirdPlaceMatch[0] = newTeams[idxTeam1];
+                    thirdPlaceMatch[1] = newTeams[idxTeam2];
+                } else {
+                    thirdPlaceMatch = null;
+                    finalResults.third = null;
+                    finalResults.fourth = null;
+                }
+            }
+            if (finalTeams.length) {
+                const prevTeams = [...prevMixedTeams, ...prevMaleTeams];
+                const newTeams = [...mixedTeams, ...maleTeams];
+                const idx1 = prevTeams.findIndex(t => t === finalTeams[0]);
+                const idx2 = prevTeams.findIndex(t => t === finalTeams[1]);
+                if (idx1 !== -1 && idx2 !== -1 && idx1 < newTeams.length && idx2 < newTeams.length) {
+                    finalTeams[0] = newTeams[idx1];
+                    finalTeams[1] = newTeams[idx2];
+                } else {
+                    finalTeams = [];
+                    finalMatchSets = [];
+                }
+            }
+            
+            // Display teams and update UI
+            document.getElementById('table-a').innerHTML = mixedTeams.length ? `<p class="text-gray-700">${mixedTeams.join(', ')}</p>` : '';
+            document.getElementById('table-b').innerHTML = maleTeams.length ? `<p class="text-gray-700">${maleTeams.join(', ')}</p>` : '';
+            
+            displayMatches();
+            updateAllScores();
+            
+            if (thirdPlaceMatch) {
+                document.getElementById('third-place-match').innerHTML = `<p class="text-gray-700">${thirdPlaceMatch[0]} ${thirdPlaceMatch[2]} - ${thirdPlaceMatch[3]} ${thirdPlaceMatch[1]}</p>`;
+            }
+            updateFinalMatchDisplay();
+            document.getElementById('final-results').innerHTML = `
+                ${finalResults.champion ? `<p class="text-gray-700 font-semibold">Champion: ${finalResults.champion}</p>` : ''}
+                ${finalResults.runner_up ? `<p class="text-gray-700 font-semibold">Runner-up: ${finalResults.runner_up}</p>` : ''}
+                ${finalResults.third ? `<p class="text-gray-700 font-semibold">Third: ${finalResults.third}</p>` : ''}
+                ${finalResults.fourth ? `<p class="text-gray-700 font-semibold">Fourth: ${finalResults.fourth}</p>` : ''}
+            `;
+        }
+
+        function displayMatches() {
+            const tbodyA = document.querySelector('#matches-a');
+            const tbodyB = document.querySelector('#matches-b');
+            tbodyA.innerHTML = '';
+            tbodyB.innerHTML = '';
+            
+            matchesA.forEach((match, i) => {
+                if (tableA[match[0]] && tableA[match[1]]) {
+                    const row = `<tr class="match-row hover:bg-gray-100">
+                        <td class="p-2">${match[0]}</td>
+                        <td class="p-2"><input type="number" min="0" max="11" value="${match[2] || ''}" data-match="a-${i}-1" oninput="updateAllScores()" placeholder="0-11" class="border rounded p-1"></td>
+                        <td class="p-2">${match[1]}</td>
+                        <td class="p-2"><input type="number" min="0" max="11" value="${match[3] || ''}" data-match="a-${i}-2" oninput="updateAllScores()" placeholder="0-11" class="border rounded p-1"></td>
+                    </tr>`;
+                    tbodyA.insertAdjacentHTML('beforeend', row);
+                }
+            });
+            
+            matchesB.forEach((match, i) => {
+                if (tableB[match[0]] && tableB[match[1]]) {
+                    const row = `<tr class="match-row hover:bg-gray-100">
+                        <td class="p-2">${match[0]}</td>
+                        <td class="p-2"><input type="number" min="0" max="11" value="${match[2] || ''}" data-match="b-${i}-1" oninput="updateAllScores()" placeholder="0-11" class="border rounded p-1"></td>
+                        <td class="p-2">${match[1]}</td>
+                        <td class="p-2"><input type="number" min="0" max="11" value="${match[3] || ''}" data-match="b-${i}-2" oninput="updateAllScores()" placeholder="0-11" class="border rounded p-1"></td>
+                    </tr>`;
+                    tbodyB.insertAdjacentHTML('beforeend', row);
+                }
+            });
+        }
+
+        function simulateRoundMatches() {
+            if (!mixedTeams.length || !maleTeams.length) {
+                document.getElementById('round-error').innerHTML = '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg> Form teams first.';
+                return;
+            }
+
+            document.getElementById('round-loading').style.display = 'inline-block';
+            setTimeout(() => {
+                matchesA.forEach(match => {
+                    if (tableA[match[0]] && tableA[match[1]]) {
+                        const winner = Math.random() < 0.5 ? 0 : 1;
+                        const sWinner = 11;
+                        const sLoser = Math.floor(Math.random() * 11);
+                        match[2] = winner === 0 ? sWinner : sLoser;
+                        match[3] = winner === 0 ? sLoser : sWinner;
+                    }
+                });
+
+                matchesB.forEach(match => {
+                    if (tableB[match[0]] && tableB[match[1]]) {
+                        const winner = Math.random() < 0.5 ? 0 : 1;
+                        const sWinner = 11;
+                        const sLoser = Math.floor(Math.random() * 11);
+                        match[2] = winner === 0 ? sWinner : sLoser;
+                        match[3] = winner === 0 ? sLoser : sWinner;
+                    }
+                });
+
+                displayMatches();
+                updateAllScores();
+
+                if (document.getElementById('third-place-check').checked) {
+                    const standingsA = Object.entries(tableA).sort((a, b) => {
+                        const diffA = a[1].points_for - a[1].points_against;
+                        const diffB = b[1].points_for - b[1].points_against;
+                        return b[1].wins - a[1].wins || diffB - diffA;
+                    });
+                    const standingsB = Object.entries(tableB).sort((a, b) => {
+                        const diffA = a[1].points_for - a[1].points_against;
+                        const diffB = b[1].points_for - b[1].points_against;
+                        return b[1].wins - a[1].wins || diffB - diffA;
+                    });
+
+                    if (standingsA[1] && standingsB[1]) {
+                        const secondA = standingsA[1][0];
+                        const secondB = standingsB[1][0];
+                        const mode = document.getElementById('third-place-mode').value;
+                        let s1, s2;
+                        if (mode === 'win_by_2_max_15') {
+                            s1 = Math.floor(Math.random() * 3) + 13;
+                            s2 = s1 - 2;
+                            if (Math.random() < 0.5) [s1, s2] = [s2, s1];
+                        } else {
+                            s1 = 15;
+                            s2 = Math.floor(Math.random() * 15);
+                            if (Math.random() < 0.5) [s1, s2] = [s2, s1];
+                        }
+                        thirdPlaceMatch = [secondA, secondB, s1, s2];
+                        finalResults.third = s1 > s2 ? secondA : secondB;
+                        finalResults.fourth = s1 > s2 ? secondB : secondA;
+                        document.getElementById('third-place-match').innerHTML = `<p class="text-gray-700">${secondA} ${s1} - ${s2} ${secondB}</p>`;
+                    }
+                }
+                document.getElementById('round-loading').style.display = 'none';
+                showTab('final');
+            }, 500);
+        }
+
+        function updateAllScores() {
+            if (!mixedTeams.length || !maleTeams.length) return;
+
+            document.getElementById('round-error').innerHTML = '';
+
+            Object.values(tableA).forEach(stats => { stats.wins = 0; stats.losses = 0; stats.points_for = 0; stats.points_against = 0; });
+            Object.values(tableB).forEach(stats => { stats.wins = 0; stats.losses = 0; stats.points_for = 0; stats.points_against = 0; });
+
+            let valid = true;
+            matchesA.forEach((match, i) => {
+                if (!tableA[match[0]] || !tableA[match[1]]) return;
+                const s1 = parseInt(document.querySelector(`[data-match="a-${i}-1"]`)?.value);
+                const s2 = parseInt(document.querySelector(`[data-match="a-${i}-2"]`)?.value);
+                if (!isNaN(s1) && !isNaN(s2) && s1 >= 0 && s2 >= 0 && ((s1 === 11 && s2 < 11) || (s2 === 11 && s1 < 11))) {
+                    match[2] = s1;
+                    match[3] = s2;
+                    tableA[match[0]].points_for += s1;
+                    tableA[match[0]].points_against += s2;
+                    tableA[match[1]].points_for += s2;
+                    tableA[match[1]].points_against += s1;
+                    if (s1 > s2) {
+                        tableA[match[0]].wins += 1;
+                        tableA[match[1]].losses += 1;
+                    } else {
+                        tableA[match[1]].wins += 1;
+                        tableA[match[0]].losses += 1;
+                    }
+                } else {
+                    match[2] = null;
+                    match[3] = null;
+                    if (!isNaN(s1) || !isNaN(s2)) valid = false;
+                }
+            });
+
+            matchesB.forEach((match, i) => {
+                if (!tableB[match[0]] || !tableB[match[1]]) return;
+                const s1 = parseInt(document.querySelector(`[data-match="b-${i}-1"]`)?.value);
+                const s2 = parseInt(document.querySelector(`[data-match="b-${i}-2"]`)?.value);
+                if (!isNaN(s1) && !isNaN(s2) && s1 >= 0 && s2 >= 0 && ((s1 === 11 && s2 < 11) || (s2 === 11 && s1 < 11))) {
+                    match[2] = s1;
+                    match[3] = s2;
+                    tableB[match[0]].points_for += s1;
+                    tableB[match[0]].points_against += s2;
+                    tableB[match[1]].points_for += s2;
+                    tableB[match[1]].points_against += s1;
+                    if (s1 > s2) {
+                        tableB[match[0]].wins += 1;
+                        tableB[match[1]].losses += 1;
+                    } else {
+                        tableB[match[1]].wins += 1;
+                        tableB[match[0]].losses += 1;
+                    }
+                } else {
+                    match[2] = null;
+                    match[3] = null;
+                    if (!isNaN(s1) || !isNaN(s2)) valid = false;
+                }
+            });
+
+            if (!valid) {
+                document.getElementById('round-error').innerHTML = '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg> Some scores are invalid. Matches need one team to reach 11.';
+            }
+
+            updateStandings();
+        }
+
+        function updateStandings() {
+            const standingsA = Object.entries(tableA).filter(([team]) => team in tableA).sort((a, b) => {
+                const diffA = a[1].points_for - a[1].points_against;
+                const diffB = b[1].points_for - b[1].points_against;
+                return b[1].wins - a[1].wins || diffB - diffA;
+            });
+            const standingsB = Object.entries(tableB).filter(([team]) => team in tableB).sort((a, b) => {
+                const diffA = a[1].points_for - a[1].points_against;
+                const diffB = b[1].points_for - b[1].points_against;
+                return b[1].wins - a[1].wins || diffB - diffA;
+            });
+            
+            const tbodyA = document.querySelector('#standings-a');
+            const tbodyB = document.querySelector('#standings-b');
+            tbodyA.innerHTML = '';
+            tbodyB.innerHTML = '';
+            
+            standingsA.forEach(([team, stats], index) => {
+                const rowClass = index < 2 ? 'bg-green-100' : '';
+                tbodyA.insertAdjacentHTML('beforeend', `<tr class="${rowClass} hover:bg-gray-100"><td class="p-2">${team}</td><td class="p-2">${stats.wins}</td><td class="p-2">${stats.losses}</td><td class="p-2">${stats.points_for}</td><td class="p-2">${stats.points_against}</td></tr>`);
+            });
+            standingsB.forEach(([team, stats], index) => {
+                const rowClass = index < 2 ? 'bg-green-100' : '';
+                tbodyB.insertAdjacentHTML('beforeend', `<tr class="${rowClass} hover:bg-gray-100"><td class="p-2">${team}</td><td class="p-2">${stats.wins}</td><td class="p-2">${stats.losses}</td><td class="p-2">${stats.points_for}</td><td class="p-2">${stats.points_against}</td></tr>`);
+            });
+
+            if (standingsA.length >= 2 && standingsB.length >= 2) {
+                const firstA = standingsA[0]?.[0];
+                const secondA = standingsA[1]?.[0];
+                const firstB = standingsB[0]?.[0];
+                const secondB = standingsB[1]?.[0];
+                const allComplete = matchesA.every(m => m[2] !== null && tableA[m[0]] && tableA[m[1]]) && matchesB.every(m => m[2] !== null && tableB[m[0]] && tableB[m[1]]);
+                if (firstA && firstB) {
+                    finalTeams = [firstA, firstB];
+                    document.getElementById('final-candidates').innerHTML = `
+                        <h3 class="text-lg font-medium mb-2">Final Candidates</h3>
+                        <p class="text-gray-700">Championship: ${firstA} (A1st) vs ${firstB} (B1st)</p>
+                        <p class="text-gray-700">Third Place: ${secondA} (A2nd) vs ${secondB} (B2nd)</p>
+                        ${allComplete ? '<p class="text-green-600 font-semibold">All rounds complete. Enter final match scores below.</p>' : '<p class="text-yellow-600">Some matches pending.</p>'}
+                    `;
+                    if (allComplete) {
+                        document.getElementById('submit-final').style.display = 'block';
+                        updateFinalMatchDisplay();
+                    } else {
+                        document.getElementById('submit-final').style.display = 'none';
+                        document.getElementById('final-match').innerHTML = '';
+                    }
+                } else {
+                    finalTeams = [];
+                    document.getElementById('final-candidates').innerHTML = '';
+                    document.getElementById('submit-final').style.display = 'none';
+                    document.getElementById('final-match').innerHTML = '';
+                }
+            } else {
+                finalTeams = [];
+                document.getElementById('final-candidates').innerHTML = '';
+                document.getElementById('submit-final').style.display = 'none';
+                document.getElementById('final-match').innerHTML = '';
+            }
+        }
+
+        function updateFinalMatchDisplay() {
+            const tbody = document.getElementById('final-match');
+            tbody.innerHTML = '';
+            if (finalTeams.length !== 2 || !tableA[finalTeams[0]] || !tableB[finalTeams[1]]) return;
+            const [team1, team2] = finalTeams;
+            for (let i = 0; i < 3; i++) {
+                const set = finalMatchSets[i] || ['', ''];
+                const row = `
+                    <tr class="final-set-row hover:bg-gray-100">
+                        <td class="p-2">Set ${i + 1}</td>
+                        <td class="p-2">${team1}</td>
+                        <td class="p-2"><input type="number" min="0" max="11" value="${set[0]}" data-final-set="${i}-1" placeholder="0-11" class="border rounded p-1"></td>
+                        <td class="p-2">${team2}</td>
+                        <td class="p-2"><input type="number" min="0" max="11" value="${set[1]}" data-final-set="${i}-2" placeholder="0-11" class="border rounded p-1"></td>
+                    </tr>`;
+                tbody.insertAdjacentHTML('beforeend', row);
+            }
+        }
+
+        function submitFinalScores() {
+            document.getElementById('final-loading').style.display = 'inline-block';
+            setTimeout(() => {
+                if (!finalTeams.length || !tableA[finalTeams[0]] || !tableB[finalTeams[1]]) {
+                    document.getElementById('final-error').innerHTML = '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg> No valid final teams selected.';
+                    document.getElementById('final-loading').style.display = 'none';
+                    return;
+                }
+
+                const [team1, team2] = finalTeams;
+                let setsA = 0, setsB = 0;
+                finalMatchSets = [];
+                let valid = true;
+                for (let i = 0; i < 3; i++) {
+                    const s1 = parseInt(document.querySelector(`[data-final-set="${i}-1"]`)?.value);
+                    const s2 = parseInt(document.querySelector(`[data-final-set="${i}-2"]`)?.value);
+                    if (i < 2 && (!isNaN(s1) || !isNaN(s2))) {
+                        if (isNaN(s1) || isNaN(s2) || s1 < 0 || s2 < 0 || (s1 !== 11 && s2 !== 11) || (s1 === 11 && s2 === 11)) {
+                            valid = false;
+                        } else {
+                            finalMatchSets.push([s1, s2]);
+                            setsA += s1 > s2 ? 1 : 0;
+                            setsB += s2 > s1 ? 1 : 0;
+                        }
+                    } else if (i === 2 && (!isNaN(s1) || !isNaN(s2))) {
+                        if (setsA < 2 && setsB < 2) {
+                            if (isNaN(s1) || isNaN(s2) || s1 < 0 || s2 < 0 || (s1 !== 11 && s2 !== 11) || (s1 === 11 && s2 === 11)) {
+                                valid = false;
+                            } else {
+                                finalMatchSets.push([s1, s2]);
+                                setsA += s1 > s2 ? 1 : 0;
+                                setsB += s2 > s1 ? 1 : 0;
+                            }
+                        }
+                    }
+                }
+
+                if (!valid || (setsA < 2 && setsB < 2)) {
+                    document.getElementById('final-error').innerHTML = '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg> Invalid final set scores. Need at least two valid sets with one team reaching 11 per set.';
+                    document.getElementById('final-loading').style.display = 'none';
+                    return;
+                }
+
+                document.getElementById('final-error').innerHTML = '';
+                finalResults.champion = setsA >= 2 ? team1 : team2;
+                finalResults.runner_up = setsA >= 2 ? team2 : team1;
+                document.getElementById('final-results').innerHTML = `
+                    <p class="text-gray-700 font-semibold">Champion: ${finalResults.champion}</p>
+                    <p class="text-gray-700 font-semibold">Runner-up: ${finalResults.runner_up}</p>
+                    ${finalResults.third ? `<p class="text-gray-700 font-semibold">Third: ${finalResults.third}</p>` : ''}
+                    ${finalResults.fourth ? `<p class="text-gray-700 font-semibold">Fourth: ${finalResults.fourth}</p>` : ''}
+                `;
+                updateFinalMatchDisplay();
+                document.getElementById('final-loading').style.display = 'none';
+            }, 500);
+        }
+
+        function toggleThirdPlace() {
+            const check = document.getElementById('third-place-check').checked;
+            document.getElementById('third-place-options').style.display = check ? 'block' : 'none';
+            if (!check) {
+                thirdPlaceMatch = null;
+                finalResults.third = null;
+                finalResults.fourth = null;
+                document.getElementById('third-place-match').innerHTML = '';
+                document.getElementById('final-results').innerHTML = `
+                    ${finalResults.champion ? `<p class="text-gray-700 font-semibold">Champion: ${finalResults.champion}</p>` : ''}
+                    ${finalResults.runner_up ? `<p class="text-gray-700 font-semibold">Runner-up: ${finalResults.runner_up}</p>` : ''}
+                `;
+            }
+        }
+
+        function exportToJson() {
+            const data = {
+                females,
+                males,
+                mixedTeams,
+                maleTeams,
+                tableA,
+                tableB,
+                matchesA,
+                matchesB,
+                finalResults,
+                finalMatchSets,
+                thirdPlaceMatch,
+                thirdPlaceMode: document.getElementById('third-place-mode').value,
+                hasThirdPlace: document.getElementById('third-place-check').checked
+            };
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'tournament_data.json';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function exportToCsv() {
+            let csv = '';
+            
+            csv += 'Players\n';
+            csv += 'Female Players,' + females.join(',') + '\n';
+            csv += 'Male Players,' + males.join(',') + '\n\n';
+            
+            csv += 'Teams\n';
+            csv += 'Table A (Nam-Nữ),' + mixedTeams.join(',') + '\n';
+            csv += 'Table B (Nam-Nam),' + maleTeams.join(',') + '\n\n';
+            
+            csv += 'Matches Table A\n';
+            csv += 'Team 1,Score 1,Team 2,Score 2\n';
+            matchesA.forEach(match => {
+                csv += `${match[0]},${match[2] || ''},${match[1]},${match[3] || ''}\n`;
+            });
+            csv += '\nMatches Table B\n';
+            csv += 'Team 1,Score 1,Team 2,Score 2\n';
+            matchesB.forEach(match => {
+                csv += `${match[0]},${match[2] || ''},${match[1]},${match[3] || ''}\n`;
+            });
+            csv += '\n';
+            
+            csv += 'Standings Table A\n';
+            csv += 'Team,Wins,Losses,Points For,Points Against\n';
+            Object.entries(tableA).forEach(([team, stats]) => {
+                csv += `${team},${stats.wins},${stats.losses},${stats.points_for},${stats.points_against}\n`;
+            });
+            csv += '\nStandings Table B\n';
+            csv += 'Team,Wins,Losses,Points For,Points Against\n';
+            Object.entries(tableB).forEach(([team, stats]) => {
+                csv += `${team},${stats.wins},${stats.losses},${stats.points_for},${stats.points_against}\n`;
+            });
+            csv += '\n';
+            
+            csv += 'Final Results\n';
+            if (finalResults.champion) csv += `Champion,${finalResults.champion}\n`;
+            if (finalResults.runner_up) csv += `Runner-up,${finalResults.runner_up}\n`;
+            if (finalResults.third) csv += `Third,${finalResults.third}\n`;
+            if (finalResults.fourth) csv += `Fourth,${finalResults.fourth}\n`;
+            if (thirdPlaceMatch) {
+                csv += `Third Place Match,${thirdPlaceMatch[0]},${thirdPlaceMatch[2]},${thirdPlaceMatch[1]},${thirdPlaceMatch[3]}\n`;
+            }
+            if (finalMatchSets.length) {
+                csv += 'Final Match Sets\n';
+                csv += 'Set,Score 1,Score 2\n';
+                finalMatchSets.forEach((set, i) => {
+                    csv += `${i + 1},${set[0]},${set[1]}\n`;
+                });
+            }
+            
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'tournament_data.csv';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function exportPlayersCsv() {
+            let csv = 'Tên,Giới tính,Tên Đội\n';
+            females.forEach((f, i) => {
+                csv += `${f},Nữ,A${i+1}\n`;
+            });
+            for (let i = 0; i < 6; i++) {
+                csv += `${males[i]},Nam,A${i+1}\n`;
+            }
+            for (let i = 0; i < 6; i++) {
+                const m1 = males[6 + 2 * i];
+                const m2 = males[6 + 2 * i + 1];
+                csv += `${m1},Nam,B${i+1}\n`;
+                csv += `${m2},Nam,B${i+1}\n`;
+            }
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'players.csv';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function exportTeamsCsv() {
+            let csv = 'Table,Team Đội,Players\n';
+            mixedTeams.forEach((t, i) => {
+                csv += `A,A${i+1},${t}\n`;
+            });
+            maleTeams.forEach((t, i) => {
+                csv += `B,B${i+1},${t}\n`;
+            });
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'teams.csv';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function exportMatchesCsv() {
+            let csv = 'Table,Team1,Score1,Team2,Score2\n';
+            matchesA.forEach(m => {
+                csv += `A,${m[0]},${m[2] ?? ''},${m[1]},${m[3] ?? ''}\n`;
+            });
+            matchesB.forEach(m => {
+                csv += `B,${m[0]},${m[2] ?? ''},${m[1]},${m[3] ?? ''}\n`;
+            });
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'matches.csv';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function importFromJson() {
+            const fileInput = document.getElementById('import-json');
+            const file = fileInput.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    
+                    females = data.females || [];
+                    males = data.males || [];
+                    mixedTeams = [];
+                    maleTeams = [];
+                    tableA = {};
+                    tableB = {};
+                    matchesA = data.matchesA || [];
+                    matchesB = data.matchesB || [];
+                    finalResults = data.finalResults || {};
+                    finalMatchSets = data.finalMatchSets || [];
+                    thirdPlaceMatch = data.thirdPlaceMatch || null;
+                    
+                    // Validate and rebuild teams
+                    if (females.length === 6 && males.length === 18) {
+                        for (let i = 0; i < 6; i++) {
+                            const teamName = `${females[i]}-${males[i]}`;
+                            mixedTeams.push(teamName);
+                            tableA[teamName] = { wins: 0, losses: 0, points_for: 0, points_against: 0 };
+                        }
+                        const remainingMales = males.slice(6);
+                        for (let i = 0; i < 12; i += 2) {
+                            const teamName = `${remainingMales[i]}-${remainingMales[i+1]}`;
+                            maleTeams.push(teamName);
+                            tableB[teamName] = { wins: 0, losses: 0, points_for: 0, points_against: 0 };
+                        }
+                        // Validate matches
+                        matchesA = matchesA.filter(match => tableA[match[0]] && tableA[match[1]]);
+                        matchesB = matchesB.filter(match => tableB[match[0]] && tableB[match[1]]);
+                        if (!matchesA.length) matchesA = roundRobin([...mixedTeams]);
+                        if (!matchesB.length) matchesB = roundRobin([...maleTeams]);
+                    } else {
+                        matchesA = [];
+                        matchesB = [];
+                        finalResults = {};
+                        finalMatchSets = [];
+                        thirdPlaceMatch = null;
+                        finalTeams = [];
+                    }
+                    
+                    // Update UI
+                    const femaleInputs = document.querySelectorAll('#female-players input');
+                    const maleInputs = document.querySelectorAll('#male-players input');
+                    females.forEach((name, i) => {
+                        if (femaleInputs[i]) femaleInputs[i].value = name;
+                    });
+                    males.forEach((name, i) => {
+                        if (maleInputs[i]) maleInputs[i].value = name;
+                    });
+                    
+                    document.getElementById('table-a').innerHTML = mixedTeams.length ? `<p class="text-gray-700">${mixedTeams.join(', ')}</p>` : '';
+                    document.getElementById('table-b').innerHTML = maleTeams.length ? `<p class="text-gray-700">${maleTeams.join(', ')}</p>` : '';
+                    
+                    displayMatches();
+                    updateAllScores();
+                    
+                    document.getElementById('third-place-check').checked = data.hasThirdPlace || false;
+                    document.getElementById('third-place-mode').value = data.thirdPlaceMode || 'touch_15';
+                    toggleThirdPlace();
+                    
+                    if (thirdPlaceMatch) {
+                        document.getElementById('third-place-match').innerHTML = `<p class="text-gray-700">${thirdPlaceMatch[0]} ${thirdPlaceMatch[2]} - ${thirdPlaceMatch[3]} ${thirdPlaceMatch[1]}</p>`;
+                    }
+                    updateFinalMatchDisplay();
+                    document.getElementById('final-results').innerHTML = `
+                        ${finalResults.champion ? `<p class="text-gray-700 font-semibold">Champion: ${finalResults.champion}</p>` : ''}
+                        ${finalResults.runner_up ? `<p class="text-gray-700 font-semibold">Runner-up: ${finalResults.runner_up}</p>` : ''}
+                        ${finalResults.third ? `<p class="text-gray-700 font-semibold">Third: ${finalResults.third}</p>` : ''}
+                        ${finalResults.fourth ? `<p class="text-gray-700 font-semibold">Fourth: ${finalResults.fourth}</p>` : ''}
+                    `;
+                    
+                    document.getElementById('players-error').innerHTML = '<svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> Imported successfully.';
+                } catch (e) {
+                    document.getElementById('players-error').innerHTML = '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg> Invalid JSON file.';
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function importFromCsv() {
+            const fileInput = document.getElementById('import-csv');
+            const file = fileInput.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const text = e.target.result;
+                    const lines = text.split('\n').map(line => line.trim()).filter(line => line);
+                    const headers = lines[0].split(',').map(h => h.trim());
+                    const players = [];
+                    for (let i = 1; i < lines.length; i++) {
+                        const values = lines[i].split(',').map(v => v.trim());
+                        const player = {};
+                        headers.forEach((h, j) => player[h] = values[j] || '');
+                        players.push(player);
+                    }
+
+                    const teamToPlayers = {};
+                    players.forEach(p => {
+                        const tenDoi = p['Tên Đội'];
+                        if (!teamToPlayers[tenDoi]) teamToPlayers[tenDoi] = [];
+                        teamToPlayers[tenDoi].push(p);
+                    });
+
+                    const aTeams = [];
+                    const bTeams = [];
+                    const teamKeys = Object.keys(teamToPlayers).sort((a, b) => a.localeCompare(b, undefined, {numeric: true}));
+                    teamKeys.forEach(tenDoi => {
+                        if (tenDoi.startsWith('A')) aTeams.push(teamToPlayers[tenDoi]);
+                        if (tenDoi.startsWith('B')) bTeams.push(teamToPlayers[tenDoi]);
+                    });
+
+                    if (aTeams.length !== 6 || bTeams.length !== 6) {
+                        document.getElementById('players-error').innerHTML = '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg> Invalid number of teams in CSV. Require 6 teams per table.';
+                        return;
+                    }
+
+                    const femalesList = [];
+                    const malesMixed = [];
+                    mixedTeams = [];
+                    aTeams.forEach(teamPlayers => {
+                        teamPlayers.sort((a, b) => (a['Giới tính'] === 'Nữ' ? -1 : 1) || a['Tên'].localeCompare(b['Tên']));
+                        if (teamPlayers.length !== 2 || teamPlayers[0]['Giới tính'] !== 'Nữ' || teamPlayers[1]['Giới tính'] !== 'Nam') {
+                            throw new Error('Invalid team composition in Table A');
+                        }
+                        const nu = teamPlayers[0]['Tên'];
+                        const nam = teamPlayers[1]['Tên'];
+                        femalesList.push(nu);
+                        malesMixed.push(nam);
+                        mixedTeams.push(`${nu}-${nam}`);
+                    });
+
+                    const malesB = [];
+                    maleTeams = [];
+                    bTeams.forEach(teamPlayers => {
+                        teamPlayers.sort((a, b) => a['Tên'].localeCompare(b['Tên']));
+                        if (teamPlayers.length !== 2 || teamPlayers[0]['Giới tính'] !== 'Nam' || teamPlayers[1]['Giới tính'] !== 'Nam') {
+                            throw new Error('Invalid team composition in Table B');
+                        }
+                        const nam1 = teamPlayers[0]['Tên'];
+                        const nam2 = teamPlayers[1]['Tên'];
+                        malesB.push(nam1);
+                        malesB.push(nam2);
+                        maleTeams.push(`${nam1}-${nam2}`);
+                    });
+
+                    females = femalesList;
+                    males = malesMixed.concat(malesB);
+
+                    const femaleInputs = document.querySelectorAll('#female-players input');
+                    const maleInputs = document.querySelectorAll('#male-players input');
+                    females.forEach((name, i) => femaleInputs[i].value = name);
+                    males.forEach((name, i) => maleInputs[i].value = name);
+
+                    // Reset matches to align with new teams
+                    matchesA = roundRobin([...mixedTeams]);
+                    matchesB = roundRobin([...maleTeams]);
+                    finalResults = {};
+                    finalMatchSets = [];
+                    thirdPlaceMatch = null;
+                    finalTeams = [];
+
+                    updateTeams();
+
+                    document.getElementById('players-error').innerHTML = '<svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> Imported from CSV successfully.';
+                } catch (e) {
+                    document.getElementById('players-error').innerHTML = `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg> Invalid CSV file: ${e.message}`;
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        updateTeams();
+    </script>
+</body>
+</html>
