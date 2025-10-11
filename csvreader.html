@@ -1,0 +1,308 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>CSV → JSON Web App</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body { padding: 18px; background: #f7f9fc; }
+    .card { margin-bottom: 16px; }
+    table { font-size: 0.9rem; }
+    pre { white-space: pre-wrap; word-break: break-word; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Web app: đọc CSV, thêm dữ liệu, xuất JSON</h2>
+    <p class="text-muted">Đặt <code>index.html</code> và <code>data.csv</code> cùng thư mục để app tự load.</p>
+
+    <div class="card">
+      <div class="card-body">
+        <h5>1) Load CSV</h5>
+        <div class="mb-2">
+          <button id="btnReload" class="btn btn-primary btn-sm">Tải data.csv từ cùng thư mục</button>
+          <input id="fileInput" type="file" accept=".csv" class="form-control form-control-sm" style="width:260px; display:inline-block; margin-left:10px;">
+        </div>
+        <div id="loadMsg" class="small text-muted"></div>
+      </div>
+    </div>
+
+    <div class="card" id="tableCard" style="display:none;">
+      <div class="card-body">
+        <h5>2) Dữ liệu CSV</h5>
+        <div class="table-responsive" style="max-height:360px; overflow:auto;">
+          <table id="dataTable" class="table table-sm table-bordered table-hover"></table>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" id="formCard" style="display:none;">
+      <div class="card-body">
+        <h5>3) Thêm dòng mới</h5>
+        <form id="addForm" class="row g-2 align-items-end"></form>
+        <div class="mt-2">
+          <button id="btnAddRow" class="btn btn-success btn-sm">Thêm vào dữ liệu</button>
+          <button id="btnExportJson" class="btn btn-outline-primary btn-sm">Tải JSON (data.json)</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-body">
+        <h5>4) Tùy chọn: Lưu JSON vào GitHub Repo (Yêu cầu token)</h5>
+        <div class="small text-muted mb-2">Nếu bạn muốn commit file trực tiếp vào repo GitHub, nhập thông tin bên dưới và nhấn "Commit to GitHub". <strong>Token cần có scope: repo (cho private) hoặc public_repo</strong>.</div>
+        <div class="row g-2">
+          <div class="col-md-4"><input id="ghOwner" class="form-control form-control-sm" placeholder="owner (username/repo-org)" /></div>
+          <div class="col-md-4"><input id="ghRepo" class="form-control form-control-sm" placeholder="repo (tên repo)" /></div>
+          <div class="col-md-4"><input id="ghPath" class="form-control form-control-sm" placeholder="path file (vd: data/data.json)" /></div>
+          <div class="col-md-4 mt-2"><input id="ghBranch" class="form-control form-control-sm" placeholder="branch (vd: main)" /></div>
+          <div class="col-md-8 mt-2"><input id="ghToken" type="password" class="form-control form-control-sm" placeholder="Personal Access Token (PAT) - sẽ gửi trực tiếp tới GitHub" /></div>
+          <div class="col-12 mt-2"><input id="ghMessage" class="form-control form-control-sm" placeholder="Commit message (vd: Update data.json)" /></div>
+        </div>
+        <div class="mt-2">
+          <button id="btnCommit" class="btn btn-warning btn-sm">Commit to GitHub</button>
+          <span id="ghStatus" class="ms-2 small text-muted"></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-body">
+        <h5>Console</h5>
+        <pre id="console" style="height:150px; overflow:auto; background:#fff; padding:10px; border-radius:6px;"></pre>
+      </div>
+    </div>
+  </div>
+
+<script>
+/*
+  CSV → JSON Web App
+  - Tìm data.csv trong cùng thư mục (fetch('./data.csv'))
+  - Nếu fetch lỗi, cho phép upload file CSV bằng input
+  - Thêm hàng mới dựa trên header
+  - Xuất JSON bằng download
+  - Tùy chọn: commit lên GitHub (PUT contents API)
+*/
+
+const consoleEl = document.getElementById('console');
+function log(msg){
+  const time = new Date().toLocaleTimeString();
+  consoleEl.textContent = '['+time+'] ' + msg + '\\n' + consoleEl.textContent;
+}
+
+// Simple CSV parser — hỗ trợ CSV cơ bản, không xử lý full RFC. Nếu cần parser mạnh hơn, dùng PapaParse.
+function parseCSV(text){
+  const lines = text.replace(/\\r/g,'').split('\\n').filter(l=>l.trim() !== '');
+  if(lines.length === 0) return {headers:[], rows:[]};
+  const headers = lines[0].split(',').map(h => h.trim());
+  const rows = lines.slice(1).map(line => {
+    const cols = line.split(',');
+    const obj = {};
+    for(let i=0;i<headers.length;i++){
+      obj[headers[i]] = (cols[i] !== undefined) ? cols[i].trim() : '';
+    }
+    return obj;
+  });
+  return {headers, rows};
+}
+
+let data = { headers: [], rows: [] };
+const dataTable = document.getElementById('dataTable');
+const tableCard = document.getElementById('tableCard');
+const formCard = document.getElementById('formCard');
+const addForm = document.getElementById('addForm');
+
+async function loadCSVFromServer(path='./data.csv'){
+  document.getElementById('loadMsg').textContent = 'Đang cố gắng tải ' + path + ' ...';
+  try{
+    const res = await fetch(path);
+    if(!res.ok) throw new Error('HTTP ' + res.status);
+    const text = await res.text();
+    data = parseCSV(text);
+    renderTable();
+    prepareAddForm();
+    document.getElementById('loadMsg').textContent = 'Đã tải ' + path + ' thành công.';
+    log('Load CSV từ ' + path + ' OK — ' + data.rows.length + ' dòng.');
+  }catch(err){
+    document.getElementById('loadMsg').textContent = 'Không thể tải ' + path + ': ' + err;
+    log('Lỗi tải CSV: ' + err);
+  }
+}
+
+function renderTable(){
+  if(!data.headers.length){
+    dataTable.innerHTML = '<tr><td>Không có dữ liệu</td></tr>';
+    tableCard.style.display = 'none';
+    formCard.style.display = 'none';
+    return;
+  }
+  tableCard.style.display = '';
+  let html = '<thead><tr>';
+  for(const h of data.headers) html += '<th>' + escapeHtml(h) + '</th>';
+  html += '</tr></thead><tbody>';
+  for(const row of data.rows){
+    html += '<tr>';
+    for(const h of data.headers) html += '<td>' + escapeHtml(row[h] ?? '') + '</td>';
+    html += '</tr>';
+  }
+  html += '</tbody>';
+  dataTable.innerHTML = html;
+}
+
+function prepareAddForm(){
+  addForm.innerHTML = '';
+  if(!data.headers.length) return;
+  for(const h of data.headers){
+    const div = document.createElement('div');
+    div.className = 'col-md-3';
+    div.innerHTML = '<label class="form-label small">' + escapeHtml(h) + '</label>' +
+                    '<input data-field="'+escapeHtml(h)+'" class="form-control form-control-sm" />';
+    addForm.appendChild(div);
+  }
+  formCard.style.display = '';
+}
+
+document.getElementById('btnReload').addEventListener('click', ()=>{
+  loadCSVFromServer('./data.csv');
+});
+
+document.getElementById('fileInput').addEventListener('change', (e)=>{
+  const f = e.target.files[0];
+  if(!f) return;
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    try{
+      data = parseCSV(ev.target.result);
+      renderTable();
+      prepareAddForm();
+      log('Đã load CSV từ upload: ' + f.name);
+      document.getElementById('loadMsg').textContent = 'Đã load ' + f.name + ' từ upload.';
+    }catch(err){
+      log('Lỗi parse CSV từ upload: ' + err);
+    }
+  };
+  reader.readAsText(f);
+});
+
+// Add row
+document.getElementById('btnAddRow').addEventListener('click', ()=>{
+  if(!data.headers.length){ alert('Chưa có header để thêm'); return; }
+  const inputs = addForm.querySelectorAll('input[data-field]');
+  const newRow = {};
+  inputs.forEach(inp => {
+    const key = inp.getAttribute('data-field');
+    newRow[key] = inp.value;
+    inp.value = '';
+  });
+  data.rows.push(newRow);
+  renderTable();
+  log('Đã thêm 1 dòng mới.');
+});
+
+// Export JSON - download data.json
+document.getElementById('btnExportJson').addEventListener('click', ()=>{
+  const filename = 'data.json';
+  const blob = new Blob([JSON.stringify({headers: data.headers, rows: data.rows}, null, 2)], {type: 'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename; document.body.appendChild(a); a.click();
+  a.remove(); URL.revokeObjectURL(url);
+  log('Tải xuống ' + filename);
+});
+
+// Escape HTML for safe rendering
+function escapeHtml(s){
+  if(s === null || s === undefined) return '';
+  return String(s)
+    .replaceAll('&','&amp;')
+    .replaceAll('<','&lt;')
+    .replaceAll('>','&gt;')
+    .replaceAll('"','&quot;')
+    .replaceAll("'","&#39;");
+}
+
+/* -------------------------
+   GitHub commit helper
+   -------------------------
+   This will:
+   - Get the current file (to obtain sha) if exists:
+     GET https://api.github.com/repos/{owner}/{repo}/contents/{path}?ref={branch}
+   - Then PUT to same endpoint with content (base64), message, branch, and sha (if updating)
+   Note: Using PAT in client is risky — do not publish token publicly.
+*/
+async function ghGetFileSha(owner, repo, path, branch, token){
+  const url = `https://api.github.com/repos/${owner}/${repo}/contents/${encodeURIComponent(path)}?ref=${encodeURIComponent(branch)}`;
+  const res = await fetch(url, { headers: { Authorization: 'token ' + token, Accept: 'application/vnd.github+json' }});
+  if(res.status === 404) return null;
+  if(!res.ok) throw new Error('GET file failed: ' + res.status);
+  const j = await res.json();
+  return j.sha;
+}
+
+async function ghPutFile(owner, repo, path, branch, token, message, contentBase64, sha=null){
+  const url = `https://api.github.com/repos/${owner}/${repo}/contents/${encodeURIComponent(path)}`;
+  const body = { message, content: contentBase64, branch };
+  if(sha) body.sha = sha;
+  const res = await fetch(url, {
+    method: 'PUT',
+    headers: {
+      Authorization: 'token ' + token,
+      'Content-Type': 'application/json',
+      Accept: 'application/vnd.github+json'
+    },
+    body: JSON.stringify(body)
+  });
+  const j = await res.json();
+  if(!res.ok){
+    throw new Error('PUT file failed: ' + (j && j.message ? j.message : res.status));
+  }
+  return j;
+}
+
+document.getElementById('btnCommit').addEventListener('click', async ()=>{
+  const owner = document.getElementById('ghOwner').value.trim();
+  const repo = document.getElementById('ghRepo').value.trim();
+  const path = document.getElementById('ghPath').value.trim();
+  const branch = document.getElementById('ghBranch').value.trim() || 'main';
+  const token = document.getElementById('ghToken').value.trim();
+  const message = document.getElementById('ghMessage').value.trim() || 'Update data.json from web app';
+
+  if(!owner || !repo || !path || !token){
+    alert('Vui lòng điền owner, repo, path, token.');
+    return;
+  }
+
+  try{
+    document.getElementById('ghStatus').textContent = 'Đang kiểm tra...';
+    log('Bắt đầu commit lên GitHub: ' + owner + '/' + repo + ' -> ' + path);
+
+    const payload = { headers: data.headers, rows: data.rows };
+    const contentStr = JSON.stringify(payload, null, 2);
+    const contentBase64 = btoa(unescape(encodeURIComponent(contentStr))); // base64 safe
+    let sha = null;
+    try{
+      sha = await ghGetFileSha(owner, repo, path, branch, token);
+      log('File hiện tại on repo sha: ' + (sha ?? 'null (new file)'));
+    }catch(e){
+      // If get fails (403/401), bubble up
+      throw e;
+    }
+
+    const res = await ghPutFile(owner, repo, path, branch, token, message, contentBase64, sha);
+    document.getElementById('ghStatus').textContent = 'OK - committed';
+    log('Commit thành công: ' + (res.content && res.content.html_url ? res.content.html_url : JSON.stringify(res)));
+  }catch(err){
+    document.getElementById('ghStatus').textContent = 'Lỗi';
+    log('Lỗi khi commit GitHub: ' + err);
+    alert('Commit thất bại: ' + err);
+  }
+});
+
+// On load try to fetch ./data.csv automatically
+window.addEventListener('load', ()=> {
+  loadCSVFromServer('./data.csv');
+});
+</script>
+</body>
+</html>
