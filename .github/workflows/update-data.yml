@@ -1,0 +1,43 @@
+name: Update Data File
+on:
+  repository_dispatch:
+    types: [update_data]
+
+permissions:
+  contents: write
+
+jobs:
+  update-json:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Ensure jq is available
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y jq
+
+      - name: Update JSON file
+        env:
+          FILE_PATH: data/${{ github.event.client_payload.file }}
+        run: |
+          echo "🏓 Updating JSON..."
+          FILE="${FILE_PATH}"
+          TMP="./tmp.json"
+
+          if [ ! -f "${FILE}" ]; then
+            echo "[]"> "${FILE}"
+          fi
+
+          OLD=$(cat "${FILE}" || echo "[]")
+          NEW=$(echo "${OLD}" | jq ". + [${{ toJson(github.event.client_payload.newData) }}]")
+          echo "${NEW}" > "${TMP}"
+          mv "${TMP}" "${FILE}"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add "${FILE}"
+          git commit -m "Add data via web app"
+          git push
