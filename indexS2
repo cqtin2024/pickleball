@@ -1,0 +1,1753 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pickleball Tournament Organizer V12.0 Firebase Ready</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        :root {
+            --primary-color: #00796B; /* Teal/Xanh ngọc */
+            --secondary-color: #FF9800; /* Cam/Hổ phách */
+            --background-color: #f0f4f7;
+            --text-color: #263238;
+            --alert-color: #D32F2F; /* Red/Cảnh báo */
+            --warning-color: #FBC02D; /* Yellow/Lệch lịch */
+            --success-color: #388E3C; /* Green/Thành công */
+            --border-color: #CFD8DC;
+            --card-bg: #FFFFFF;
+            --firebase-online: #4CAF50;
+            --firebase-offline: #FF5722;
+        }
+        body {
+            font-family: 'Inter', Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--background-color);
+            color: var(--text-color);
+        }
+        .container {
+            width: 95%;
+            max-width: 1200px;
+            margin: 20px auto;
+            background: var(--card-bg);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            border-radius: 12px;
+            min-height: 90vh;
+        }
+        header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 12px 12px 0 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        header img {
+            height: 45px;
+            margin-right: 15px;
+            border-radius: 6px;
+            object-fit: contain;
+        }
+        .nav-bar {
+            display: flex;
+            background-color: #333;
+            border-radius: 0 0 12px 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .nav-bar button {
+            background-color: inherit;
+            color: white;
+            padding: 12px 15px;
+            border: none;
+            cursor: pointer;
+            transition: 0.3s;
+            font-size: 15px;
+            flex-grow: 1;
+            outline: none;
+            border-right: 1px solid #444;
+            flex-shrink: 0;
+        }
+        .nav-bar button:last-child {
+            border-right: none;
+        }
+        .nav-bar button:hover:not(.active) {
+            background-color: #555;
+        }
+        .nav-bar button.active {
+            background-color: var(--secondary-color);
+            color: var(--text-color);
+            font-weight: bold;
+        }
+        .tab-content {
+            padding: 25px;
+        }
+        h2, h3 {
+            color: var(--primary-color);
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 8px;
+            margin-top: 10px;
+        }
+        .input-group {
+            margin-bottom: 20px;
+            padding: 15px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background-color: #fafafa;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #455A64;
+        }
+        input[type="text"],
+        input[type="number"],
+        input[type="time"],
+        select {
+            width: 100%;
+            padding: 10px;
+            margin-top: 5px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 10px 18px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.1s;
+            margin-right: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        button:hover {
+            background-color: #004D40; /* Darker teal */
+            transform: translateY(-1px);
+        }
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+        /* Table styles */
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin-top: 15px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        table th, table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+        table th {
+            background-color: #E0F2F1;
+            color: var(--text-color);
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        /* Editable Cell (D1e/D2e) */
+        .editable-cell {
+            padding: 5px 8px;
+            border: 1px solid transparent;
+            border-radius: 4px;
+            transition: border-color 0.2s;
+            display: block;
+        }
+        .editable-cell:focus {
+            outline: none;
+            border-color: var(--secondary-color);
+            background-color: #FFFBEA;
+        }
+        /* Alert/Status styles */
+        .alert {
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+            font-weight: bold;
+        }
+        .alert-success {
+            background-color: #E8F5E9;
+            color: var(--success-color);
+            border: 1px solid var(--success-color);
+        }
+        .alert-error {
+            background-color: #FFEBEE;
+            color: var(--alert-color);
+            border: 1px solid var(--alert-color);
+        }
+        .alert-warning {
+            background-color: #FFFDE7;
+            color: var(--warning-color);
+            border: 1px solid var(--warning-color);
+        }
+        /* Firebase Status Indicator */
+        #firebase-status {
+            font-size: 0.9rem;
+            padding: 5px 10px;
+            border-radius: 9999px;
+            display: inline-flex;
+            align-items: center;
+        }
+        .dot {
+            height: 10px;
+            width: 10px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 6px;
+        }
+        .online {
+            background-color: var(--firebase-online);
+            color: white;
+        }
+        .offline {
+            background-color: var(--firebase-offline);
+            color: white;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <div class="flex items-center">
+             <img id="logo-display" src="" alt="Logo" style="display:none;">
+             <h1 id="tournament-title" class="text-xl md:text-2xl font-bold">PICKLEBALL TOURNAMENT ORGANIZER</h1>
+        </div>
+        <div id="firebase-status" class="offline">
+            <span class="dot"></span>
+            <span id="auth-status-text">Đang kết nối...</span>
+        </div>
+    </header>
+    
+    <div class="nav-bar" id="navbar">
+        <button onclick="openTab('C')" id="tab-C">C: CẤU HÌNH ⚙️</button>
+        <button onclick="openTab('D')" id="tab-D">D: NGƯỜI CHƠI & ĐỘI 👥</button>
+        <button onclick="openTab('E')" id="tab-E">E: LỊCH THI ĐẤU & TG ⏰</button>
+        <button onclick="openTab('F')" id="tab-F">F: VÒNG BẢNG 📊</button>
+        <button onclick="openTab('G')" id="tab-G">G: VÒNG LOẠI 🏆</button>
+        <button onclick="openTab('L')" id="tab-L">L: KẾT QUẢ ⭐</button>
+        <button onclick="openTab('H')" id="tab-H">H: TEST 🧪</button>
+    </div>
+
+    <div id="C" class="tab-content">
+        <h2>C: CẤU HÌNH ⚙️</h2>
+        
+        <!-- BỔ SUNG: P1. Giao diện trạng thái Firebase -->
+        <div class="input-group">
+            <h3 class="text-lg font-semibold mb-3">Trạng Thái Dữ Liệu (Firebase)</h3>
+            <div class="text-sm font-mono text-gray-600">
+                <p><strong>App ID:</strong> <span id="display-app-id">...</span></p>
+                <p><strong>User ID:</strong> <span id="display-user-id" class="break-all">...</span> (ID này dùng để đồng bộ dữ liệu)</p>
+            </div>
+            <div id="firebase-error" class="alert alert-error mt-4 hidden">Lỗi kết nối Firebase. Vui lòng kiểm tra console.</div>
+        </div>
+
+        <div class="input-group">
+            <label>C1a: Tên Giải Đấu</label>
+            <input type="text" id="config-name" value="">
+            <label>C1a: Upload Logo (Base64)</label>
+            <input type="file" id="config-logo" accept="image/*" onchange="handleLogoUpload(this)">
+            <label>C1f: Chế độ Trao Giải Nhất Độc Lập (2 Hạng)</label>
+            <input type="checkbox" id="config-double-champion"> (Bật nếu có Hạng A/Hạng B riêng biệt)
+        </div>
+        
+        <h3>C2: Quản Lý THỂ THỨC VÒNG ĐẤU</h3>
+        <div class="input-group">
+            <label>C2a0: Thể thức Vòng Loại (Knockout)</label>
+            <select id="config-elimination-type">
+                <option value="SINGLE">Single Elimination (Loại Đơn)</option>
+                <option value="DOUBLE">Double Elimination (Loại Kép - Nhánh Thua)</option>
+            </select>
+            <label>C2a1i: Quy tắc Điểm Chạm Cao Nhất (Cap Score)</label>
+            <input type="number" id="config-cap-score" value="13" min="11" placeholder="Ví dụ: 13 (Thắng 11 điểm, điểm tối đa 13)">
+            <label>C2a1: Điểm Thắng mỗi Set</label>
+            <input type="number" id="config-win-score" value="11" min="1" placeholder="Ví dụ: 11">
+            <label>Số đội thăng hạng từ mỗi bảng</label>
+            <input type="number" id="config-advancing-teams" value="2" min="1" max="4">
+        </div>
+        <button onclick="saveConfig()">Lưu Cấu Hình</button>
+        <div id="config-status" class="alert alert-success" style="margin-top:15px; display:none;"></div>
+        
+        <hr class="my-4">
+        
+        <h3>B: Công Cụ Dữ Liệu (Import/Export JSON)</h3>
+        <button onclick="exportData()">B1: EXPORT Dữ Liệu (JSON)</button>
+        <input type="file" id="import-file" accept=".json" style="display: none;" onchange="handleImportFile(this.files)">
+        <button onclick="document.getElementById('import-file').click()">B2: IMPORT Dữ Liệu (JSON)</button>
+        <div id="data-status" class="alert alert-success" style="margin-top:15px; display:none;"></div>
+    </div>
+
+    <div id="D" class="tab-content" style="display:none;">
+        <h2>D: NGƯỜI CHƠI & ĐỘI 👥</h2>
+        
+        <h3>D2: Quản lý Đội/Cặp Đấu (D2e: Sửa trực tiếp)</h3>
+        <button onclick="generateRandomTeams()">D2e: GHÉP CẶP RANDOM (Tạo 8 đội demo)</button>
+        <div id="team-list-status" class="alert" style="margin-top:10px; display:none;"></div>
+
+        <table id="teams-table">
+            <thead>
+                <tr>
+                    <th>ID Đội</th>
+                    <th>Tên Đội (Sửa trực tiếp)</th>
+                    <th>Hạng (A/B/C)</th>
+                    <th>Trạng thái (D2a)</th>
+                    <th>Nhóm/Bảng (D3)</th>
+                    <th>Xóa</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Team rows populated by JS -->
+            </tbody>
+        </table>
+
+        <h3>D3: Phân Bảng Tự Động</h3>
+        <button onclick="generateGroups()">D3: PHÂN BẢNG TỰ ĐỘNG</button>
+    </div>
+
+    <div id="E" class="tab-content" style="display:none;">
+        <h2>E: LỊCH THI ĐẤU & TG ⏰ (Planning Engine)</h2>
+        
+        <h3>E1: Cấu Hình Thời Gian & Sân Đấu</h3>
+        <div class="input-group">
+            <label>Giờ Bắt Đầu (Ví dụ: 08:00)</label>
+            <input type="time" id="schedule-start-time" value="08:00">
+            <label>Thời Lượng TB mỗi Trận (Phút)</label>
+            <input type="number" id="schedule-duration" value="30" min="5">
+            <label>E1a: SỐ LƯỢNG SÂN ĐẤU</label>
+            <input type="number" id="schedule-courts" value="2" min="1">
+        </div>
+        
+        <!-- BỔ SUNG: P2. Cấu hình ngoại lệ lịch trình -->
+        <h3>E1b: Cấu Hình Ngoại Lệ & Nghỉ Ngơi (P2)</h3>
+        <div class="input-group">
+            <label>Thời gian nghỉ bắt buộc giữa các trận của một đội (Phút)</label>
+            <input type="number" id="rest-time-required" value="15" min="0" placeholder="Thời gian tối thiểu đội phải nghỉ giữa các trận">
+            <p class="text-sm text-gray-500 mt-2">Tính năng này sẽ được áp dụng trong thuật toán E2a để tránh lịch trình dày đặc.</p>
+        </div>
+        
+        <h3>E2: Quản Lý LỊCH TRÌNH TỔNG HỢP (E2a: Logic Tối Ưu)</h3>
+        <button onclick="generateSchedule()">E2a: TẠO LỊCH TRÌNH TỐI ƯU</button>
+        <button onclick="showScheduleSummary()">E2c: XEM TÓM TẮT LỊCH</button>
+        <div id="schedule-status" class="alert" style="margin-top:15px; display:none;"></div>
+
+        <div id="schedule-viewer" style="margin-top: 20px;">
+            <h4>E2b: Bảng Lịch Chi Tiết (Tất cả trận đấu)</h4>
+            <table id="schedule-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Vòng</th>
+                        <th>Thời Gian Dự Kiến</th>
+                        <th>Sân</th>
+                        <th>Trận Đấu</th>
+                        <th>Tối ưu Giãn Cách</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Schedule rows populated by JS -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="F" class="tab-content" style="display:none;">
+        <h2>F: VÒNG BẢNG 📊 (Execution & Monitoring)</h2>
+        
+        <h3>F2: Xây Dựng Trận Đấu Vòng Bảng</h3>
+        <button onclick="generateGroupMatches()">F2a: TẠO DANH SÁCH TRẬN ĐẤU VÒNG BẢNG</button>
+        
+        <h3>F3: Nhập Kết Quả & Giám Sát</h3>
+        <!-- P3: Nhập điểm Set-by-Set sẽ được tích hợp vào đây -->
+        <div id="f-match-list">
+            <!-- Matches to be scored -->
+        </div>
+        
+        <h3>F4: Bảng Xếp Hạng (Logic tính toán nâng cao)</h3>
+        <div id="f-standings">
+            <!-- Standings populated by JS -->
+        </div>
+    </div>
+
+    <div id="G" class="tab-content" style="display:none;">
+        <h2>G: VÒNG LOẠI 🏆</h2>
+        
+        <h3>G1: Xây Dựng Cây Đấu Loại TỰ ĐỘNG</h3>
+        <button onclick="generateKnockoutBrackets()">G1: TẠO CÂY ĐẤU LOẠI (Dùng kết quả F4)</button>
+        <div id="bracket-status" class="alert" style="margin-top:15px; display:none;"></div>
+
+        <h3>G2: Theo Dõi & Cập Nhật Tự Động (Hỗ trợ Double Elimination)</h3>
+        <div class="bracket-container" id="knockout-bracket">
+            <!-- Knockout matches populated by JS -->
+        </div>
+    </div>
+
+    <div id="L" class="tab-content" style="display:none;">
+        <h2>L: KẾT QUẢ ⭐ (Public Display)</h2>
+        <!-- P4: Bộ Lọc sẽ được tích hợp vào đây -->
+        
+        <div class="public-card">
+            <h3>L1/L2: ĐANG DIỄN RA (LIVE) / SẮP DIỄN RA</h3>
+            <div id="live-upcoming-matches">
+                <!-- Live and Upcoming matches -->
+            </div>
+        </div>
+
+        <div class="public-card">
+            <h3>L5: XẾP HẠNG CHUNG CUỘC</h3>
+            <div id="final-standings">
+                <!-- Final ranks -->
+            </div>
+        </div>
+    </div>
+    
+    <div id="H" class="tab-content" style="display:none;">
+        <h2>H: TEST 🧪 (Utility)</h2>
+        <div class="input-group">
+            <h3>H1b: Simulate Results</h3>
+            <button onclick="simulateGroupResults()">GIẢ LẬP KẾT QUẢ VÒNG BẢNG (Chạy F3)</button>
+        </div>
+        
+        <div class="input-group">
+            <h3>H2: Reset Dữ Liệu (CRITICAL)</h3>
+            <button onclick="softReset()">H2b: XÓA PHÂN BẢNG, LỊCH TRÌNH & KẾT QUẢ (SOFT RESET)</button>
+        </div>
+    </div>
+
+</div>
+
+<!-- Firebase SDKs -->
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import { getFirestore, doc, getDoc, setDoc, onSnapshot, collection, query, where, addDoc, deleteDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+    import { setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+    // Set Firestore log level to debug for better monitoring
+    setLogLevel('Debug');
+
+    // Global variables (from Canvas environment)
+    const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+    const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
+    const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+    let app;
+    let db;
+    let auth;
+    let currentUserId = null;
+    let isAuthReady = false;
+
+    // Global Collections/Docs Paths (Public Data)
+    const COLLECTIONS = {
+        CONFIG: `artifacts/${appId}/public/data/tournament_settings/config`,
+        TEAMS: `artifacts/${appId}/public/data/teams`,
+        MATCHES: `artifacts/${appId}/public/data/matches`
+    };
+
+    // Initialize Firebase and Auth
+    try {
+        app = initializeApp(firebaseConfig);
+        db = getFirestore(app);
+        auth = getAuth(app);
+        
+        document.getElementById('display-app-id').innerText = appId;
+
+        // Sign in logic
+        if (initialAuthToken) {
+            await signInWithCustomToken(auth, initialAuthToken);
+        } else {
+            await signInAnonymously(auth);
+        }
+
+        // Auth State Listener
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                currentUserId = user.uid;
+                isAuthReady = true;
+                
+                document.getElementById('firebase-status').classList.remove('offline');
+                document.getElementById('firebase-status').classList.add('online');
+                document.getElementById('auth-status-text').innerText = 'Online';
+                document.getElementById('display-user-id').innerText = currentUserId;
+                
+                // Start listening to data once authenticated
+                startRealtimeListeners();
+            } else {
+                currentUserId = null;
+                isAuthReady = false;
+                document.getElementById('firebase-status').classList.remove('online');
+                document.getElementById('firebase-status').classList.add('offline');
+                document.getElementById('auth-status-text').innerText = 'Offline / Guest';
+            }
+        });
+
+    } catch (e) {
+        console.error("Firebase Initialization Error:", e);
+        document.getElementById('firebase-error').classList.remove('hidden');
+    }
+
+    // Export Firebase instances and paths to the global scope for use in non-module script
+    window.db = db;
+    window.auth = auth;
+    window.COLLECTIONS = COLLECTIONS;
+    window.currentUserId = currentUserId;
+    window.isAuthReady = isAuthReady;
+    window.doc = doc;
+    window.getDoc = getDoc;
+    window.setDoc = setDoc;
+    window.onSnapshot = onSnapshot;
+    window.collection = collection;
+    window.query = query;
+    window.where = where;
+    window.addDoc = addDoc;
+    window.deleteDoc = deleteDoc;
+    window.updateDoc = updateDoc;
+
+    // Function to start listeners once auth is ready
+    function startRealtimeListeners() {
+        // C: Listen to Config Document
+        onSnapshot(doc(db, COLLECTIONS.CONFIG), (docSnapshot) => {
+            if (docSnapshot.exists()) {
+                window.tournamentData.config = docSnapshot.data();
+                window.loadConfigUI();
+            } else {
+                console.log("Config document not found. Using default local state.");
+            }
+        });
+
+        // D: Listen to Teams Collection
+        onSnapshot(collection(db, COLLECTIONS.TEAMS), (querySnapshot) => {
+            window.tournamentData.teams = [];
+            querySnapshot.forEach((doc) => {
+                window.tournamentData.teams.push({ id: doc.id, ...doc.data() });
+            });
+            window.renderTeamTable(); 
+        });
+
+        // E, F, G, L: Listen to Matches Collection
+        onSnapshot(collection(db, COLLECTIONS.MATCHES), (querySnapshot) => {
+            window.tournamentData.matches = [];
+            // Reconstruct tournamentData.groups based on match data (since groups are not a separate collection)
+            querySnapshot.forEach((doc) => {
+                const match = { id: doc.id, ...doc.data() };
+                window.tournamentData.matches.push(match);
+            });
+            
+            // Re-render all data-dependent tabs
+            window.renderScheduleTable();
+            window.renderGroupMatchList();
+            window.renderGroupStandings(); // Needs match data
+            window.renderKnockoutBracket(); // Needs match data
+            window.renderLiveUpcomingMatches(); 
+            window.renderFinalStandings();
+        });
+    }
+
+    window.startRealtimeListeners = startRealtimeListeners;
+</script>
+
+<script>
+    // --- GLOBAL STATE (Initial local state will be overwritten by Firestore) ---
+    let tournamentData = {
+        config: {
+            name: 'Giải Pickleball Demo Nâng Cấp',
+            logoUrl: '',
+            eliminationType: 'SINGLE', 
+            doubleChampion: false,
+            capScore: 13,
+            winScore: 11,
+            advancingTeams: 2,
+            restTimeRequired: 15, // P2: New config for rest time
+        },
+        teams: [],
+        scheduleParams: {
+            startTime: '08:00',
+            duration: 30, // minutes
+            numCourts: 2
+        },
+        matches: [], 
+        groups: {}, // Derived from match data 
+    };
+    window.tournamentData = tournamentData;
+
+    // --- UTILITIES ---
+
+    const generateId = (prefix = '') => prefix + Math.random().toString(36).substring(2, 9);
+    const getTeam = (teamId) => tournamentData.teams.find(t => t.id === teamId);
+    window.getTeam = getTeam; // Export for global use
+
+    const formatTime = (time) => {
+        if (!time) return 'TBA';
+        const [hours, minutes] = time.split(':').map(Number);
+        const date = new Date();
+        date.setHours(hours, minutes, 0, 0);
+        return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false }).replace(' AM', '').replace(' PM', '').trim();
+    };
+
+    const addMinutes = (time, mins) => {
+        if (!time) return '00:00'; 
+        const [hours, minutes] = time.split(':').map(Number);
+        const date = new Date();
+        date.setHours(hours, minutes, 0, 0);
+        date.setMinutes(date.getMinutes() + mins);
+        // Returns HH:MM format (24h)
+        return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false }).replace(' AM', '').replace(' PM', '').trim();
+    };
+    
+    const timeDiffInMinutes = (time1, time2) => {
+        if (!time1 || !time2) return 0;
+        const date1 = new Date(`2000/01/01 ${time1}`);
+        const date2 = new Date(`2000/01/01 ${time2}`);
+        return Math.abs((date1 - date2) / (1000 * 60));
+    };
+
+    // P1: Load config data into UI fields
+    function loadConfigUI() {
+        document.getElementById('config-name').value = tournamentData.config.name;
+        document.getElementById('config-elimination-type').value = tournamentData.config.eliminationType;
+        document.getElementById('config-double-champion').checked = tournamentData.config.doubleChampion;
+        document.getElementById('config-cap-score').value = tournamentData.config.capScore;
+        document.getElementById('config-win-score').value = tournamentData.config.winScore;
+        document.getElementById('config-advancing-teams').value = tournamentData.config.advancingTeams;
+        document.getElementById('tournament-title').innerText = tournamentData.config.name;
+        
+        // P2: Load new config fields
+        document.getElementById('rest-time-required').value = tournamentData.config.restTimeRequired || 15;
+
+        if (tournamentData.config.logoUrl) {
+            document.getElementById('logo-display').src = tournamentData.config.logoUrl;
+            document.getElementById('logo-display').style.display = 'block';
+        }
+    }
+    window.loadConfigUI = loadConfigUI; // Export for Firebase listener
+
+    // P1: Placeholder for full data loading (Called by Firebase Listeners)
+    function loadData() {
+        // This function now primarily relies on the onSnapshot listeners
+        // It's kept here just for soft reset compatibility
+        loadConfigUI();
+        renderTeamTable(); 
+        renderScheduleTable();
+        renderGroupMatchList();
+        renderGroupStandings();
+        renderKnockoutBracket();
+        renderFinalStandings();
+        renderLiveUpcomingMatches();
+    }
+    window.loadData = loadData; 
+    
+    // --- TAB NAVIGATION ---
+    function openTab(tabId) {
+        const contents = document.querySelectorAll('.tab-content');
+        contents.forEach(content => content.style.display = 'none');
+
+        const buttons = document.querySelectorAll('.nav-bar button');
+        buttons.forEach(button => button.classList.remove('active'));
+
+        document.getElementById(tabId).style.display = 'block';
+        document.getElementById(`tab-${tabId}`).classList.add('active');
+    }
+    window.openTab = openTab;
+
+    document.addEventListener('DOMContentLoaded', () => {
+        openTab('C'); 
+        loadConfigUI();
+    });
+
+    // --- TAB C: CẤU HÌNH & IMPORT/EXPORT (B) ---
+    function handleLogoUpload(input) {
+        const file = input.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                tournamentData.config.logoUrl = e.target.result;
+                document.getElementById('logo-display').src = e.target.result;
+                document.getElementById('logo-display').style.display = 'block';
+                // Trigger save to Firestore
+                saveConfig(); 
+            };
+            reader.readAsDataURL(file);
+        }
+    }
+
+    async function saveConfig() {
+        if (!window.isAuthReady) {
+            alert("Hệ thống chưa xác thực (Auth). Vui lòng đợi kết nối.");
+            return;
+        }
+
+        const newConfig = {
+            name: document.getElementById('config-name').value,
+            eliminationType: document.getElementById('config-elimination-type').value,
+            doubleChampion: document.getElementById('config-double-champion').checked,
+            capScore: parseInt(document.getElementById('config-cap-score').value) || 13,
+            winScore: parseInt(document.getElementById('config-win-score').value) || 11,
+            advancingTeams: parseInt(document.getElementById('config-advancing-teams').value) || 2,
+            logoUrl: tournamentData.config.logoUrl,
+            // P2: Save new config field
+            restTimeRequired: parseInt(document.getElementById('rest-time-required').value) || 15,
+        };
+
+        try {
+            // P1: Save to Firestore
+            await window.setDoc(window.doc(window.db, window.COLLECTIONS.CONFIG), newConfig);
+            
+            const statusEl = document.getElementById('config-status');
+            statusEl.innerText = 'Lưu cấu hình thành công (Đã đồng bộ Firestore)!';
+            statusEl.style.display = 'block';
+            setTimeout(() => statusEl.style.display = 'none', 3000);
+
+        } catch(error) {
+            console.error("Error saving config to Firestore:", error);
+            alert("Lỗi khi lưu cấu hình. Vui lòng kiểm tra console.");
+        }
+    }
+
+    // B1: EXPORT Dữ Liệu (Local Snapshot for backup)
+    function exportData() {
+        // Export current in-memory state (which should match Firestore)
+        const jsonString = JSON.stringify(tournamentData, null, 2);
+        const blob = new Blob([jsonString], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `tournament_data_${new Date().toISOString().slice(0, 10)}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        
+        const statusEl = document.getElementById('data-status');
+        statusEl.innerText = 'Xuất dữ liệu thành công!';
+        statusEl.className = 'alert alert-success';
+        statusEl.style.display = 'block';
+        setTimeout(() => statusEl.style.display = 'none', 3000);
+    }
+
+    // B2: IMPORT Dữ Liệu (Import to Firestore)
+    function handleImportFile(files) {
+        const file = files[0];
+        if (!file) return;
+        if (!window.isAuthReady) {
+            alert("Hệ thống chưa xác thực (Auth). Vui lòng đợi kết nối.");
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+            try {
+                const importedData = JSON.parse(e.target.result);
+                if (!importedData.config || !importedData.teams || !importedData.matches) {
+                    throw new Error("Cấu trúc file JSON không hợp lệ.");
+                }
+                
+                // P1: Write data to Firestore
+                // 1. Config
+                await window.setDoc(window.doc(window.db, window.COLLECTIONS.CONFIG), importedData.config);
+                
+                // 2. Teams (Clear and re-add)
+                const teamCollection = window.collection(window.db, window.COLLECTIONS.TEAMS);
+                const oldTeams = await window.getDocs(teamCollection);
+                oldTeams.forEach(async (d) => await window.deleteDoc(window.doc(teamCollection, d.id)));
+                importedData.teams.forEach(async (team) => {
+                    const { id, ...data } = team;
+                    // Use setDoc to preserve old ID if possible, otherwise use addDoc
+                    await window.setDoc(window.doc(teamCollection, id), data); 
+                });
+
+                // 3. Matches (Clear and re-add)
+                const matchCollection = window.collection(window.db, window.COLLECTIONS.MATCHES);
+                const oldMatches = await window.getDocs(matchCollection);
+                oldMatches.forEach(async (d) => await window.deleteDoc(window.doc(matchCollection, d.id)));
+                importedData.matches.forEach(async (match) => {
+                    const { id, ...data } = match;
+                    await window.setDoc(window.doc(matchCollection, id), data);
+                });
+
+                const statusEl = document.getElementById('data-status');
+                statusEl.innerText = 'Nhập dữ liệu thành công! Đã đồng bộ lên Firestore.';
+                statusEl.className = 'alert alert-success';
+                statusEl.style.display = 'block';
+                setTimeout(() => statusEl.style.display = 'none', 5000);
+
+            } catch (error) {
+                const statusEl = document.getElementById('data-status');
+                statusEl.innerText = `Lỗi nhập file: ${error.message}`;
+                statusEl.className = 'alert alert-error';
+                statusEl.style.display = 'block';
+                console.error("Import Error:", error);
+            }
+        };
+        reader.readAsText(file);
+    }
+
+    // --- TAB D: NGƯỜI CHƠI & ĐỘI (D1e/D2e Grid Editing & Firestore) ---
+    async function generateRandomTeams() {
+        if (!window.isAuthReady) {
+            alert("Hệ thống chưa xác thực (Auth). Vui lòng đợi kết nối.");
+            return;
+        }
+        const numTeams = 8;
+        const teamCollection = window.collection(window.db, window.COLLECTIONS.TEAMS);
+
+        // Clear existing teams first (optional but good for clean demo)
+        const oldTeams = await window.getDocs(teamCollection);
+        oldTeams.forEach(async (d) => await window.deleteDoc(window.doc(teamCollection, d.id)));
+
+
+        for (let i = 1; i <= numTeams; i++) {
+            const newTeam = {
+                name: `Đội ${i}`,
+                category: i % 2 === 0 ? 'A' : 'B', 
+                status: 'OFFICIAL', 
+                groupId: null,
+                players: [{ name: `Player ${i}-1` }, { name: `Player ${i}-2` }]
+            };
+            // P1: Add team to Firestore
+            await window.addDoc(teamCollection, newTeam);
+        }
+        // Firestore listener will handle the rendering (renderTeamTable)
+        const statusEl = document.getElementById('team-list-status');
+        statusEl.innerText = `Đã tạo ${numTeams} đội demo và đồng bộ Firestore!`;
+        statusEl.className = 'alert alert-success';
+        statusEl.style.display = 'block';
+    }
+
+    // D1e/D2e: Update data when cell is edited
+    async function updateTeamData(teamId, field, value) {
+        if (!window.isAuthReady) return;
+        
+        try {
+            const teamRef = window.doc(window.db, window.COLLECTIONS.TEAMS, teamId);
+            const updateData = {};
+            if (field === 'category') {
+                updateData[field] = value.toUpperCase().replace(/\s/g, '').trim();
+            } else {
+                updateData[field] = value.trim();
+            }
+            
+            // P1: Update team in Firestore
+            await window.updateDoc(teamRef, updateData);
+            console.log(`Đã cập nhật Đội ${teamId} - ${field}: ${updateData[field]} (Firestore)`);
+
+        } catch (error) {
+            console.error("Error updating team:", error);
+        }
+    }
+
+    async function deleteTeam(teamId) {
+        if (!window.isAuthReady) return;
+         if (!confirm('Bạn có chắc chắn muốn xóa đội này?')) return;
+
+        try {
+            const teamRef = window.doc(window.db, window.COLLECTIONS.TEAMS, teamId);
+            // P1: Delete team from Firestore
+            await window.deleteDoc(teamRef);
+            console.log(`Đã xóa đội ${teamId} (Firestore)`);
+        } catch (error) {
+            console.error("Error deleting team:", error);
+        }
+    }
+
+    function renderTeamTable() {
+        const tbody = document.getElementById('teams-table').getElementsByTagName('tbody')[0];
+        tbody.innerHTML = '';
+        tournamentData.teams.forEach(team => {
+            const row = tbody.insertRow();
+            row.insertCell().innerText = team.id.slice(-4);
+            // D2e: Editable Team Name
+            row.insertCell().innerHTML = `<span contenteditable="true" class="editable-cell" onblur="updateTeamData('${team.id}', 'name', this.innerText)">${team.name}</span>`;
+            // D2e: Editable Category (Hạng)
+            row.insertCell().innerHTML = `<span contenteditable="true" class="editable-cell" onblur="updateTeamData('${team.id}', 'category', this.innerText)">${team.category}</span>`;
+            row.insertCell().innerText = team.status;
+            row.insertCell().innerText = team.groupId || 'Chưa phân bảng';
+            row.insertCell().innerHTML = `<button onclick="deleteTeam('${team.id}')" class="bg-red-500 hover:bg-red-700 p-1">Xóa</button>`;
+        });
+    }
+    window.renderTeamTable = renderTeamTable;
+
+    // D3: Phân Bảng Tự Động (Cần cập nhật team documents)
+    async function generateGroups() {
+        if (!window.isAuthReady) {
+            alert("Hệ thống chưa xác thực (Auth). Vui lòng đợi kết nối.");
+            return;
+        }
+
+        const officialTeams = tournamentData.teams.filter(t => t.status === 'OFFICIAL');
+        if (officialTeams.length === 0) {
+            alert('Chưa có đội thi đấu chính thức.');
+            return;
+        }
+
+        const numGroups = 4; 
+        const groupKeys = ['A', 'B', 'C', 'D']; 
+
+        const updates = officialTeams.map((team, index) => {
+            const groupId = groupKeys[index % numGroups];
+            const teamRef = window.doc(window.db, window.COLLECTIONS.TEAMS, team.id);
+            // P1: Update team's groupId in Firestore
+            return window.updateDoc(teamRef, { groupId: groupId });
+        });
+
+        await Promise.all(updates);
+
+        alert(`Đã phân ${officialTeams.length} đội vào ${numGroups} bảng thành công. (Đã đồng bộ Firestore)`);
+        // renderTeamTable() will be called by the onSnapshot listener
+    }
+
+    // --- TAB E: LỊCH THI ĐẤU & TG (P2: Logic Giãn Cách Nâng Cao) ---
+    async function generateSchedule() {
+        // P1: Check Auth
+        if (!window.isAuthReady) {
+            alert("Hệ thống chưa xác thực (Auth). Vui lòng đợi kết nối.");
+            return;
+        }
+
+        const allMatches = tournamentData.matches;
+        if (allMatches.length === 0) {
+            alert('Vui lòng tạo danh sách trận đấu Vòng Bảng (Tab F) và/hoặc Vòng Loại (Tab G) trước.');
+            return;
+        }
+        
+        // P2: Get rest time required
+        const requiredRestTime = tournamentData.config.restTimeRequired || 15; 
+
+        const params = tournamentData.scheduleParams;
+        const numCourts = params.numCourts;
+        const matchDuration = params.duration;
+        
+        let teamsSchedule = {}; 
+        let courtFreeTime = Array(numCourts).fill(params.startTime); 
+        
+        const updates = [];
+
+        // Reset schedule fields for matches that are not completed
+        allMatches.forEach(match => {
+            if (match.status !== 'COMPLETED') {
+                match.scheduledTime = null;
+                match.courtId = null;
+                match.timeWarning = false;
+                updates.push(window.updateDoc(window.doc(window.db, window.COLLECTIONS.MATCHES, match.id), {
+                    scheduledTime: null, courtId: null, timeWarning: false
+                }));
+            }
+        });
+        await Promise.all(updates); // Wait for initial reset
+
+        // Sort matches: Group matches first, then Knockout (KO) in order of round
+        const matchesToSchedule = allMatches.filter(m => m.status !== 'COMPLETED').sort((a, b) => {
+            const isGroupA = a.roundId.startsWith('Group');
+            const isGroupB = b.roundId.startsWith('Group');
+            
+            if (isGroupA && !isGroupB) return -1;
+            if (!isGroupA && isGroupB) return 1;
+            
+            if (!isGroupA && !isGroupB) {
+                const roundsOrder = { 'WB-R1': 1, 'LB-R1': 2, 'WB-R2': 3, 'LB-R2': 4, 'Grand Final': 99 };
+                return (roundsOrder[a.roundId] || 99) - (roundsOrder[b.roundId] || 99);
+            }
+            return 0;
+        });
+
+        const scheduleUpdates = [];
+
+        matchesToSchedule.forEach(match => {
+            const teamAId = match.teamAId;
+            const teamBId = match.teamBId;
+            
+            let bestCourtIndex = -1;
+            let earliestCourtTime = '23:59';
+            
+            // 1. Find the earliest free court time
+            courtFreeTime.forEach((freeTime, index) => {
+                if (freeTime < earliestCourtTime) {
+                    earliestCourtTime = freeTime;
+                    bestCourtIndex = index;
+                }
+            });
+
+            let scheduleTime = earliestCourtTime;
+            let timeWarning = false;
+            
+            // 2. Logic Giãn Cách (P2 Upgrade): Check team rest time and apply REQUIRED REST
+            const checkTeamRestTime = (teamId) => {
+                if (!teamId || teamId.startsWith('W') || teamId.startsWith('L') || !teamsSchedule[teamId]) return false;
+
+                const lastEndTime = teamsSchedule[teamId];
+                // Time difference between earliest possible start (scheduleTime) and team's last end time
+                const diffInMins = timeDiffInMinutes(lastEndTime, scheduleTime);
+                
+                if (diffInMins < requiredRestTime) {
+                    // Force start time to be lastEndTime + requiredRestTime
+                    const newStartTime = addMinutes(lastEndTime, requiredRestTime);
+                    
+                    // If the newly calculated start time is later than the current scheduleTime, update it
+                    if (newStartTime.localeCompare(scheduleTime) > 0) {
+                        scheduleTime = newStartTime;
+                        return true; // Warning needed
+                    }
+                }
+                return false;
+            };
+
+            // Check Team A and Team B (adjust scheduleTime if necessary)
+            if (checkTeamRestTime(teamAId)) timeWarning = true;
+            if (checkTeamRestTime(teamBId)) timeWarning = true; 
+            
+            // Recalculate match end time based on final scheduleTime
+            const matchEndTime = addMinutes(scheduleTime, matchDuration);
+
+            // 3. Update schedule data (Local and prepare for Firestore)
+            match.scheduledTime = scheduleTime;
+            match.courtId = bestCourtIndex + 1;
+            match.timeWarning = timeWarning;
+
+            // 4. Update court and team free times
+            // Need to re-find best court for the possibly delayed time
+            let finalCourtIndex = bestCourtIndex; 
+            if (scheduleTime.localeCompare(earliestCourtTime) > 0) {
+                // If schedule time was delayed by a team, this court might be available earlier,
+                // but for simplicity and serial execution, we use the delayed time on the initially chosen court
+                finalCourtIndex = bestCourtIndex; 
+            }
+            
+            courtFreeTime[finalCourtIndex] = matchEndTime;
+            if (teamAId && !teamAId.startsWith('W') && !teamAId.startsWith('L')) teamsSchedule[teamAId] = matchEndTime;
+            if (teamBId && !teamBId.startsWith('W') && !teamBId.startsWith('L')) teamsSchedule[teamBId] = matchEndTime;
+
+            // P1: Prepare Firestore update
+            scheduleUpdates.push(window.updateDoc(window.doc(window.db, window.COLLECTIONS.MATCHES, match.id), {
+                scheduledTime: scheduleTime,
+                courtId: finalCourtIndex + 1,
+                timeWarning: timeWarning
+            }));
+        });
+        
+        // P1: Execute all schedule updates
+        await Promise.all(scheduleUpdates);
+
+        // renderScheduleTable() will be called by the onSnapshot listener
+        const statusEl = document.getElementById('schedule-status');
+        statusEl.innerText = `Đã tạo ${matchesToSchedule.length} lịch trình tối ưu trên ${numCourts} sân. (Giãn cách tối thiểu: ${requiredRestTime} phút)`;
+        statusEl.className = 'alert alert-success';
+        statusEl.style.display = 'block';
+    }
+
+    function renderScheduleTable() {
+        const tbody = document.getElementById('schedule-table').getElementsByTagName('tbody')[0];
+        tbody.innerHTML = '';
+        
+        const sortedMatches = tournamentData.matches.sort((a, b) => {
+            if (!a.scheduledTime && b.scheduledTime) return 1;
+            if (a.scheduledTime && !b.scheduledTime) return -1;
+            
+            if (a.scheduledTime === b.scheduledTime) return (a.courtId || 0) - (b.courtId || 0);
+            return (a.scheduledTime || '99:99').localeCompare(b.scheduledTime || '99:99');
+        });
+
+        sortedMatches.forEach(match => {
+            const row = tbody.insertRow();
+            const teamA = getTeam(match.teamAId)?.name || match.teamAId || 'TBD';
+            const teamB = getTeam(match.teamBId)?.name || match.teamBId || 'TBD';
+
+            row.insertCell().innerText = match.id.slice(-4);
+            row.insertCell().innerText = match.roundId;
+            row.insertCell().innerText = match.scheduledTime || 'Chưa xếp';
+            row.insertCell().innerText = match.courtId ? `Sân ${match.courtId}` : '-';
+            row.insertCell().innerHTML = `<strong>${teamA}</strong> vs <strong>${teamB}</strong>`;
+            
+            const warningCell = row.insertCell();
+            if (match.timeWarning) {
+                warningCell.innerHTML = `<span class="time-monitor-warning">⚠️ Giãn cách ngắn.</span>`;
+            } else {
+                warningCell.innerText = '-';
+            }
+        });
+    }
+    window.renderScheduleTable = renderScheduleTable;
+
+    function showScheduleSummary() {
+        // Implementation remains the same, relying on local tournamentData.matches
+        let summary = '--- Tóm Tắt Lịch Trình (Giờ x Sân) ---\n';
+        const sortedMatches = tournamentData.matches.filter(m => m.scheduledTime).sort((a, b) => a.scheduledTime.localeCompare(b.scheduledTime));
+        
+        let displayMap = {}; 
+
+        sortedMatches.forEach(match => {
+            if (!displayMap[match.scheduledTime]) {
+                displayMap[match.scheduledTime] = {};
+            }
+            const teamA = getTeam(match.teamAId)?.name || match.teamAId || 'TBD';
+            const teamB = getTeam(match.teamBId)?.name || match.teamBId || 'TBD';
+            displayMap[match.scheduledTime][match.courtId] = `${teamA} vs ${teamB} (${match.roundId})`;
+        });
+
+        for (const time in displayMap) {
+            summary += `\n⏰ ${time}:`;
+            for (let i = 1; i <= tournamentData.scheduleParams.numCourts; i++) {
+                summary += ` | Sân ${i}: ${displayMap[time][i] || 'TRỐNG'}`;
+            }
+        }
+
+        alert(summary);
+    }
+
+    // --- TAB F: VÒNG BẢNG (Firestore & Scoring) ---
+    async function generateGroupMatches() {
+        if (!window.isAuthReady) {
+            alert("Hệ thống chưa xác thực (Auth). Vui lòng đợi kết nối.");
+            return;
+        }
+
+        // Rebuild groups from team data
+        const groups = tournamentData.teams.reduce((acc, team) => {
+            if (team.groupId) {
+                acc[team.groupId] = acc[team.groupId] || [];
+                acc[team.groupId].push(team.id);
+            }
+            return acc;
+        }, {});
+        tournamentData.groups = groups;
+
+        if (Object.keys(groups).length === 0) {
+            alert('Vui lòng phân bảng (D3) trước khi tạo trận đấu.');
+            return;
+        }
+
+        const matchCollection = window.collection(window.db, window.COLLECTIONS.MATCHES);
+        
+        // Clear old Group matches from Firestore
+        const oldGroupMatches = tournamentData.matches.filter(m => m.roundId.startsWith('Group'));
+        oldGroupMatches.forEach(async (m) => {
+            await window.deleteDoc(window.doc(matchCollection, m.id));
+        });
+
+        const newMatches = [];
+        for (const groupId in groups) {
+            const groupTeams = groups[groupId];
+            for (let i = 0; i < groupTeams.length; i++) {
+                for (let j = i + 1; j < groupTeams.length; j++) {
+                    const newMatch = {
+                        roundId: `Group ${groupId}`,
+                        teamAId: groupTeams[i],
+                        teamBId: groupTeams[j],
+                        score: { A: 0, B: 0, sets: [] },
+                        winnerId: null,
+                        loserId: null,
+                        status: 'SCHEDULED',
+                        scheduledTime: null,
+                        courtId: null,
+                        actualStartTime: null,
+                        bracket: 'Group'
+                    };
+                    newMatches.push(newMatch);
+                }
+            }
+        }
+        
+        // P1: Add new matches to Firestore
+        newMatches.forEach(async (m) => await window.addDoc(matchCollection, m));
+        
+        // Listeners will handle rendering
+        alert(`Đã tạo ${newMatches.length} trận đấu Vòng Bảng và đồng bộ Firestore.`);
+    }
+    
+    function renderGroupMatchList() {
+        const matchListEl = document.getElementById('f-match-list');
+        const groupMatches = tournamentData.matches.filter(m => m.roundId.startsWith('Group'));
+        
+        let html = '<table><thead><tr><th>Trận</th><th>Đội A</th><th>Đội B</th><th>Điểm A</th><th>Điểm B</th><th>Trạng thái</th><th>Thao tác</th></tr></thead><tbody>';
+
+        groupMatches.forEach(match => {
+            const teamA = getTeam(match.teamAId)?.name || 'TBD';
+            const teamB = getTeam(match.teamBId)?.name || 'TBD';
+            const completed = match.status === 'COMPLETED';
+
+            html += `<tr>
+                <td>${match.roundId} - ${match.id.slice(-4)}</td>
+                <td>${teamA}</td>
+                <td>${teamB}</td>
+                <td><input type="number" id="score-A-${match.id}" value="${match.score.A}" style="width: 60px;" ${completed ? 'disabled' : ''}></td>
+                <td><input type="number" id="score-B-${match.id}" value="${match.score.B}" style="width: 60px;" ${completed ? 'disabled' : ''}></td>
+                <td>${completed ? `<span style="color:${match.winnerId ? 'var(--success-color)' : 'var(--alert-color)'}">Hoàn tất</span>` : 'Đang chờ'}</td>
+                <td><button onclick="recordGroupScore('${match.id}')" ${completed ? 'disabled' : ''}>Ghi điểm</button></td>
+            </tr>`;
+        });
+
+        html += '</tbody></table>';
+        matchListEl.innerHTML = html;
+        // Re-render standings as match list is updated
+        renderGroupStandings();
+    }
+    window.renderGroupMatchList = renderGroupMatchList;
+    
+    // P1 & P3 (Preparation for Set-by-Set)
+    async function recordGroupScore(matchId) {
+        if (!window.isAuthReady) {
+            alert("Hệ thống chưa xác thực (Auth). Vui lòng đợi kết nối.");
+            return;
+        }
+
+        const match = tournamentData.matches.find(m => m.id === matchId);
+        if (!match || match.winnerId) return;
+
+        const scoreA = parseInt(document.getElementById(`score-A-${matchId}`).value) || 0;
+        const scoreB = parseInt(document.getElementById(`score-B-${matchId}`).value) || 0;
+        
+        const config = tournamentData.config;
+        const winScore = config.winScore;
+        const capScore = config.capScore;
+
+        let winnerId = null;
+        
+        const checkWin = (s1, s2) => {
+             return (s1 >= winScore && (s1 - s2) >= 2) || (s1 >= capScore && s1 > s2);
+        }
+
+        if (checkWin(scoreA, scoreB)) {
+            winnerId = match.teamAId;
+        } else if (checkWin(scoreB, scoreA)) {
+            winnerId = match.teamBId;
+        } else {
+            alert(`Điểm chưa đủ điều kiện thắng (Thắng ${winScore} điểm, cách biệt 2 điểm, hoặc đạt tối đa ${capScore}).`);
+            return;
+        }
+
+        const currentTime = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
+        
+        // P1: Prepare update data for Firestore
+        const updateData = {
+            score: { 
+                A: scoreA, 
+                B: scoreB, 
+                // For P3, this would become an array of sets
+                sets: [{ scoreA, scoreB }] 
+            },
+            winnerId: winnerId,
+            loserId: (winnerId === match.teamAId) ? match.teamBId : match.teamAId,
+            status: 'COMPLETED',
+            actualStartTime: currentTime
+        };
+        
+        try {
+            const matchRef = window.doc(window.db, window.COLLECTIONS.MATCHES, matchId);
+            await window.updateDoc(matchRef, updateData);
+            console.log(`Đã ghi điểm trận ${matchId} (Firestore)`);
+        } catch (error) {
+            console.error("Error recording score:", error);
+        }
+
+        // Listeners will trigger renderGroupStandings and renderGroupMatchList
+    }
+
+    function renderGroupStandings() {
+        const standingsEl = document.getElementById('f-standings');
+        standingsEl.innerHTML = '';
+        
+        // Re-calculate groups from team data
+        const groups = tournamentData.teams.reduce((acc, team) => {
+            if (team.groupId) {
+                acc[team.groupId] = acc[team.groupId] || [];
+                acc[team.groupId].push(team.id);
+            }
+            return acc;
+        }, {});
+        tournamentData.groups = groups;
+
+        for (const groupId in tournamentData.groups) {
+            // ... (rest of the standing calculation logic remains the same, relying on local tournamentData.matches)
+            const teamStats = {}; 
+            tournamentData.groups[groupId].forEach(teamId => {
+                teamStats[teamId] = { P: 0, W: 0, L: 0, PF: 0, PA: 0, Diff: 0, teamName: getTeam(teamId)?.name || 'TBD', teamId: teamId };
+            });
+
+            const groupMatches = tournamentData.matches.filter(m => m.roundId === `Group ${groupId}` && m.status === 'COMPLETED');
+            
+            groupMatches.forEach(match => {
+                const statA = teamStats[match.teamAId];
+                const statB = teamStats[match.teamBId];
+
+                statA.P++; statB.P++;
+                statA.PF += match.score.A; statA.PA += match.score.B;
+                statB.PF += match.score.B; statB.PA += match.score.A;
+
+                if (match.winnerId === match.teamAId) {
+                    statA.W++; statB.L++;
+                } else if (match.winnerId === match.teamBId) {
+                    statA.L++; statB.W++;
+                }
+            });
+
+            const sortedStats = Object.values(teamStats).sort((a, b) => {
+                b.Diff = b.PF - b.PA; a.Diff = a.PF - a.PA;
+
+                if (b.W !== a.W) return b.W - a.W;
+                if (b.Diff !== a.Diff) return b.Diff - a.Diff;
+                return b.PF - a.PF;
+            });
+            
+            let html = `<h4>Bảng ${groupId}</h4>`;
+            html += '<table style="font-size:0.9em"><thead><tr><th>Rank</th><th>Đội</th><th>W</th><th>L</th><th>PF</th><th>PA</th><th>Diff</th></tr></thead><tbody>';
+            
+            sortedStats.forEach((stat, index) => {
+                const rankClass = (index < tournamentData.config.advancingTeams) ? 'font-weight: bold; background-color: #E0F2F1;' : '';
+                html += `<tr style="${rankClass}"><td>${index + 1}</td><td>${stat.teamName}</td><td>${stat.W}</td><td>${stat.L}</td><td>${stat.PF}</td><td>${stat.PA}</td><td>${stat.Diff}</td></tr>`;
+            });
+
+            html += '</tbody></table>';
+            standingsEl.innerHTML += html;
+        }
+    }
+    window.renderGroupStandings = renderGroupStandings;
+
+    // --- TAB G: VÒNG LOẠI (Firestore & Logic) ---
+    async function generateKnockoutBrackets() {
+        if (!window.isAuthReady) {
+            alert("Hệ thống chưa xác thực (Auth). Vui lòng đợi kết nối.");
+            return;
+        }
+        
+        const teamsToAdvance = getTeamsToAdvance(); 
+        // ... (rest of the logic remains the same for generating bracket structure)
+        if (teamsToAdvance.length === 0 || teamsToAdvance.length < 2) {
+            document.getElementById('bracket-status').innerText = 'Không đủ đội (Cần ít nhất 2 đội thăng hạng).';
+            document.getElementById('bracket-status').className = 'alert alert-error';
+            document.getElementById('bracket-status').style.display = 'block';
+            return;
+        }
+
+        let size = 8;
+        while (size < teamsToAdvance.length) size *= 2;
+
+        const paddedTeams = [...teamsToAdvance];
+        while (paddedTeams.length < size) paddedTeams.push(null);
+        
+        const eliminationType = tournamentData.config.eliminationType;
+        let bracketMatches = [];
+        
+        if (eliminationType === 'SINGLE') {
+             bracketMatches = generateSingleElimination(paddedTeams);
+        } else { 
+             bracketMatches = generateDoubleElimination(paddedTeams);
+        }
+        
+        // P1: Clear old knockout matches from Firestore
+        const matchCollection = window.collection(window.db, window.COLLECTIONS.MATCHES);
+        const oldKnockoutMatches = tournamentData.matches.filter(m => !m.roundId.startsWith('Group')); 
+        oldKnockoutMatches.forEach(async (m) => {
+            await window.deleteDoc(window.doc(matchCollection, m.id));
+        });
+
+        // P1: Add new knockout matches to Firestore
+        bracketMatches.forEach(async (m) => {
+             // Use addDoc since we don't need to preserve specific KO ID structure on the KO matches (W1, W2 etc. are internal links)
+            await window.addDoc(matchCollection, m);
+        });
+        
+        // Listeners will handle rendering
+        document.getElementById('bracket-status').innerText = `Đã tạo ${bracketMatches.length} trận đấu Vòng Loại (${eliminationType}) và đồng bộ Firestore.`;
+        document.getElementById('bracket-status').className = 'alert alert-success';
+        document.getElementById('bracket-status').style.display = 'block';
+    }
+    window.generateKnockoutBrackets = generateKnockoutBrackets;
+
+    // Helper functions (generateSingleElimination, generateDoubleElimination, getTeamsToAdvance) remain local logic, no need for P1 change
+
+    function renderKnockoutBracket() {
+        // ... (Logic remains the same, relying on local tournamentData.matches updated by listener)
+        const bracketEl = document.getElementById('knockout-bracket');
+        bracketEl.innerHTML = '';
+        const knockoutMatches = tournamentData.matches.filter(m => !m.roundId.startsWith('Group'));
+
+        if (knockoutMatches.length === 0) {
+            bracketEl.innerHTML = '<p>Cây đấu loại chưa được tạo. Vui lòng chạy G1.</p>';
+            return;
+        }
+
+        const structuredBrackets = knockoutMatches.reduce((acc, match) => {
+            const bracket = match.bracket || 'Single';
+            acc[bracket] = acc[bracket] || {};
+            acc[bracket][match.roundId] = acc[bracket][match.roundId] || [];
+            acc[bracket][match.roundId].push(match);
+            return acc;
+        }, {});
+        
+        const bracketOrder = ['Winner', 'Loser', 'Final', 'Single'];
+        
+        bracketOrder.forEach(bracketKey => {
+            const rounds = structuredBrackets[bracketKey];
+            if (!rounds) return;
+
+            let bracketHtml = `<div class="p-4 rounded-lg shadow-inner bg-gray-50 mb-4"><h3>${bracketKey.toUpperCase().replace('SINGLE', 'KNOCKOUT')} BRACKET</h3><div class="bracket-rounds flex space-x-4 overflow-x-auto p-2">`;
+
+            for (const roundName in rounds) {
+                let roundHtml = `<div class="bracket-round flex-shrink-0 min-w-[200px]"><h4>${roundName}</h4>`;
+                rounds[roundName].forEach(match => {
+                    const teamA = getTeam(match.teamAId)?.name || match.teamAId || 'TBD';
+                    const teamB = getTeam(match.teamBId)?.name || match.teamBId || 'TBD';
+                    
+                    const winnerName = match.winnerId ? getTeam(match.winnerId)?.name : null;
+                    const teamAClass = winnerName === teamA ? 'font-bold text-success-color' : 'text-gray-700';
+                    const teamBClass = winnerName === teamB ? 'font-bold text-success-color' : 'text-gray-700';
+                    
+                    const statusText = match.status === 'COMPLETED' ? 'Kết thúc' : (match.status === 'TBD' ? 'Chờ đội' : 'Sắp xếp');
+
+                    roundHtml += `
+                        <div class="rounded-lg border p-3 mb-3 ${match.status === 'COMPLETED' ? 'bg-green-50 border-green-300' : 'bg-white border-gray-300'}">
+                            <div class="text-xs text-gray-500 mb-1">${match.id.slice(-4)} (${match.roundId}) - ${statusText}</div>
+                            <div class="flex justify-between items-center text-sm mb-2">
+                                <span class="${teamAClass}">${teamA}</span>
+                                <span class="font-bold text-xs">${match.score.A || 0}</span>
+                            </div>
+                            <div class="flex justify-between items-center text-sm mb-2">
+                                <span class="${teamBClass}">${teamB}</span>
+                                <span class="font-bold text-xs">${match.score.B || 0}</span>
+                            </div>
+                            <button onclick="recordKnockoutScore('${match.id}')" ${match.winnerId || match.status === 'TBD' ? 'disabled' : ''} class="w-full text-xs p-1 bg-secondary-color hover:bg-orange-600">Nhập điểm</button>
+                        </div>
+                    `;
+                });
+                roundHtml += `</div>`;
+                bracketHtml += roundHtml;
+            }
+            bracketHtml += `</div></div>`;
+            bracketEl.innerHTML += bracketHtml;
+        });
+    }
+    window.renderKnockoutBracket = renderKnoutBracket;
+
+    // G2: Record Knockout Score and Auto-Update (G2i/G2d)
+    async function recordKnockoutScore(matchId) {
+        if (!window.isAuthReady) return;
+        
+        const match = tournamentData.matches.find(m => m.id === matchId);
+        if (!match || match.winnerId || match.status === 'TBD') return;
+
+        // Simplified scoring for Knockout: Random Win/Loss
+        const scoreA = Math.floor(Math.random() * 5) + 11; 
+        const scoreB = Math.floor(Math.random() * 5) + 11; 
+        
+        let winnerId;
+        if (scoreA !== scoreB) {
+            winnerId = scoreA > scoreB ? match.teamAId : match.teamBId;
+        } else {
+             return recordKnockoutScore(matchId); 
+        }
+
+        const loserId = (winnerId === match.teamAId) ? match.teamBId : match.teamAId;
+
+        const updateOps = [];
+
+        // 1. Update Current Match (P1)
+        updateOps.push(window.updateDoc(window.doc(window.db, window.COLLECTIONS.MATCHES, match.id), {
+            score: { A: scoreA, B: scoreB, sets: [{ scoreA, scoreB }] },
+            winnerId: winnerId,
+            loserId: loserId,
+            status: 'COMPLETED'
+        }));
+
+        // 2. Update Next Match Slot (P1 & G2i/G2d)
+        tournamentData.matches.forEach(nextMatch => {
+            const nextMatchRef = window.doc(window.db, window.COLLECTIONS.MATCHES, nextMatch.id);
+            let nextMatchUpdates = {};
+            let shouldUpdate = false;
+            
+            // Winner Progression
+            if (nextMatch.teamAId === match.id) { 
+                nextMatchUpdates.teamAId = winnerId;
+                shouldUpdate = true;
+            } else if (nextMatch.teamBId === match.id) {
+                nextMatchUpdates.teamBId = winnerId;
+                shouldUpdate = true;
+            }
+            
+            // Loser Progression (Simplified Double Elimination)
+            if (tournamentData.config.eliminationType === 'DOUBLE') {
+                 if (nextMatch.teamAId === `W-${match.id}`) {
+                    nextMatchUpdates.teamAId = winnerId;
+                    shouldUpdate = true;
+                 } else if (nextMatch.teamBId === `W-${match.id}`) {
+                    nextMatchUpdates.teamBId = winnerId;
+                    shouldUpdate = true;
+                 }
+                 if (match.bracket === 'Winner') { // Send loser to LB
+                    const loserPlaceholder = `L-${match.id}`;
+                    if (nextMatch.teamAId === loserPlaceholder) { nextMatchUpdates.teamAId = loserId; shouldUpdate = true; }
+                    if (nextMatch.teamBId === loserPlaceholder) { nextMatchUpdates.teamBId = loserId; shouldUpdate = true; }
+                 }
+            }
+            
+            // Update status if both teams are known (and not TBD/Placeholder)
+            if (shouldUpdate && !nextMatchUpdates.status) {
+                const finalA = nextMatchUpdates.teamAId || nextMatch.teamAId;
+                const finalB = nextMatchUpdates.teamBId || nextMatch.teamBId;
+                if (finalA && finalB && !finalA.startsWith('W-') && !finalA.startsWith('L-') && !finalB.startsWith('W-') && !finalB.startsWith('L-') && nextMatch.status === 'TBD') {
+                   nextMatchUpdates.status = 'SCHEDULED';
+                }
+            }
+
+            if (shouldUpdate) {
+                 updateOps.push(window.updateDoc(nextMatchRef, nextMatchUpdates));
+            }
+        });
+
+        await Promise.all(updateOps);
+        console.log(`Cập nhật KO thành công cho trận ${matchId} và trận tiếp theo (Firestore)`);
+    }
+
+    // --- TAB L: KẾT QUẢ (Public Display - Real-time via P1) ---
+    function renderLiveUpcomingMatches() {
+        const liveUpcomingEl = document.getElementById('live-upcoming-matches');
+        // ... (Logic remains the same, relying on local tournamentData.matches updated by listener)
+        liveUpcomingEl.innerHTML = '';
+        
+        const nowTime = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+        
+        // Use IN_PROGRESS status for live monitoring (will be manually set in F/G in a future P3 update)
+        const liveMatches = tournamentData.matches.filter(m => m.status === 'IN_PROGRESS'); 
+        const upcomingMatches = tournamentData.matches.filter(m => m.status === 'SCHEDULED' && m.scheduledTime && m.scheduledTime.localeCompare(nowTime) >= 0)
+                                                    .sort((a, b) => a.scheduledTime.localeCompare(b.scheduledTime)).slice(0, 5);
+        
+        let html = '<h4>TRẬN ĐANG DIỄN RA (L1)</h4>';
+        if (liveMatches.length > 0) {
+            liveMatches.forEach(match => {
+                const teamA = getTeam(match.teamAId)?.name || 'TBD';
+                const teamB = getTeam(match.teamBId)?.name || 'TBD';
+                html += `<div class="live-match-item">Sân ${match.courtId}: <strong>${teamA} vs ${teamB}</strong> (${match.score.A}-${match.score.B})</div>`;
+            });
+        } else {
+            html += '<p>Không có trận đấu đang diễn ra.</p>';
+        }
+
+
+        html += '<h4>SẮP DIỄN RA (L2)</h4>';
+        if (upcomingMatches.length > 0) {
+             html += '<table class="w-full"><thead><tr><th>Giờ Dự Kiến</th><th>Sân</th><th>Trận Đấu</th><th>Vòng</th></tr></thead><tbody>';
+             upcomingMatches.forEach(match => {
+                const teamA = getTeam(match.teamAId)?.name || 'TBD';
+                const teamB = getTeam(match.teamBId)?.name || 'TBD';
+                html += `<tr><td>${match.scheduledTime}</td><td>${match.courtId}</td><td>${teamA} vs ${teamB}</td><td>${match.roundId}</td></tr>`;
+             });
+             html += '</tbody></table>';
+        } else {
+             html += '<p>Không có trận đấu nào trong danh sách sắp diễn ra.</p>';
+        }
+
+        liveUpcomingEl.innerHTML = html;
+    }
+    window.renderLiveUpcomingMatches = renderLiveUpcomingMatches;
+
+    function renderFinalStandings() {
+        const finalEl = document.getElementById('final-standings');
+        // ... (Logic remains the same)
+        finalEl.innerHTML = '';
+        
+        const finalMatch = tournamentData.matches.find(m => m.roundId === 'Chung Kết' && m.winnerId);
+        const grandFinalMatch = tournamentData.matches.find(m => m.roundId === 'Grand Final' && m.winnerId);
+
+        let html = '';
+        
+        if (grandFinalMatch || finalMatch) {
+            const match = grandFinalMatch || finalMatch;
+            const winner = getTeam(match.winnerId);
+            const runnerUp = getTeam(match.loserId);
+            
+            html += `
+                <div class="final-result-item">
+                    <h3>🏆 VÔ ĐỊCH TOÀN GIẢI</h3>
+                    <p>${winner?.name || 'TBD'}</p>
+                    <p style="font-size:0.9em; color:#888;">🥈 Á Quân: ${runnerUp?.name || 'TBD'}</p>
+                </div>
+            `;
+            finalEl.innerHTML = html;
+        } else {
+             finalEl.innerHTML = '<p>Xếp hạng chung cuộc sẽ được hiển thị sau khi Vòng Loại kết thúc.</p>';
+        }
+    }
+    window.renderFinalStandings = renderFinalStandings;
+
+    // --- TAB H: TEST (UTILITY) ---
+    async function simulateGroupResults() {
+        if (!window.isAuthReady) return;
+        
+        const groupMatches = tournamentData.matches.filter(m => m.roundId.startsWith('Group') && !m.winnerId);
+        if (groupMatches.length === 0) {
+             alert('Không có trận Vòng Bảng nào để giả lập.');
+             return;
+        }
+
+        const updates = [];
+
+        groupMatches.forEach(match => {
+            if (!match.winnerId) {
+                const scoreA = Math.floor(Math.random() * 3) + 11; 
+                const scoreB = Math.floor(Math.random() * 10);
+                
+                const winnerId = scoreA > scoreB ? match.teamAId : match.teamBId;
+                const loserId = scoreA > scoreB ? match.teamBId : match.teamAId;
+                const currentTime = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
+
+                // P1: Prepare update data for Firestore
+                updates.push(window.updateDoc(window.doc(window.db, window.COLLECTIONS.MATCHES, match.id), {
+                    score: { A: scoreA, B: scoreB, sets: [{ scoreA, scoreB }] },
+                    winnerId: winnerId,
+                    loserId: loserId,
+                    status: 'COMPLETED',
+                    actualStartTime: currentTime
+                }));
+            }
+        });
+        
+        await Promise.all(updates);
+        alert(`Đã giả lập ${updates.length} trận đấu Vòng Bảng thành công! (Đã đồng bộ Firestore)`);
+    }
+
+    async function softReset() {
+        if (!window.isAuthReady) return;
+        if (!confirm('Thao tác này sẽ XÓA Phân Bảng, Lịch Trình, Vòng Bảng và Vòng Loại, nhưng GIỮ LẠI danh sách Đội và Cấu Hình. Tiếp tục?')) {
+            return;
+        }
+
+        const teamUpdates = tournamentData.teams.map(t => {
+            const teamRef = window.doc(window.db, window.COLLECTIONS.TEAMS, t.id);
+            return window.updateDoc(teamRef, { groupId: null, status: 'OFFICIAL' });
+        });
+
+        const matchCollection = window.collection(window.db, window.COLLECTIONS.MATCHES);
+        const matchDocs = await window.getDocs(matchCollection);
+        const matchDeletes = matchDocs.docs.map(d => window.deleteDoc(window.doc(matchCollection, d.id)));
+
+        await Promise.all([...teamUpdates, ...matchDeletes]);
+        
+        alert('Soft Reset hoàn tất (Đã xóa dữ liệu trên Firestore). Bạn có thể bắt đầu lại từ bước Phân Bảng (D3).');
+        // Listeners will handle the final UI update
+    }
+</script>
+
+<!-- Helper function for bracket generation (kept for completeness) -->
+<script>
+    // These functions were part of the previous logic and are required for G1/G2
+    // They are kept here for the functions that rely on them (getTeamsToAdvance, generateSingleElimination, generateDoubleElimination)
+
+    function getTeamsToAdvance() {
+        // ... (Logic implementation as before, relying on tournamentData.matches)
+        const teamsToAdvance = [];
+        const groups = tournamentData.teams.reduce((acc, team) => {
+            if (team.groupId) {
+                acc[team.groupId] = acc[team.groupId] || [];
+                acc[team.groupId].push(team.id);
+            }
+            return acc;
+        }, {});
+        tournamentData.groups = groups;
+
+        for (const groupId in tournamentData.groups) {
+            const teamStats = {}; 
+            tournamentData.groups[groupId].forEach(teamId => {
+                teamStats[teamId] = { P: 0, W: 0, L: 0, PF: 0, PA: 0, Diff: 0, teamName: getTeam(teamId)?.name || 'TBD', teamId: teamId };
+            });
+
+            const groupMatches = tournamentData.matches.filter(m => m.roundId === `Group ${groupId}` && m.status === 'COMPLETED');
+            
+            groupMatches.forEach(match => {
+                const statA = teamStats[match.teamAId];
+                const statB = teamStats[match.teamBId];
+                if (match.winnerId === match.teamAId) {
+                    statA.W++; 
+                } else if (match.winnerId === match.teamBId) {
+                    statB.W++;
+                }
+                statA.Diff = (statA.PF || 0) - (statA.PA || 0);
+                statB.Diff = (statB.PF || 0) - (statB.PA || 0);
+            });
+
+            const sortedStats = Object.values(teamStats).sort((a, b) => {
+                b.Diff = b.PF - b.PA; a.Diff = a.PF - a.PA;
+                if (b.W !== a.W) return b.W - a.W;
+                if (b.Diff !== a.Diff) return b.Diff - a.Diff;
+                return b.PF - a.PF;
+            });
+
+            for (let i = 0; i < tournamentData.config.advancingTeams && i < sortedStats.length; i++) {
+                teamsToAdvance.push(sortedStats[i].teamId);
+            }
+        }
+        return teamsToAdvance;
+    }
+    
+    function generateSingleElimination(teams) {
+        let matches = [];
+        let numRounds = Math.log2(teams.length);
+        let currentRoundTeams = [...teams];
+        
+        const roundNames = ['Vòng 1/8', 'Tứ Kết', 'Bán Kết', 'Chung Kết'];
+        let matchCounter = 0;
+        let numTeamsInRound = teams.length;
+
+        for (let r = 0; r < numRounds; r++) {
+            const roundName = roundNames[roundNames.length - numRounds + r];
+            const numMatches = numTeamsInRound / 2;
+            
+            for (let i = 0; i < numMatches; i++) {
+                matchCounter++;
+                const matchId = `W${matchCounter}`; // Use simple ID for linking
+                
+                const teamAId = currentRoundTeams[i * 2];
+                const teamBId = currentRoundTeams[i * 2 + 1];
+                
+                matches.push({
+                    id: generateId('KO'), // Use Firestore ID generator for the final object
+                    roundId: roundName,
+                    teamAId: teamAId,
+                    teamBId: teamBId,
+                    score: { A: 0, B: 0, sets: [] },
+                    winnerId: null,
+                    loserId: null,
+                    status: (teamAId && teamBId) ? 'SCHEDULED' : (teamAId || teamBId ? 'BYE' : 'TBD'),
+                    bracket: 'Single',
+                    // The match.id is used as the link placeholder for the next match (handled in G2)
+                    linkId: matchId 
+                });
+                currentRoundTeams[i] = matchId; 
+            }
+            currentRoundTeams.length = numMatches;
+            numTeamsInRound /= 2;
+        }
+        return matches;
+    }
+
+    function generateDoubleElimination(teams) {
+        // Simplified Double Elimination generation for demo purposes
+        let matches = [];
+        let size = teams.length;
+        
+        // WB Round 1
+        const wbR1Matches = size / 2;
+        for (let i = 1; i <= wbR1Matches; i++) {
+            matches.push({
+                id: generateId('WB'), roundId: 'WB-R1', 
+                teamAId: teams[i * 2 - 2], teamBId: teams[i * 2 - 1],
+                score: { A: 0, B: 0, sets: [] }, winnerId: null, loserId: null, status: 'SCHEDULED', bracket: 'Winner', linkId: `WB${i}` 
+            });
+        }
+        
+        // Additional rounds (placeholders)
+        matches.push({ id: generateId('WB'), roundId: 'WB-R2', teamAId: `W-WB1`, teamBId: `W-WB2`, score: { A: 0, B: 0, sets: [] }, winnerId: null, loserId: null, status: 'TBD', bracket: 'Winner' });
+        matches.push({ id: generateId('LB'), roundId: 'LB-R1', teamAId: `L-WB1`, teamBId: `L-WB2`, score: { A: 0, B: 0, sets: [] }, winnerId: null, loserId: null, status: 'TBD', bracket: 'Loser' });
+        matches.push({ id: generateId('GF'), roundId: 'Grand Final', teamAId: `W-WB-Final`, teamBId: `W-LB-Final`, score: { A: 0, B: 0, sets: [] }, winnerId: null, loserId: null, status: 'TBD', bracket: 'Final' });
+        
+        return matches;
+    }
+</script>
+
+</body>
+</html>
