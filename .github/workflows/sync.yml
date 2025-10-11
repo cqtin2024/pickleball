@@ -1,0 +1,16 @@
+name: Auto Commit from WebApp
+on:
+  workflow_dispatch:
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Commit auto update
+        run: |
+          git config --global user.email "github-actions@users.noreply.github.com"
+          git config --global user.name "GitHub Actions"
+          git add data/players.json
+          git commit -m "Auto update data"
+          git push
