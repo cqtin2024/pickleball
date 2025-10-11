@@ -1,143 +1,113 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="vi">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Pickleball Tournament - Data Manager</title>
-  <style>
-    body { font-family: Arial, sans-serif; margin: 30px; max-width: 720px; }
-    h1 { color: #2c3e50; }
-    input, button, textarea { padding: 8px; margin: 5px 0; font-size: 16px; width: 100%; box-sizing: border-box; }
-    section { margin-top: 30px; border-top: 1px solid #eee; padding-top: 20px; }
-    .hidden { display: none; }
-    pre { background: #f6f6f6; padding: 10px; border-radius: 6px; font-size: 14px; overflow:auto; }
-    .ok { color: #27ae60; }
-    .err { color: #c0392b; }
-    small { color: #666; }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pickleball Sync (GitHub API)</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<style>
+  body { background:#f8f9fa; padding:2rem; }
+  .card { border-radius:12px; box-shadow:0 3px 10px rgba(0,0,0,0.1); }
+</style>
 </head>
 <body>
-  <h1>🏓 Pickleball Tournament – Data Manager</h1>
-  <p>Hướng dẫn nhanh: tạo <b>Fine-grained Personal Access Token</b> trên GitHub (Permissions: repo contents read & write) và dán vào ô bên dưới. <small>(Token được lưu cục bộ trên trình duyệt)</small></p>
+<div class="container">
+  <h2 class="mb-4 text-center">🏓 Pickleball Data Sync (GitHub API)</h2>
+  <div class="card p-3 mb-4">
+    <h5>🔧 Cấu hình GitHub</h5>
+    <div class="mb-3">
+      <label class="form-label">Owner (tài khoản GitHub)</label>
+      <input id="owner" type="text" class="form-control" placeholder="VD: tinle">
+    </div>
+    <div class="mb-3">
+      <label class="form-label">Repository</label>
+      <input id="repo" type="text" class="form-control" placeholder="VD: Pickleball">
+    </div>
+    <div class="mb-3">
+      <label class="form-label">Token truy cập cá nhân (PAT)</label>
+      <input id="token" type="password" class="form-control" placeholder="Dán token GitHub tại đây">
+    </div>
+    <button id="saveConfig" class="btn btn-primary">💾 Lưu cấu hình</button>
+  </div>
 
-  <section id="setupSection">
-    <h2>🧩 Bước 1. Tạo GitHub Token</h2>
-    <ol>
-      <li>Mở: <a href="https://github.com/settings/tokens?type=fine-grained" target="_blank">https://github.com/settings/tokens?type=fine-grained</a></li>
-      <li>Nhấn <b>Generate new token</b></li>
-      <li>Repository access: chọn repo của bạn (ví dụ <code>Pickleball</code>)</li>
-      <li>Permissions: <b>Contents → Read and write</b></li>
-      <li>Sao chép token (chỉ hiện 1 lần)</li>
-    </ol>
+  <div class="card p-3">
+    <h5>📄 Quản lý dữ liệu người chơi</h5>
+    <textarea id="jsonData" rows="8" class="form-control mb-2" placeholder="Dữ liệu JSON sẽ hiển thị tại đây..."></textarea>
+    <div class="d-flex gap-2">
+      <button id="loadBtn" class="btn btn-success">⬇️ Tải dữ liệu</button>
+      <button id="saveBtn" class="btn btn-warning">⬆️ Ghi dữ liệu</button>
+    </div>
+    <div id="status" class="mt-3 text-muted"></div>
+  </div>
+</div>
 
-    <h2>🔑 Bước 2. Dán Token vào đây:</h2>
-    <input type="password" id="tokenInput" placeholder="Dán GitHub token tại đây..." />
-    <button id="saveTokenBtn">Lưu token & tiếp tục</button>
-    <p id="tokenStatus"></p>
-  </section>
+<script>
+function saveConfig() {
+  const cfg = {
+    owner: document.getElementById('owner').value.trim(),
+    repo: document.getElementById('repo').value.trim(),
+    token: document.getElementById('token').value.trim()
+  };
+  localStorage.setItem('githubConfig', JSON.stringify(cfg));
+  document.getElementById('status').innerText = '✅ Cấu hình đã lưu!';
+}
 
-  <section id="mainApp" class="hidden">
-    <h2>🏅 Quản lý người chơi</h2>
-    <label>Tên người chơi:</label>
-    <input id="playerName" type="text" placeholder="Nhập tên người chơi..." />
-    <button id="saveBtn">Lưu vào GitHub</button>
-    <pre id="log"></pre>
+function loadConfig() {
+  const cfg = JSON.parse(localStorage.getItem('githubConfig') || '{}');
+  document.getElementById('owner').value = cfg.owner || '';
+  document.getElementById('repo').value = cfg.repo || '';
+  document.getElementById('token').value = cfg.token || '';
+}
 
-    <h3>⚙️ Cấu hình hiện tại</h3>
-    <pre id="configDisplay"></pre>
-    <button id="clearTokenBtn" style="background:#eee;">Xoá token và cấu hình</button>
+async function loadData() {
+  const cfg = JSON.parse(localStorage.getItem('githubConfig') || '{}');
+  if (!cfg.token || !cfg.owner || !cfg.repo) return alert('⚠️ Vui lòng nhập đầy đủ cấu hình!');
+  const url = `https://api.github.com/repos/${cfg.owner}/${cfg.repo}/contents/data/players.json`;
+  const res = await fetch(url, {
+    headers: { "Authorization": `token ${cfg.token}`, "Accept": "application/vnd.github.v3+json" }
+  });
+  if (!res.ok) {
+    document.getElementById('status').innerText = '❌ Lỗi tải dữ liệu: ' + res.status;
+    return;
+  }
+  const data = await res.json();
+  const decoded = atob(data.content);
+  document.getElementById('jsonData').value = decoded;
+  document.getElementById('status').innerText = '✅ Đã tải dữ liệu thành công!';
+}
 
-    <section>
-      <h3>🔁 Hướng dẫn đồng bộ</h3>
-      <ol>
-        <li>Sau khi thêm người chơi, Action sẽ commit thay đổi vào <code>/data/players.json</code>.</li>
-        <li>Mở repository trên GitHub để kiểm tra file <code>data/players.json</code> và các commit.</li>
-        <li>Nếu muốn thay đổi tên repo trên giao diện, chỉnh biến <code>owner</code> hoặc <code>repo</code> bên dưới trong file <code>index.html</code>.</li>
-      </ol>
-    </section>
-  </section>
+async function saveData() {
+  const cfg = JSON.parse(localStorage.getItem('githubConfig') || '{}');
+  if (!cfg.token || !cfg.owner || !cfg.repo) return alert('⚠️ Vui lòng nhập đầy đủ cấu hình!');
+  const url = `https://api.github.com/repos/${cfg.owner}/${cfg.repo}/contents/data/players.json`;
+  const res = await fetch(url, {
+    headers: { "Authorization": `token ${cfg.token}`, "Accept": "application/vnd.github.v3+json" }
+  });
+  const json = await res.json();
+  const sha = json.sha;
+  const newContent = btoa(document.getElementById('jsonData').value);
+  const update = await fetch(url, {
+    method: "PUT",
+    headers: {
+      "Authorization": `token ${cfg.token}`,
+      "Accept": "application/vnd.github.v3+json",
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      message: "Update data via Pickleball App",
+      content: newContent,
+      sha: sha
+    })
+  });
+  const result = await update.json();
+  document.getElementById('status').innerText = result.commit ? '✅ Ghi dữ liệu thành công!' : '❌ Ghi thất bại!';
+}
 
-  <script>
-    // ====== CONFIG ======
-    // Thay YOUR_GITHUB_USERNAME bằng tên user GitHub của bạn.
-    const owner = "YOUR_GITHUB_USERNAME";
-    const repo  = "Pickle";
-    const eventType = "update_data";
-    const tokenKey = "github_token_pickleb";
+document.getElementById('saveConfig').onclick = saveConfig;
+document.getElementById('loadBtn').onclick = loadData;
+document.getElementById('saveBtn').onclick = saveData;
 
-    // ====== UI refs ======
-    const tokenInput = document.getElementById("tokenInput");
-    const saveTokenBtn = document.getElementById("saveTokenBtn");
-    const tokenStatus = document.getElementById("tokenStatus");
-    const setupSection = document.getElementById("setupSection");
-    const mainApp = document.getElementById("mainApp");
-    const logEl = document.getElementById("log");
-    const configDisplay = document.getElementById("configDisplay");
-
-    // If token exists in localStorage, skip setup
-    const savedToken = localStorage.getItem(tokenKey);
-    if (savedToken) showMainApp(savedToken);
-
-    saveTokenBtn.onclick = () => {
-      const token = tokenInput.value.trim();
-      if (!token) return alert("Vui lòng dán token GitHub!");
-      localStorage.setItem(tokenKey, token);
-      showMainApp(token);
-    };
-
-    function showMainApp(token) {
-      setupSection.classList.add("hidden");
-      mainApp.classList.remove("hidden");
-      configDisplay.textContent = JSON.stringify({ owner, repo, token: token.slice(0, 6) + "..." }, null, 2);
-    }
-
-    document.getElementById("clearTokenBtn").onclick = () => {
-      localStorage.removeItem(tokenKey);
-      location.reload();
-    };
-
-    // Save player
-    document.getElementById("saveBtn").onclick = async () => {
-      const token = localStorage.getItem(tokenKey);
-      const name = document.getElementById("playerName").value.trim();
-      if (!token) return alert("Bạn chưa dán token!");
-      if (!name) return alert("Nhập tên người chơi!");
-
-      // Prepare payload for repository_dispatch
-      const payload = {
-        event_type: eventType,
-        client_payload: {
-          file: "players.json",
-          newData: { name: name, time: new Date().toISOString() }
-        }
-      };
-
-      logEl.textContent = "⏳ Đang gửi yêu cầu tới GitHub Actions...";
-      logEl.className = "";
-      try {
-        const res = await fetch(`https://api.github.com/repos/${owner}/${repo}/dispatches`, {
-          method: "POST",
-          headers: {
-            "Accept": "application/vnd.github+json",
-            "Authorization": `Bearer ${token}`,
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify(payload)
-        });
-
-        if (res.ok || res.status === 204) {
-          logEl.textContent = "✅ Gửi thành công! Dữ liệu sẽ được cập nhật trong vài giây (kiểm tra commit trong repo).";
-          logEl.className = "ok";
-        } else {
-          const txt = await res.text();
-          logEl.textContent = "❌ Lỗi: " + txt;
-          logEl.className = "err";
-        }
-      } catch (e) {
-        logEl.textContent = "❌ Lỗi mạng hoặc fetch: " + e.message;
-        logEl.className = "err";
-      }
-    };
-  </script>
+loadConfig();
+</script>
 </body>
 </html>
