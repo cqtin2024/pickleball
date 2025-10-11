@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Tournament App v11 Full</title>
+<link href="vendor/bootstrap.min.css" rel="stylesheet">
+<link href="vendor/bootstrap-icons.css" rel="stylesheet">
+<link href="css/style.css" rel="stylesheet">
+</head>
+<body>
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+  <div class="container-fluid"><a class="navbar-brand" href="#">Tournament v11</a></div>
+</nav>
+<div class="container mt-3">
+  <div class="row">
+    <div class="col-md-3">
+      <div class="section">
+        <h5>Dữ liệu mẫu</h5>
+        <button id="sample12" class="btn btn-sm btn-primary mb-2">Nạp 12 đội</button>
+        <button id="sample16" class="btn btn-sm btn-primary mb-2">Nạp 16 đội</button>
+        <button id="sample32" class="btn btn-sm btn-primary mb-2">Nạp 32 đội</button>
+        <hr/>
+        <h6>Actions</h6>
+        <button id="btn-groups-generate" class="btn btn-sm btn-success mb-2">Chia bảng (tự động)</button>
+        <button id="btn-ko-generate" class="btn btn-sm btn-warning mb-2">Sinh Knockout</button>
+        <button id="btn-compute-finance" class="btn btn-sm btn-info mb-2">Tính tài chính</button>
+      </div>
+      <div class="section"><h6>Legend</h6><p>Teams: tên đội (vui nhộn) + 2 players (tên thật).</p></div>
+    </div>
+    <div class="col-md-9">
+      <ul class="nav nav-tabs" id="mainTab" role="tablist">
+        <li class="nav-item"><a class="nav-link active" id="teams-tab" data-bs-toggle="tab" href="#teams">Đội & Người chơi</a></li>
+        <li class="nav-item"><a class="nav-link" id="groups-tab" data-bs-toggle="tab" href="#groups">Vòng bảng</a></li>
+        <li class="nav-item"><a class="nav-link" id="ko-tab" data-bs-toggle="tab" href="#ko">Loại trực tiếp</a></li>
+        <li class="nav-item"><a class="nav-link" id="finance-tab" data-bs-toggle="tab" href="#finance">Ngân sách</a></li>
+        <li class="nav-item"><a class="nav-link" id="summary-tab" data-bs-toggle="tab" href="#summary">Tổng kết</a></li>
+      </ul>
+      <div class="tab-content mt-3">
+        <div class="tab-pane fade show active" id="teams"><div id="teamsList"></div></div>
+        <div class="tab-pane fade" id="groups"><div id="groupsContainer"></div><div id="standingsContainer"></div></div>
+        <div class="tab-pane fade" id="ko"><div id="koContainer"></div></div>
+        <div class="tab-pane fade" id="finance"><div id="financeContainer"></div></div>
+        <div class="tab-pane fade" id="summary"><canvas id="summaryChart" width="400" height="200"></canvas></div>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="vendor/bootstrap.bundle.min.js"></script>
+<script src="vendor/chart.umd.min.js"></script>
+<script src="vendor/html2canvas.min.js"></script>
+<script type="module" src="js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,1944 @@
+<!doctype html>
+<html lang='vi'>
+<head>
+  <meta charset='utf-8' />
+  <meta name='viewport' content='width=device-width,initial-scale=1' />
+  <title>Pickleball Tournament V9.5.9 (Detailed Scheduling & Court Config)</title>
+  <link href='https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css' rel='stylesheet'>
+  <link href="css/style.css" rel="stylesheet">
+</head>
+<body>
+<nav class='navbar navbar-expand-lg'>
+  <div class='container-fluid'>
+    <a class='navbar-brand d-flex align-items-center' href='#'>
+      <img id='headerLogo' src='' class='logo-preview me-2' style='display:none'>
+      <span id='tournamentTitle'>Pickleball Tournament V9.5.9</span>
+    </a>
+    <div>
+      <button class='btn btn-dark me-2' onclick='saveTournament()'>Lưu giải</button>
+      <button class='btn btn-dark me-2' onclick='exportTournament()'>Xuất JSON</button>
+      <label class='btn btn-outline-secondary mb-0 me-2'>Import JSON<input id='importFile' type='file' accept='application/json' onchange='importTournament(event)' style='display:none'></label>
+      <button class='btn btn-dark' onclick='renderSavedList()'>Load</button>
+    </div>
+  </div>
+</nav>
+
+<div class='container my-3'>
+  <ul class='nav nav-tabs' id='mainTabs' role='tablist'>
+    <li class='nav-item' role='presentation'><button class='nav-link active' id='tournament-tab' data-bs-toggle='tab' data-bs-target='#tournament' type='button'>🏆 Giải đấu</button></li>
+    <li class='nav-item' role='presentation'><button class='nav-link' id='config-tab' data-bs-toggle='tab' data-bs-target='#config' type='button'>⚙️ Cấu hình</button></li>
+    <li class='nav-item' role='presentation'><button class='nav-link' id='budget-tab' data-bs-toggle='tab' data-bs-target='#budget' type='button'>💰 Thu chi & Tài trợ</button></li>
+    <li class='nav-item' role='presentation'><button class='nav-link' id='players-tab' data-bs-toggle='tab' data-bs-target='#players' type='button'>👥 Người chơi & Đội</button></li>
+    <li class='nav-item' role='presentation'><button class='nav-link' id='matches-tab' data-bs-toggle='tab' data-bs-target='#matches' type='button'>📊 Trận đấu & Kết quả</button></li>
+    <li class='nav-item' role='presentation'><button class='nav-link' id='test-tab' data-bs-toggle='tab' data-bs-target='#test' type='button'>🎲 Test & Random</button></li>
+  </ul>
+
+  <div class='tab-content'>
+    <div class='tab-pane fade show active' id='tournament'>
+      <div class='section row g-3'>
+        <div class='col-md-6'>
+          <h5>Thông tin cơ bản</h5>
+          <label class='form-label'>Tên giải</label>
+          <input id='inputTitle' class='form-control' value='Pickleball Cup' onchange='setTournamentField("title", this.value)'>
+          <label class='form-label mt-2'>Logo (upload)</label>
+          <input id='inputLogo' type='file' accept='image/*' class='form-control'>
+          <div class='muted-sm mt-1'>Logo sẽ lưu vào dữ liệu (base64).</div>
+
+          <h5 class='mt-3'>Ban tổ chức</h5>
+          <div id='btcList'></div>
+          <div class='d-flex gap-2 mt-2'>
+            <input id='btcName' class='form-control' placeholder='Tên BTC'>
+            <button class='btn btn-dark' onclick='addBTC()'>Thêm</button>
+            <button class='btn btn-outline-secondary' onclick='clearBTC()'>Xóa hết</button>
+          </div>
+
+          <div class='mt-3'>
+            <h6>Quản lý giải đã lưu</h6>
+            <div id='savedList' class='small-muted'></div>
+            <div class='mt-2'><button class='btn btn-outline-secondary' onclick='deleteTournament()'>Xóa giải hiện tại</button></div>
+          </div>
+        </div>
+
+        <div class='col-md-6'>
+            <h5>Thông tin Sân thi đấu</h5>
+            <label class='form-label'>Tên Sân</label>
+            <input id='courtName' class='form-control' onchange='setCourtField("name", this.value)'>
+            <label class='form-label mt-2'>Địa chỉ</label>
+            <input id='courtAddress' class='form-control' onchange='setCourtField("address", this.value)'>
+            <label class='form-label mt-2'>Link Map</label>
+            <input id='courtMapLink' class='form-control' onchange='setCourtField("mapLink", this.value)'>
+            <label class='form-label mt-2'>Người liên lạc</label>
+            <input id='courtContactPerson' class='form-control' onchange='setCourtField("contactPerson", this.value)'>
+            <label class='form-label mt-2'>Số liên lạc</label>
+            <input id='courtContactPhone' class='form-control' onchange='setCourtField("contactPhone", this.value)'>
+
+            <h5 class='mt-4'>Thu Lệ phí</h5>
+            <label class='form-label'>Số tiền Lệ phí (VND/người/đội)</label>
+            <input id='feeAmount' type='number' min='0' class='form-control' onchange='setFeeField("amount", this.value)'>
+            <label class='form-label mt-2'>QR Code Thanh toán (upload)</label>
+            <input id='inputQrCode' type='file' accept='image/*' class='form-control'>
+            <img id='qrCodePreview' src='' class='logo-preview mt-2' style='display:none; width: 120px; height: 120px;'>
+            <div class='muted-sm mt-1'>Ảnh QR Code sẽ lưu vào dữ liệu (base64).</div>
+        </div>
+      </div>
+    </div>
+
+    <div class='tab-pane fade' id='config'>
+      <div class='section row'>
+          <div class='col-md-6'>
+              <h5>Hình thức giải</h5>
+              <select id='tourneyFormat' class='form-select' onchange='updateSimpleConfig()'>
+                  <option value='rr+ko' selected>Round robin + Knock-out</option>
+                  <option value='rr'>Round robin xếp hạng (không knock-out)</option>
+              </select>
+              <div class='muted-sm mt-2'>Chọn cách tổ chức chung cho giải.</div>
+          </div>
+          <div class='col-md-6'>
+              <h5>Cấu hình Nâng cao</h5>
+              <div class='d-flex gap-2 align-items-center flex-wrap'>
+                  <label class='muted-sm me-3'>Số đội vào mặc định/bảng</label>
+                  <select id='defaultAdvance' class='form-select' style='width:120px' onchange='updateSimpleConfig()'>
+                      <option value='1'>1</option><option value='2' selected>2</option><option value='auto'>Auto</option>
+                  </select>
+                  <label class='muted-sm ms-3'>Số vé vớt</label>
+                  <select id='wildcardCount' class='form-select' style='width:100px' onchange='updateSimpleConfig()'>
+                      <option value='0' selected>0</option><option value='1'>1</option><option value='2'>2</option>
+                  </select>
+              </div>
+              <div class='muted-sm mt-2'>Cấu hình luật thi đấu Set được chỉnh ở phía dưới.</div>
+          </div>
+          
+          <div class='col-md-12 mt-3'>
+              <hr>
+              <h4>⏰ Cấu hình Lịch thi đấu & Sân bãi</h4>
+              <div class="row g-3 mb-4">
+                  <div class="col-md-4">
+                      <label for="initialStartTime" class="form-label small">Giờ bắt đầu Trận đầu tiên (HH:MM)</label>
+                      <input type="time" id="initialStartTime" class="form-control form-control-sm" value="09:00" onchange="saveSchedulingConfig()">
+                  </div>
+                  <div class="col-md-4">
+                      <label for="spareCourts" class="form-label small">Số sân Dự phòng</label>
+                      <input type="number" id="spareCourts" class="form-control form-control-sm" value="0" min="0" onchange="saveSchedulingConfig()">
+                  </div>
+                  <div class="col-md-4">
+                      <label class="form-label small">Tác vụ</label>
+                      <button class="btn btn-sm btn-dark w-100" onclick="generateScheduledTimes()">Sinh lịch tự động</button>
+                  </div>
+                  <div class="col-md-12">
+                      <label for="courtNamesConfig" class="form-label small">Tên Sân Thi Đấu (ngăn cách bằng dấu phẩy)</label>
+                      <textarea id="courtNamesConfig" class="form-control form-control-sm" rows="2" placeholder="Sân 1, Sân 2, Sân 3, Sân 4" onchange="saveCourtNames()"></textarea>
+                  </div>
+              </div>
+          </div>
+
+          <div class='col-md-12 mt-3'>
+              <div id='matchConfigContainer'>
+                  <h4>Cấu hình Luật Set, Thời gian & Sân theo Giai đoạn</h4>
+                  <div id='rrConfigBlock'></div> 
+                  
+                  <hr>
+                  <h5>Vòng Loại Trực Tiếp (Knock-out Rounds)</h5>
+                  <div id='qfConfigBlock'></div> 
+                  <div id='sfConfigBlock'></div> 
+                  <div id='finalConfigBlock'></div> 
+              </div>
+          </div>
+      </div>
+    </div>
+    
+    <div class='tab-pane fade' id='budget'>
+      <div class='section row'>
+        <div class='col-md-12'>
+            <h5 class='d-flex justify-content-between align-items-center'>
+                Nhà tài trợ (Sponsors)
+                <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#sponsorCollapse" aria-expanded="true" aria-controls="sponsorCollapse">Thu/Gọn</button>
+            </h5>
+            <div class="collapse show" id="sponsorCollapse">
+                <div class='budget-grid budget-header' style='grid-template-columns: 2fr 1fr 1fr 1fr 50px;'>
+                    <div>Tên</div><div>Khoản tiền (VND)</div><div>Hiện vật</div><div>Liên hệ</div><div></div>
+                </div>
+                <div id='sponsorList'></div>
+                <div class='d-flex gap-2 mt-3'>
+                    <input id='newSponsorName' class='form-control form-control-sm' placeholder='Tên nhà tài trợ'>
+                    <input id='newSponsorAmount' type='number' min='0' class='form-control form-control-sm' placeholder='Tiền mặt'>
+                    <input id='newSponsorInKind' class='form-control form-control-sm' placeholder='Hiện vật'>
+                    <input id='newSponsorContact' class='form-control form-control-sm' placeholder='Liên hệ'>
+                    <button class='btn btn-sm btn-dark' onclick='addSponsor()'>Thêm</button>
+                </div>
+            </div>
+        </div>
+      </div>
+
+      <div class='section'>
+        <h5>Tính toán Chi phí Tiệc sau giải</h5>
+        <div class='party-calc-grid'>
+            <label class='form-label'>Chi phí/người (VND)</label>
+            <label class='form-label'>Số người dự kiến</label>
+            <label class='form-label'>Số người thực tế</label>
+        </div>
+        <div class='party-calc-grid'>
+            <input id='partyCostPerPerson' type='number' min='0' class='form-control' placeholder='100000' onchange='calculatePartyCost(); setPartyConfig()'>
+            <input id='partyPlannedAttendees' type='number' min='0' class='form-control' placeholder='50' onchange='calculatePartyCost(); setPartyConfig()'>
+            <input id='partyActualAttendees' type='number' min='0' class='form-control' placeholder='45' onchange='calculatePartyCost(); setPartyConfig()'>
+        </div>
+        <div id='partyBudgetingArea' class='mt-2'></div>
+      </div>
+
+      <div class='section row'>
+        <div class='col-md-6'>
+            <h5 class='d-flex justify-content-between align-items-center'>
+                Khoản Thu Khác (Income)
+                <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#incomeCollapse" aria-expanded="true" aria-controls="incomeCollapse">Thu/Gọn</button>
+            </h5>
+            <div class="collapse show" id="incomeCollapse">
+                <div class='budget-grid budget-header'><div>Tên</div><div>Dự toán</div><div>Thực tế</div><div></div></div>
+                <div id='incomeList'></div>
+                <div class='d-flex gap-2 mt-3'>
+                    <input id='newIncomeName' class='form-control form-control-sm' placeholder='Tên khoản thu'>
+                    <input id='newIncomePlanned' type='number' min='0' class='form-control form-control-sm' placeholder='Dự toán'>
+                    <button class='btn btn-sm btn-dark' onclick='addItem("income")'>Thêm</button>
+                </div>
+            </div>
+        </div>
+        <div class='col-md-6'>
+            <h5 class='d-flex justify-content-between align-items-center'>
+                Khoản Chi (Expense)
+                <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#expenseCollapse" aria-expanded="true" aria-controls="expenseCollapse">Thu/Gọn</button>
+            </h5>
+            <div class="collapse show" id="expenseCollapse">
+                <div class='budget-grid budget-header'><div>Tên</div><div>Dự toán</div><div>Thực tế</div><div></div></div>
+                <div id='expenseList'></div>
+                <div class='d-flex gap-2 mt-3'>
+                    <input id='newExpenseName' class='form-control form-control-sm' placeholder='Tên khoản chi'>
+                    <input id='newExpensePlanned' type='number' min='0' class='form-control form-control-sm' placeholder='Dự toán'>
+                    <button class='btn btn-sm btn-dark' onclick='addItem("expense")'>Thêm</button>
+                </div>
+            </div>
+        </div>
+      </div>
+      <div class='section mt-3'>
+        <h5>Tóm tắt & Kết quả</h5>
+        <div id='summaryArea'></div>
+      </div>
+    </div>
+
+    <div class='tab-pane fade' id='players'>
+      <div class='section row'>
+        <div class='col-md-6'>
+          <h5>Người chơi</h5>
+          <div class='d-flex gap-2 mb-2'>
+            <input id='numRandom' type='number' min='2' class='form-control' placeholder='Số người random'>
+            <button class='btn btn-dark' onclick='randomPlayers()'>Random</button>
+            <label class='btn btn-dark mb-0'>Import CSV/JSON
+                <input id='importPlayersFile' type='file' accept='.csv, application/json' onchange='importPlayers(event)' style='display:none'>
+            </label>
+            <button class='btn btn-outline-secondary' onclick='clearPlayers()'>Xóa</button>
+          </div>
+           <div id='playersListHeader' class='d-grid gap-2 mb-1 fw-bold' style='grid-template-columns: 2fr 1.5fr 1.5fr 60px;'>
+                <div>Tên</div><div>SĐT</div><div>Email</div><div></div>
+            </div>
+          <div id='playersList'></div>
+          <div class='mt-2 d-flex gap-2'>
+            <input id='playerAddName' class='form-control' placeholder='Tên người chơi mới'>
+            <input id='playerAddPhone' class='form-control' placeholder='SĐT'>
+            <input id='playerAddEmail' class='form-control' placeholder='Email'>
+            <button class='btn btn-dark' onclick='addPlayerFromInputs()'>Thêm</button>
+            <button class='btn btn-outline-secondary' onclick='applyPlayerEdits()'>Lưu cập nhật</button>
+          </div>
+        </div>
+        <div class='col-md-6'>
+          <h5>Đội (2 người/cặp)</h5>
+          <div class='d-flex gap-2 mb-2'>
+            <button class='btn btn-dark' onclick='makeTeams("sequential")'>Ghép cặp Theo thứ tự</button>
+            <button class='btn btn-outline-secondary' onclick='makeTeams("random")'>Ghép cặp Random</button>
+            <button class='btn btn-outline-secondary' onclick='shuffleTeams()'>Shuffle (Đảo vị trí)</button>
+          </div>
+          <div id='teamsArea'></div>
+          <div class='muted-sm mt-2'>Chỉnh sửa tên đội trực tiếp trong danh sách để cập nhật tay ghép cặp.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class='tab-pane fade' id='matches'>
+      <div class='section'>
+        <h5 class='d-flex justify-content-between align-items-center'>
+            Chia bảng & Lịch vòng bảng
+            <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#groupStageCollapse" aria-expanded="true" aria-controls="groupStageCollapse">Thu/Gọn</button>
+        </h5>
+        <div class="collapse show" id="groupStageCollapse">
+            <div class='d-flex gap-2 mb-2 align-items-center'>
+              <label class='small-muted me-2'>Min</label><input id='minPerGroup' type='number' value='3' min='3' max='5' class='form-control' style='width:70px'>
+              <label class='small-muted me-2'>Max</label><input id='maxPerGroup' type='number' value='5' min='3' max='5' class='form-control' style='width:70px'>
+              <button class='btn btn-dark' onclick='generateGroups()'>Chia bảng</button>
+              <button class='btn btn-dark' onclick='generateAll()'>Chia + Sinh lịch</button>
+            </div>
+
+            <div id='groupsArea'></div>
+            
+            <div class='mt-3 court-filter'>
+                <label for='courtFilterSelect' class='small-muted me-2'>Lọc theo Sân:</label>
+                <select id='courtFilterSelect' class='form-select d-inline-block' style='width:150px;' onchange='renderGroupMatches()'>
+                    <option value='all'>Tất cả Sân</option>
+                </select>
+            </div>
+
+            <div id='groupMatchesArea' class='mt-3'></div>
+
+            <div class='mt-3'>
+              <h5>Bảng xếp hạng (Ưu tiên: Pts > Sets Diff > Points Diff)</h5>
+              <div id='rankingsArea'></div>
+              <div class='mt-2'><button class='btn btn-dark' onclick='selectTopAndBuildKO()'>Chọn & Sinh Knockout</button></div>
+            </div>
+        </div>
+      </div>
+
+      <div class='section mt-3'>
+        <h5 class='d-flex justify-content-between align-items-center'>
+            Vòng loại trực tiếp → Chung kết
+            <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#knockoutCollapse" aria-expanded="true" aria-controls="knockoutCollapse">Thu/Gọn</button>
+        </h5>
+        <div class="collapse show" id="knockoutCollapse">
+            <div id='knockoutArea'></div>
+            <div id='championArea' class='mt-2'></div>
+        </div>
+      </div>
+    </div>
+
+    <div class='tab-pane fade' id='test'>
+      <div class='section'>
+        <h5>Test & Random (tách riêng)</h5>
+        <div class='d-flex gap-2 mb-2'>
+          <button class='btn btn-outline-secondary' onclick='testRandomPlayers()'>Random Players (test only)</button>
+          <button class='btn btn-outline-secondary' onclick='testAllGroupMatches()'>Random All Group Matches (Sets)</button>
+          <button class='btn btn-outline-secondary' onclick='testAllKOMatches()'>Random All KO Matches (Sets)</button>
+        </div>
+        <div class='muted-sm'>Các test ở tab này chỉ ghi vào dữ liệu tạm (current_tournament_temp). Sử dụng để demo/kiểm tra trước khi lưu.</div>
+        <div class='mt-3'><pre id='testLog' style='max-height:200px; overflow:auto; background:#f8f8f8; padding:8px; border:1px solid #eee;'></pre></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src='https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js'></script>
+<script>
+let playersEdited = [];
+let teams = [];
+let groups = [];
+let groupMatches = {};
+let standings = {};
+let knockout = [];
+let budget = { 
+    income: [], 
+    expense: [], 
+    sponsors: [], 
+    partyConfig: { costPerPerson: 0, plannedAttendees: 0, actualAttendees: 0 }
+};
+let currentTournamentId = null;
+const tournamentsKey = 'pickleball_tournaments_v9_5_9'; // Updated version key
+const headerLogo = document.getElementById('headerLogo');
+const inputLogo = document.getElementById('inputLogo');
+const inputTitle = document.getElementById('inputTitle');
+const testLog = document.getElementById('testLog');
+const qrCodePreview = document.getElementById('qrCodePreview');
+const inputQrCode = document.getElementById('inputQrCode');
+
+function getCourtNames(){ 
+    const config = getTournamentField('config') || {};
+    const names = (config.scheduling || {}).courtNames || 'Sân 1, Sân 2, Sân 3, Sân 4';
+    return names.split(',').map(s => s.trim()).filter(s => s.length > 0);
+}
+
+function uid(){ return 't_'+Date.now()+'_'+Math.floor(Math.random()*9999); }
+function escapeHtml(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function saveStateToLocal(key,obj){ localStorage.setItem(key, JSON.stringify(obj)); }
+function loadStateFromLocal(key){ const v=localStorage.getItem(key); return v?JSON.parse(v):null; }
+function formatVND(n){ return (n||0).toLocaleString('vi-VN') + '₫'; }
+
+inputLogo.addEventListener('change', async (e)=>{ const f=e.target.files[0]; if(!f) return; const data = await readFileAsDataURL(f); headerLogo.src = data; headerLogo.style.display='inline-block'; setTournamentField('logo', data); });
+inputQrCode.addEventListener('change', async (e)=>{ const f=e.target.files[0]; if(!f) return; const data = await readFileAsDataURL(f); qrCodePreview.src = data; qrCodePreview.style.display='inline-block'; setFeeField('qrCode', data); });
+
+function readFileAsDataURL(file){ return new Promise(res=>{ const fr=new FileReader(); fr.onload=()=>res(fr.result); fr.readAsDataURL(file); }); }
+
+// --- CONFIG CONSTANTS ---
+const DEFAULT_SET_CONFIG = {
+    sets: 3,         
+    target: 11,      
+    rule: 'WBY2',    
+    maxTarget: 12,
+    courts: 4,       // NEW: Default courts
+    duration: 20     // NEW: Default duration (minutes)
+};
+
+const DEFAULT_SCHEDULING_CONFIG = {
+    initialStartTime: '09:00',
+    spareCourts: 0, // NEW: Spare courts
+    courtNames: 'Sân 1, Sân 2, Sân 3, Sân 4' // NEW: Default court names
+};
+
+const DEFAULT_CONFIG_SETS = {
+    rr_config: { ...DEFAULT_SET_CONFIG, sets: 1, target: 11, maxTarget: 12, courts: 4, duration: 20 }, 
+    ko_qf_config: { ...DEFAULT_SET_CONFIG, sets: 3, target: 11, maxTarget: 12, courts: 4, duration: 20 }, 
+    ko_sf_config: { ...DEFAULT_SET_CONFIG, sets: 3, target: 15, maxTarget: 16, courts: 2, duration: 25 }, 
+    ko_final_config: { ...DEFAULT_SET_CONFIG, sets: 5, target: 15, maxTarget: 17, courts: 1, duration: 30 },
+    scheduling: DEFAULT_SCHEDULING_CONFIG
+};
+
+// Function to get the full tournament object
+function getTournament(){ 
+    const current = loadStateFromLocal('current_tournament_temp') || {};
+    // Merge existing config with defaults
+    current.config = { 
+        ...DEFAULT_CONFIG_SETS, 
+        ...current.config,
+        scheduling: { 
+            ...DEFAULT_SCHEDULING_CONFIG, 
+            ...((current.config || {}).scheduling || {})
+        }
+    };
+    return current;
+}
+function setTournament(obj){ 
+    saveStateToLocal('current_tournament_temp', obj); 
+}
+
+// --- STATE MANAGEMENT & CONFIG ---
+function getTournamentField(field){ const obj=getTournament(); return obj[field]; }
+function setTournamentField(field,value){ 
+    const obj=getTournament(); 
+    obj[field]=value; 
+    setTournament(obj); 
+}
+
+function setCourtField(field, value){ 
+    const obj=getTournament(); 
+    obj.court = obj.court || {};
+    obj.court[field]=value; 
+    setTournament(obj); 
+}
+function setFeeField(field, value){ 
+    const obj=getTournament(); 
+    obj.fee = obj.fee || {};
+    obj.fee[field]=value; 
+    setTournament(obj); 
+}
+
+function updateSimpleConfig(){
+    const currentConfig = getTournamentField('config') || {};
+    currentConfig.tourneyFormat = document.getElementById('tourneyFormat').value;
+    currentConfig.defaultAdvance = document.getElementById('defaultAdvance').value; 
+    currentConfig.wildcardCount = document.getElementById('wildcardCount').value; 
+    setTournamentField('config', currentConfig);
+}
+
+// NEW: Save Scheduling Config (Initial Start Time & Spare Courts)
+function saveSchedulingConfig(){
+    const currentConfig = getTournamentField('config') || {};
+    currentConfig.scheduling = currentConfig.scheduling || {};
+    currentConfig.scheduling.initialStartTime = document.getElementById('initialStartTime').value;
+    currentConfig.scheduling.spareCourts = parseInt(document.getElementById('spareCourts').value, 10) || 0; 
+    setTournamentField('config', currentConfig);
+}
+
+// NEW: Save Court Names
+function saveCourtNames(){
+    const currentConfig = getTournamentField('config') || {};
+    currentConfig.scheduling = currentConfig.scheduling || {};
+    currentConfig.scheduling.courtNames = document.getElementById('courtNamesConfig').value.trim();
+    setTournamentField('config', currentConfig);
+    renderGroupMatches(); // Refresh matches to update court options
+    renderKnockout();
+}
+
+function getRoundTitle(rIdx){
+    if (knockout.length === 0) return 'Vòng loại trực tiếp';
+    if (!knockout[rIdx]) return `Vòng ${rIdx + 1}`;
+    const numMatches = knockout[rIdx].length;
+    if (numMatches === 1) return 'Chung kết';
+    if (numMatches === 2) return 'Bán kết';
+    if (numMatches <= 4 && numMatches > 2) return 'Tứ kết';
+    if (numMatches > 4) {
+        let teams = numMatches * 2;
+        let roundTeams = 1;
+        while (roundTeams < teams) { roundTeams *= 2; }
+        return `Vòng ${roundTeams} đội`; 
+    }
+    return `Vòng ${rIdx + 1}`;
+}
+
+function getKORoundConfig(rIdx, config){
+    const totalRounds = knockout.length; 
+    const cfg = { ...DEFAULT_CONFIG_SETS, ...config }; 
+    
+    // Fallback to default configs with merge
+    const finalConfig = { ...DEFAULT_CONFIG_SETS.ko_final_config, ...(cfg.ko_final_config || {}) };
+    const sfConfig = { ...DEFAULT_CONFIG_SETS.ko_sf_config, ...(cfg.ko_sf_config || {}) };
+    const qfConfig = { ...DEFAULT_CONFIG_SETS.ko_qf_config, ...(cfg.ko_qf_config || {}) };
+    
+    if (rIdx === totalRounds - 1) {
+        return finalConfig;
+    } 
+    else if (rIdx === totalRounds - 2) {
+        return sfConfig;
+    } 
+    else {
+        return qfConfig;
+    }
+}
+
+// --- SCHEDULING LOGIC ---
+function addMinutesToTime(timeStr, minutes) {
+    if(!timeStr) return '';
+    const [hours, mins] = timeStr.split(':').map(Number);
+    // Use an arbitrary date (today) to handle overflow of minutes/hours
+    const date = new Date(); 
+    date.setHours(hours);
+    date.setMinutes(mins + minutes);
+    date.setSeconds(0);
+    date.setMilliseconds(0);
+    
+    const newHours = String(date.getHours()).padStart(2, '0');
+    const newMins = String(date.getMinutes()).padStart(2, '0');
+    return `${newHours}:${newMins}`;
+}
+
+function generateScheduledTimes() {
+    const config = getTournamentField('config');
+    const scheduling = config.scheduling || DEFAULT_SCHEDULING_CONFIG;
+    const initialStartTime = scheduling.initialStartTime;
+    
+    const rrConfig = getMatchSetConfig('group', 0);
+    const estimatedDuration = rrConfig.duration; // Use duration from RR config
+    const numCourts = rrConfig.courts; // Use courts from RR config
+    
+    if (groups.length === 0) {
+        alert('Vui lòng Chia bảng trước khi Sinh lịch.');
+        return;
+    }
+    
+    if (knockout.length > 0) {
+        if (!confirm('Việc sinh lịch tự động sẽ xóa lịch thi đấu vòng loại trực tiếp (KO). Bạn có muốn tiếp tục?')) {
+            return;
+        }
+        knockout = [];
+        setTournamentField('knockout', knockout);
+    }
+    
+    // 1. Group Matches
+    const allGroupMatchIds = [];
+    for (const gi in groupMatches) {
+        groupMatches[gi].forEach((m, mi) => {
+            allGroupMatchIds.push({ gi, mi });
+        });
+    }
+
+    // Sort matches by group and index (A1, A2, B1, B2, etc.) for sequential scheduling
+    allGroupMatchIds.sort((a, b) => {
+        if (a.gi !== b.gi) return a.gi - b.gi;
+        return a.mi - b.mi;
+    });
+    
+    let currentTime = initialStartTime;
+    for (let i = 0; i < allGroupMatchIds.length; i++) {
+        const { gi, mi } = allGroupMatchIds[i];
+        const match = groupMatches[gi][mi];
+        
+        match.scheduledTime = currentTime; // NEW
+        
+        // Advance time only after every `numCourts` matches (or if it's the last match)
+        if ((i + 1) % numCourts === 0 || i === allGroupMatchIds.length - 1) {
+            currentTime = addMinutesToTime(currentTime, estimatedDuration);
+        }
+    }
+
+    setTournamentField('groupMatches', groupMatches);
+    renderGroupMatches();
+    renderKnockout(); // To clear old KO data if any
+    alert('Đã sinh lịch thi đấu tự động cho Vòng bảng.');
+}
+
+
+// --- SCORING FUNCTIONS (V9.5.5: Added better validation logic) ---
+/**
+ * Lấy cấu hình Set cho một trận đấu cụ thể (Group hoặc KO)
+ */
+function getMatchSetConfig(type, rIdx) {
+    const cfg = getTournamentField('config') || {};
+    if (type === 'group') {
+        return { ...DEFAULT_CONFIG_SETS.rr_config, ...(cfg.rr_config || {}) };
+    } else { // 'ko'
+        return getKORoundConfig(rIdx, cfg);
+    }
+}
+
+/**
+ * Hiển thị tỉ số chi tiết của các set (vd: (11-7, 8-11, 11-3))
+ */
+function formatSetScores(sets) {
+    if (!sets || sets.length === 0) return '';
+    const scores = sets.filter(([a, b]) => a !== null && b !== null && !isNaN(a) && !isNaN(b))
+                        .map(set => `${set[0]}-${set[1]}`).join(', ');
+    return scores ? `(${scores})` : '';
+}
+
+/**
+ * Kiểm tra tính hợp lệ và xác định người thắng của một Set đơn
+ * @param {number} a Điểm đội A
+ * @param {number} b Điểm đội B
+ * @param {number} target Điểm mục tiêu (ví dụ: 11)
+ * @param {string} rule Quy tắc ('WBY2', 'HIT')
+ * @param {number | null} maxTarget Điểm tối đa (CHỈ áp dụng khi rule='WBY2')
+ * @returns {{valid: boolean, winner: string | null, reason: string | null, isFinished: boolean}}
+ */
+function validateSimpleScore(a, b, target, rule, maxTarget = null) {
+    const defaultResult = { valid: false, winner: null, reason: 'Chưa đủ điểm', isFinished: false };
+
+    if (a === null || b === null) {
+        if (a === null && b === null) return { ...defaultResult, reason: 'Trống' };
+        return { ...defaultResult, reason: 'Chưa nhập đủ điểm' };
+    }
+    if (isNaN(a) || isNaN(b) || a < 0 || b < 0) return { ...defaultResult, reason: 'Điểm phải là số dương' };
+    
+    const t = parseInt(target, 10);
+    const m = maxTarget !== null ? parseInt(maxTarget, 10) : null;
+    const maxScore = Math.max(a, b);
+    const minScore = Math.min(a, b);
+    const diff = Math.abs(a - b);
+    const winner = a > b ? 'A' : (b > a ? 'B' : null);
+
+    // 1. Rule 'HIT' (Chạm mốc)
+    if (rule === 'HIT') {
+        if (maxScore >= t && maxScore > minScore) {
+            if (maxScore > t) {
+                 return { ...defaultResult, reason: `Không thể vượt quá ${t} điểm khi áp dụng luật Chạm mốc` };
+            }
+            return { valid: true, winner: winner, reason: 'Chạm mốc', isFinished: true };
+        }
+        if (maxScore >= t && maxScore === minScore) {
+             return { ...defaultResult, reason: 'Điểm hòa không được chấp nhận trong luật Chạm mốc' };
+        }
+        return defaultResult; // Not finished/invalid
+    }
+    
+    // 2. Rule 'WBY2' (Thắng hơn 2 điểm)
+    
+    // Check Max Target Score (if configured)
+    if (m !== null && m > t) {
+        // Nếu đạt Max Target
+        if (maxScore === m) {
+            if (diff >= 1) {
+                return { valid: true, winner: winner, reason: 'Đạt điểm tối đa', isFinished: true };
+            } else {
+                 return { ...defaultResult, reason: 'Điểm tối đa phải hơn 1' };
+            }
+        }
+        // Nếu điểm cao hơn Max Target (không hợp lệ)
+        if (maxScore > m) {
+             return { ...defaultResult, reason: `Điểm tối đa là ${m}` };
+        }
+    }
+    
+    // Check for "Not yet reached target"
+    if (maxScore < t) {
+        return defaultResult;
+    }
+    
+    // Check for "Deuce scenario" (e.g., 10-10, 11-11, 12-12)
+    if (maxScore >= t && diff < 2) {
+        if (maxScore === t - 1) { // e.g. 10-10 -> still valid and not finished
+             return { ...defaultResult, reason: 'Chưa hơn 2 điểm (Deuce)' };
+        }
+        if (maxScore === minScore) { // e.g. 11-11, 12-12
+             return { ...defaultResult, reason: 'Hòa điểm (Deuce) - cần hơn 2' };
+        }
+        if (maxScore > t && diff === 1) { // e.g. 12-11, 15-14
+            return { ...defaultResult, reason: 'Hơn 1 điểm (Deuce) - cần hơn 2' };
+        }
+    }
+    
+    // Check Win by 2 (e.g., 11-9, 12-10)
+    if (maxScore >= t && diff >= 2) {
+        return { valid: true, winner: winner, reason: 'Hơn 2 điểm', isFinished: true };
+    }
+    
+    return defaultResult; // Catch-all for incomplete/invalid states
+}
+
+
+function calculateMatchResultFromSets(sets, target, rule, maxSets, maxTarget = null) {
+    let setsA = 0;
+    let setsB = 0;
+    let pointsA = 0;
+    let pointsB = 0;
+    const requiredSets = Math.ceil(maxSets / 2);
+
+    for (const [scoreA, scoreB] of sets) {
+        if (scoreA === null || scoreB === null) continue;
+
+        pointsA += scoreA;
+        pointsB += scoreB;
+
+        const validation = validateSimpleScore(scoreA, scoreB, target, rule, maxTarget);
+        if (validation.valid) {
+            if (validation.winner === 'A') {
+                setsA++;
+            } else {
+                setsB++;
+            }
+        }
+        
+        if (setsA === requiredSets || setsB === requiredSets) {
+            break;
+        }
+    }
+
+    let winner = null;
+    if (setsA === requiredSets) {
+        winner = 'A';
+    } else if (setsB === requiredSets) {
+        winner = 'B';
+    }
+    
+    const isCompleted = setsA === requiredSets || setsB === requiredSets;
+
+    return {
+        setsA,
+        setsB,
+        pointsA,
+        pointsB,
+        winner,
+        isCompleted
+    };
+}
+
+/**
+ * NEW: Kiểm tra điểm trực tiếp khi người dùng nhập liệu (V9.5.5)
+ */
+function handleSetScoreInput(type, rIdx, mIdx, side, setIndex) {
+    const config = getMatchSetConfig(type, parseInt(rIdx, 10));
+    
+    const inputA = document.getElementById(`${type}_sets_${rIdx}_${mIdx}_a_${setIndex}`);
+    const inputB = document.getElementById(`${type}_sets_${rIdx}_${mIdx}_b_${setIndex}`);
+    const feedbackEl = document.getElementById(`${type}_feedback_${rIdx}_${mIdx}_${setIndex}`);
+    
+    const aRaw = inputA.value;
+    const bRaw = inputB.value;
+    
+    const a = aRaw === '' ? null : parseInt(aRaw, 10);
+    const b = bRaw === '' ? null : parseInt(bRaw, 10);
+    
+    // Cleanup classes
+    inputA.classList.remove('set-invalid');
+    inputB.classList.remove('set-invalid');
+    feedbackEl.textContent = '';
+    feedbackEl.style.color = '#888';
+    
+    if (a === null && b === null) {
+        feedbackEl.textContent = 'Trống';
+        return;
+    }
+    if (a === null || b === null || isNaN(a) || isNaN(b) || a < 0 || b < 0) {
+        feedbackEl.textContent = 'Chưa đủ điểm hợp lệ';
+        feedbackEl.style.color = 'orange';
+        return;
+    }
+
+    const validation = validateSimpleScore(a, b, config.target, config.rule, config.maxTarget);
+    
+    if (validation.valid) {
+        feedbackEl.textContent = validation.winner === 'A' ? 'Thắng A!' : 'Thắng B!';
+        feedbackEl.style.color = 'green';
+    } else {
+        feedbackEl.textContent = `${validation.reason}`;
+        feedbackEl.style.color = 'red';
+        
+        // Chỉ đánh dấu input màu đỏ nếu set đã được nhập đầy đủ nhưng không hợp lệ (không phải trạng thái "chưa đủ điểm")
+        if (validation.reason !== 'Chưa đủ điểm') { 
+            inputA.classList.add('set-invalid');
+            inputB.classList.add('set-invalid');
+        }
+    }
+}
+
+function saveSetsScore(type, rIdx, mIdx){
+    const matchData = type === 'group' ? groupMatches[rIdx][mIdx] : knockout[rIdx][mIdx];
+    const config = getMatchSetConfig(type, parseInt(rIdx, 10));
+    const { target, rule, sets: maxSets, maxTarget } = config;
+    
+    const sets = [];
+    let requiredSets = Math.ceil(maxSets / 2);
+    let setsA = 0;
+    let setsB = 0;
+    let hasInvalidSet = false;
+    let isMatchWon = false;
+
+    for (let i = 0; i < maxSets; i++) {
+        const aRaw = document.getElementById(`${type}_sets_${rIdx}_${mIdx}_a_${i}`).value;
+        const bRaw = document.getElementById(`${type}_sets_${rIdx}_${mIdx}_b_${i}`).value;
+        const a = aRaw === '' ? null : parseInt(aRaw, 10);
+        const b = bRaw === '' ? null : parseInt(bRaw, 10);
+        
+        if (a === null && b === null) {
+            if (isMatchWon) break; // Stop at first empty set if match is already won
+            if (sets.length <= i) break; // Stop if no scores were entered for this index
+        }
+        
+        sets.push([a, b]);
+
+        if (a !== null && b !== null) {
+            const validation = validateSimpleScore(a, b, target, rule, maxTarget);
+            
+            if (validation.valid) {
+                if (validation.winner === 'A') setsA++; else setsB++;
+                if (setsA === requiredSets || setsB === requiredSets) {
+                    isMatchWon = true;
+                    break; 
+                }
+            } else {
+                // Check if it's an explicit invalid score (not just 'not enough points')
+                if (validation.reason !== 'Chưa đủ điểm' && validation.reason !== 'Chưa nhập đủ điểm' && validation.reason !== 'Trống') {
+                    alert(`Set ${i+1} không hợp lệ: ${validation.reason}. Vui lòng kiểm tra lại quy tắc.`);
+                    hasInvalidSet = true;
+                    break; 
+                }
+            }
+        }
+    }
+    
+    if (hasInvalidSet) return;
+    
+    matchData.sets = sets;
+    
+    const courtEl = document.getElementById(`${type}_court_${rIdx}_${mIdx}`);
+    if(courtEl) matchData.court = courtEl.value;
+
+    const result = calculateMatchResultFromSets(sets, target, rule, maxSets, maxTarget);
+    
+    // NEW: Save End Time if match is completed and there's a start time
+    if (result.isCompleted) {
+        if (!matchData.endTime) {
+            matchData.endTime = Date.now();
+        }
+    } else {
+        // If match is no longer completed (e.g. scores edited back), clear end time
+        matchData.endTime = null;
+    }
+    
+    if (type === 'group') {
+        recalcStandingsForGroup(parseInt(rIdx, 10));
+        setTournamentField('groupMatches', groupMatches);
+        renderGroupMatches();
+        renderRankings();
+    } else { 
+        if (result.isCompleted) {
+            matchData.winner = result.winner === 'A' ? matchData.teamA : matchData.teamB;
+            processKOResult(rIdx, mIdx);
+        } else if (matchData.teamB !== null) {
+            if (sets.filter(([a,b]) => a !== null && b !== null).length > 0 && setsA + setsB < maxSets && setsA !== requiredSets && setsB !== requiredSets) {
+                 // Check if any score was entered, but match isn't completed
+                 if(sets.filter(([a,b]) => a !== null || b !== null).length > 0) {
+                     alert('Trận đấu chưa hoàn thành (chưa đủ số Sets thắng). Dữ liệu Sets đã được lưu.');
+                 }
+            }
+            matchData.winner = null;
+        }
+        setTournamentField('knockout', knockout);
+        renderKnockout();
+    }
+
+    closeSetScoringEditor(type, rIdx, mIdx);
+}
+
+function openSetScoringEditor(type, rIdx, mIdx){
+    closeSetScoringEditor(); 
+    const matchData = type === 'group' ? groupMatches[rIdx][mIdx] : knockout[rIdx][mIdx];
+    const containerId = `${type}_match_row_${rIdx}_${mIdx}`;
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    
+    // NEW: If match hasn't started, automatically start it (Fulfilling user's "Bắt đầu Trận đấu" dual function)
+    if (!matchData.startTime && !matchData.endTime) {
+         startMatch(type, rIdx, mIdx);
+    }
+
+    const currentSets = matchData.sets || [];
+    const config = getMatchSetConfig(type, parseInt(rIdx, 10));
+    const { target, rule, sets: maxSets, maxTarget } = config;
+
+    let matchInfo;
+    
+    if (type === 'group') {
+        matchInfo = `Bảng ${String.fromCharCode(65+parseInt(rIdx, 10))} | ${matchData.teamA} vs ${matchData.teamB}`;
+    } else {
+        const roundTitle = getRoundTitle(rIdx);
+        matchInfo = `${roundTitle} | ${matchData.teamA} vs ${matchData.teamB || '(TBD)'}`;
+    }
+    
+    const ruleDisplay = rule==='WBY2' ? `Win by 2 ${maxTarget ? '(Max '+maxTarget+')' : ''}` : 'Chạm mốc';
+
+    let html = `<div id='sets_editor_${rIdx}_${mIdx}' class='set-editor-area'>
+        <div class='text-start small fw-bold mb-2'>${escapeHtml(matchInfo)} (Best of ${maxSets} Sets | Target: ${target}, Rule: ${ruleDisplay})</div>
+        <div class='set-input-grid set-editor-header'><div>Set</div><div>${escapeHtml(matchData.teamA)}</div><div>${escapeHtml(matchData.teamB || 'BYE')}</div><div>Kết quả</div></div>
+    `;
+    
+    const requiredSets = Math.ceil(maxSets / 2);
+    let setsA = 0, setsB = 0;
+    
+    for (let i = 0; i < maxSets; i++) {
+        const scoreA = currentSets[i] !== undefined && currentSets[i][0] !== null ? currentSets[i][0] : '';
+        const scoreB = currentSets[i] !== undefined && currentSets[i][1] !== null ? currentSets[i][1] : '';
+        
+        const aNum = scoreA === '' ? null : parseInt(scoreA, 10);
+        const bNum = scoreB === '' ? null : parseInt(scoreB, 10);
+        
+        const setValid = validateSimpleScore(aNum, bNum, target, rule, maxTarget);
+        const isSetFinished = setValid.valid;
+        
+        if (isSetFinished) {
+            if (setValid.winner === 'A') setsA++; else setsB++;
+        }
+        
+        const isReadOnly = (setsA === requiredSets || setsB === requiredSets) && (setsA + setsB) <= i;
+        const isDisabled = matchData.teamB === null && type === 'ko';
+        const isInvalidClass = (aNum !== null && bNum !== null && !isSetFinished && setValid.reason !== 'Chưa đủ điểm' && setValid.reason !== 'Chưa nhập đủ điểm' && setValid.reason !== 'Trống') ? 'set-invalid' : '';
+        
+        let feedbackText = '';
+        let feedbackColor = '#888';
+        if (aNum !== null && bNum !== null) {
+             if (isSetFinished) {
+                 feedbackText = setValid.winner === 'A' ? 'Thắng A!' : 'Thắng B!';
+                 feedbackColor = 'green';
+             } else {
+                 feedbackText = setValid.reason;
+                 feedbackColor = 'red';
+             }
+        } else if (aNum !== null || bNum !== null) {
+             feedbackText = 'Chưa đủ điểm hợp lệ';
+             feedbackColor = 'orange';
+        } else {
+             feedbackText = 'Trống';
+        }
+
+
+        html += `<div class='set-input-grid'>
+            <div>Set ${i + 1}</div>
+            <input id='${type}_sets_${rIdx}_${mIdx}_a_${i}' type='number' min='0' class='form-control form-control-sm ${isInvalidClass}' value='${scoreA}' ${isReadOnly ? 'readonly' : ''} ${isDisabled ? 'disabled' : ''} onchange='handleSetScoreInput(\"${type}\", ${rIdx}, ${mIdx}, \"A\", ${i})'>
+            <input id='${type}_sets_${rIdx}_${mIdx}_b_${i}' type='number' min='0' class='form-control form-control-sm ${isInvalidClass}' value='${scoreB}' ${isReadOnly ? 'readonly' : ''} ${isDisabled ? 'disabled' : ''} onchange='handleSetScoreInput(\"${type}\", ${rIdx}, ${mIdx}, \"B\", ${i})'>
+            <div id='${type}_feedback_${rIdx}_${mIdx}_${i}' class='set-feedback text-center' style='color:${feedbackColor};'>
+                ${feedbackText}
+            </div>
+        </div>`;
+        
+        if (setsA === requiredSets || setsB === requiredSets) {
+            break;
+        }
+    }
+    
+    html += `<div class='d-flex justify-content-end gap-2 mt-3'>
+        <button class='btn btn-sm btn-outline-secondary' onclick='closeSetScoringEditor(\"${type}\", ${rIdx}, ${mIdx})'>Hủy</button>
+        <button class='btn btn-sm btn-dark' onclick='saveSetsScore(\"${type}\", ${rIdx}, ${mIdx})' ${matchData.teamB === null && type === 'ko' ? 'disabled' : ''}>Lưu Sets</button>
+    </div></div>`;
+
+    container.insertAdjacentHTML('afterend', html);
+    container.dataset.editorOpen = 'true';
+    document.querySelector(`#${containerId} .btn-primary`).classList.add('d-none'); 
+}
+
+function closeSetScoringEditor(){
+    const currentOpenEditor = document.querySelector('.set-editor-area');
+    if(currentOpenEditor){
+        const parentRow = currentOpenEditor.previousElementSibling;
+        if (parentRow) parentRow.dataset.editorOpen = 'false';
+        const scoreButton = parentRow ? parentRow.querySelector('.btn-primary') : null;
+        if (scoreButton) scoreButton.classList.remove('d-none');
+        currentOpenEditor.remove();
+    }
+}
+
+
+function processKOResult(rIdx, mIdx){
+    const match = knockout[rIdx][mIdx];
+    if(match.winner===null) return;
+    
+    const nextRIdx = rIdx + 1;
+    const nextMIdx = Math.floor(mIdx / 2);
+    
+    if (knockout[nextRIdx]) {
+        if (mIdx % 2 === 0) {
+            knockout[nextRIdx][nextMIdx].teamA = match.winner;
+        } else {
+            knockout[nextRIdx][nextMIdx].teamB = match.winner;
+        }
+    } else {
+        const allDone = knockout[rIdx].every(m=>m.winner!=null);
+        if(allDone){
+          const winners = knockout[rIdx].map(m=>m.winner).filter(Boolean);
+          if(winners.length===1){ 
+            document.getElementById('championArea').innerHTML = `<div class='h5'>🏆 Vô địch: ${escapeHtml(winners[0])}</div>`; 
+            setTournamentField('champion',winners[0]); 
+            return; 
+          }
+          const next=[]; 
+          for(let i=0;i<winners.length;i+=2) next.push({teamA:winners[i],teamB:winners[i+1]||null,sets:[],winner:null,court:null, scheduledTime: null, startTime: null, endTime: null}); // NEW: Include time fields for KO
+          knockout.push(next); 
+        }
+    }
+}
+
+// NEW: Start Match Function (Simplified, only records time if not already set)
+function startMatch(type, rIdx, mIdx) {
+    const matchData = type === 'group' ? groupMatches[rIdx][mIdx] : knockout[rIdx][mIdx];
+    
+    if (matchData.startTime) return; // Already started
+    
+    matchData.startTime = Date.now();
+    
+    if (type === 'group') {
+        setTournamentField('groupMatches', groupMatches);
+        // Do not render here, it will be rendered when openSetScoringEditor closes
+    } else {
+        setTournamentField('knockout', knockout);
+        // Do not render here
+    }
+}
+
+// --- STANDINGS & RANKING ---
+function recalcStandingsForGroup(gi){
+  const grp = groups[gi]; standings[gi]={};
+  grp.forEach(t=> standings[gi][t]={pts:0,setsFor:0,setsAgainst:0,pointsFor:0,pointsAgainst:0,setsDiff:0,pointsDiff:0});
+
+  groupMatches[gi].forEach(m=>{
+    if(!m.sets || m.sets.length === 0) return;
+    
+    const rrConfig = getMatchSetConfig('group', gi);
+    const { target, rule, sets: maxSets, maxTarget } = rrConfig;
+    
+    const result = calculateMatchResultFromSets(m.sets, target, rule, maxSets, maxTarget);
+
+    if(!result.isCompleted) return;
+
+    standings[gi][m.teamA].pointsFor += result.pointsA; 
+    standings[gi][m.teamA].pointsAgainst += result.pointsB;
+    standings[gi][m.teamB].pointsFor += result.pointsB; 
+    standings[gi][m.teamB].pointsAgainst += result.pointsA;
+    
+    standings[gi][m.teamA].setsFor += result.setsA;
+    standings[gi][m.teamA].setsAgainst += result.setsB;
+    standings[gi][m.teamB].setsFor += result.setsB;
+    standings[gi][m.teamB].setsAgainst += result.setsA;
+
+    if(result.winner==='A') standings[gi][m.teamA].pts +=1; 
+    else if(result.winner==='B') standings[gi][m.teamB].pts +=1;
+  });
+  
+  grp.forEach(t => {
+      standings[gi][t].setsDiff = standings[gi][t].setsFor - standings[gi][t].setsAgainst;
+      standings[gi][t].pointsDiff = standings[gi][t].pointsFor - standings[gi][t].pointsAgainst;
+  }); 
+}
+
+function renderRankings(){ 
+    const area=document.getElementById('rankingsArea'); let html=''; for(const gi in standings){ const table=standings[gi]; const rows = Object.keys(table).map(t=>({team:t,...table[t]})); rows.sort((r1,r2)=> r2.pts - r1.pts || r2.setsDiff - r1.setsDiff || r2.pointsDiff - r1.pointsDiff); const cfg = getTournamentField('config') || {}; const defaultAdvance = cfg.defaultAdvance; const perGroupSelectEl = document.getElementById(`advance_${gi}`); let advanceCount = 2; if (perGroupSelectEl) { let selectedValue = perGroupSelectEl.value; if (selectedValue === 'auto') { advanceCount = defaultAdvance === 'auto' ? 2 : parseInt(defaultAdvance, 10); } else { advanceCount = parseInt(selectedValue, 10); } } else { advanceCount = defaultAdvance === 'auto' ? 2 : parseInt(defaultAdvance, 10); } html+=`<h6>Bảng ${String.fromCharCode(65+parseInt(gi, 10))}</h6><table class='table table-sm'><thead><tr><th>VT</th><th>Đội</th><th>Pts</th><th>SetsF</th><th>SetsA</th><th>SetsD</th><th>PtsD</th></tr></thead><tbody>`; rows.forEach((r,idx)=>{ const rowClass = idx < advanceCount ? 'table-success' : (r.pts>0 ? '' : 'table-light'); html+=`<tr class='${rowClass}'><td>${idx+1}</td><td>${escapeHtml(r.team)}</td><td>${r.pts}</td><td>${r.setsFor}</td><td>${r.setsAgainst}</td><td>${r.setsDiff}</td><td>${r.pointsDiff}</td></tr>`; }); html+='</tbody></table>'; } area.innerHTML = html; 
+} 
+
+// --- RANDOM SCORE GENERATION ---
+function getRandomSetScore(target, rule, maxTarget = null) {
+    const t = parseInt(target, 10);
+    const m = maxTarget !== null ? parseInt(maxTarget, 10) : null;
+    let a, b;
+    
+    const randomNearTarget = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+
+    if (rule === 'HIT') {
+        // Hit target exactly
+        if (Math.random() < 0.5) { 
+            a = t;
+            b = randomNearTarget(Math.max(0, t - 5), t - 1);
+        } else { 
+            a = randomNearTarget(Math.max(0, t - 5), t - 1);
+            b = t;
+        }
+    } else { // 'WBY2' rule
+        const isCloseMatch = Math.random() < 0.5; 
+        
+        if (isCloseMatch) {
+            let maxScore = m !== null ? m : t + 5;
+            let scoreWinner = randomNearTarget(t, maxScore);
+            
+            if (m !== null && scoreWinner === m && Math.random() < 0.8) {
+                // Max Target win (e.g., 12-11)
+                if (Math.random() < 0.5) { a = scoreWinner; b = scoreWinner - 1; } 
+                else { a = scoreWinner - 1; b = scoreWinner; }
+            } else {
+                // Win by 2 (e.g., 12-10, 13-11)
+                let scoreLoser = scoreWinner - 2;
+                if (scoreLoser < 0) scoreLoser = 0;
+
+                if (Math.random() < 0.5) { a = scoreWinner; b = scoreLoser; } 
+                else { a = scoreLoser; b = scoreWinner; }
+            }
+        } else {
+            // Early win (e.g., 11-5)
+            if (Math.random() < 0.5) { a = t; b = randomNearTarget(0, t - 6); } 
+            else { a = randomNearTarget(0, t - 6); b = t; }
+        }
+    }
+    
+    if (a < 0) a = 0;
+    if (b < 0) b = 0;
+
+    const validation = validateSimpleScore(a, b, t, rule, m);
+    // Adjust if invalid, only for WBY2 since HIT rule is strictly enforced on random gen
+    if (!validation.valid && rule === 'WBY2') { 
+        if (a > b) a = a + 1; else b = b + 1;
+        // Re-validate to ensure it works after adjustment
+        const newValidation = validateSimpleScore(a, b, t, rule, m);
+        if(!newValidation.valid) { 
+             // Fallback to a safe score
+             return [t, t-2]; 
+        }
+    }
+    
+    return [a, b];
+}
+
+function testAllGroupMatches(){
+    const cfg = getTournamentField('config') || {};
+    let log = "Testing All Group Matches (Random Sets):\n";
+    if (groups.length === 0) { log += "Chưa chia bảng. Hãy chia bảng trước.\n"; testLog.textContent = log; return; }
+
+    for (let gi = 0; gi < groups.length; gi++) {
+        const roundConfig = getMatchSetConfig('group', gi);
+
+        groupMatches[gi].forEach(m => {
+            const sets = [];
+            const requiredSets = Math.ceil(roundConfig.sets / 2);
+            let setsA = 0;
+            let setsB = 0;
+            
+            // Set start/end time for testing
+            m.startTime = Date.now() - 3600000; // 1 hour ago
+            
+            for (let i = 0; i < roundConfig.sets; i++) {
+                const [a, b] = getRandomSetScore(roundConfig.target, roundConfig.rule, roundConfig.maxTarget);
+                
+                const validation = validateSimpleScore(a, b, roundConfig.target, roundConfig.rule, roundConfig.maxTarget);
+                if (validation.valid) {
+                    sets.push([a, b]);
+                    if (validation.winner === 'A') setsA++; else setsB++;
+                } else {
+                    sets.push(getRandomSetScore(roundConfig.target, roundConfig.rule, roundConfig.maxTarget));
+                    const reValidate = validateSimpleScore(sets[i][0], sets[i][1], roundConfig.target, roundConfig.rule, roundConfig.maxTarget);
+                    if (reValidate.valid) {
+                         if (reValidate.winner === 'A') setsA++; else setsB++;
+                    }
+                }
+
+                if (setsA === requiredSets || setsB === requiredSets) break;
+            }
+            
+            m.sets = sets;
+            const result = calculateMatchResultFromSets(sets, roundConfig.target, roundConfig.rule, roundConfig.sets, roundConfig.maxTarget);
+            if (result.isCompleted) {
+                m.winner = result.winner === 'A' ? m.teamA : m.teamB;
+                m.endTime = Date.now() - Math.floor(Math.random() * 600000); // Set end time
+                log += `Bảng ${String.fromCharCode(65+gi)}: ${m.teamA} vs ${m.teamB} -> ${result.setsA}-${result.setsB} Sets (${m.winner} thắng)\n`;
+            } else {
+                 m.endTime = null;
+                 log += `Bảng ${String.fromCharCode(65+gi)}: ${m.teamA} vs ${m.teamB} -> ${result.setsA}-${result.setsB} Sets (chưa xong)\n`;
+            }
+        });
+        recalcStandingsForGroup(gi); 
+    }
+
+    setTournamentField('groupMatches', groupMatches);
+    renderGroupMatches();
+    renderRankings();
+    testLog.textContent = log;
+    log += "DONE: Test Group Matches.\n"; 
+}
+
+function testAllKOMatches() {
+    selectTopAndBuildKO();
+    
+    const cfg = getTournamentField('config') || {};
+
+    let log = "Testing All KO Matches (Random Sets):\n";
+    if (knockout.length === 0) { log += "Chưa có vòng KO. Hãy chia bảng và chọn đội vào Knockout trước.\n"; testLog.textContent = log; return; }
+
+    for (let rIdx = 0; rIdx < knockout.length; rIdx++) {
+        const roundConfig = getKORoundConfig(rIdx, cfg);
+        const roundTitle = getRoundTitle(rIdx);
+        
+        knockout[rIdx].forEach((m, mIdx) => {
+            if (m.winner !== null || m.teamB === null) return; 
+
+            const sets = [];
+            const requiredSets = Math.ceil(roundConfig.sets / 2);
+            let setsA = 0;
+            let setsB = 0;
+            
+            // Set start time for testing
+            m.startTime = Date.now() - 3600000;
+
+            for (let i = 0; i < roundConfig.sets; i++) {
+                const [a, b] = getRandomSetScore(roundConfig.target, roundConfig.rule, roundConfig.maxTarget);
+                
+                const validation = validateSimpleScore(a, b, roundConfig.target, roundConfig.rule, roundConfig.maxTarget);
+                if (validation.valid) {
+                    sets.push([a, b]);
+                    if (validation.winner === 'A') setsA++; else setsB++;
+                } else {
+                    sets.push(getRandomSetScore(roundConfig.target, roundConfig.rule, roundConfig.maxTarget));
+                    const reValidate = validateSimpleScore(sets[i][0], sets[i][1], roundConfig.target, roundConfig.rule, roundConfig.maxTarget);
+                    if (reValidate.valid) {
+                         if (reValidate.winner === 'A') setsA++; else setsB++;
+                    }
+                }
+
+                if (setsA === requiredSets || setsB === requiredSets) break;
+            }
+            
+            m.sets = sets;
+            const result = calculateMatchResultFromSets(sets, roundConfig.target, roundConfig.rule, roundConfig.sets, roundConfig.maxTarget);
+            if (result.isCompleted) {
+                m.winner = result.winner === 'A' ? m.teamA : m.teamB;
+                m.endTime = Date.now() - Math.floor(Math.random() * 600000); // Set end time
+                log += `${roundTitle}: ${m.teamA} vs ${m.teamB} -> ${result.setsA}-${result.setsB} Sets (${m.winner} thắng)\n`;
+                processKOResult(rIdx, mIdx); 
+            } else {
+                m.endTime = null;
+            }
+        });
+    }
+
+    setTournamentField('knockout', knockout);
+    renderKnockout();
+    testLog.textContent = log;
+    log += "DONE: Test KO Matches.\n"; 
+}
+
+
+// --- NEW UI/DATA LOGIC FUNCTIONS ---
+function generateMatchConfigHTML(idPrefix, title, configData) {
+    const { sets, target, rule, maxTarget, courts, duration } = configData;
+    const isWby2 = rule === 'WBY2';
+    const maxTargetValue = maxTarget !== null ? maxTarget : '';
+
+    return `
+        <div class="section mb-4 p-3 border border-dark-subtle">
+            <h6>${title}</h6>
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <div class="config-grid">
+                        <div>
+                            <label for="${idPrefix}_sets" class="form-label small">Số Sets/Trận (Best of)</label>
+                            <select id="${idPrefix}_sets" class="form-select form-select-sm" data-config-stage="${idPrefix}" onchange="saveMatchConfigData('${idPrefix}')">
+                                <option value="1" ${sets == 1 ? 'selected' : ''}>Best of 1</option>
+                                <option value="3" ${sets == 3 ? 'selected' : ''}>Best of 3</option>
+                                <option value="5" ${sets == 5 ? 'selected' : ''}>Best of 5</option>
+                                <option value="7" ${sets == 7 ? 'selected' : ''}>Best of 7</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="${idPrefix}_target" class="form-label small">Điểm Mục Tiêu</label>
+                            <input type="number" id="${idPrefix}_target" class="form-control form-control-sm" value="${target}" min="1" data-config-stage="${idPrefix}" onchange="saveMatchConfigData('${idPrefix}')">
+                        </div>
+                        <div>
+                            <label for="${idPrefix}_courts" class="form-label small">Số Sân dùng</label>
+                            <input type="number" id="${idPrefix}_courts" class="form-control form-control-sm" value="${courts}" min="1" data-config-stage="${idPrefix}" onchange="saveMatchConfigData('${idPrefix}')">
+                        </div>
+                        <div>
+                            <label for="${idPrefix}_duration" class="form-label small">TG Dự kiến/Trận (phút)</label>
+                            <input type="number" id="${idPrefix}_duration" class="form-control form-control-sm" value="${duration}" min="5" data-config-stage="${idPrefix}" onchange="saveMatchConfigData('${idPrefix}')">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label small">Quy tắc Thắng</label>
+                            <div class="form-check">
+                                <input class="form-check-input ${idPrefix}_rule_radio" type="radio" name="${idPrefix}_rule" id="${idPrefix}_rule_wby2" value="WBY2" ${isWby2 ? 'checked' : ''} data-config-stage="${idPrefix}">
+                                <label class="form-check-label small" for="${idPrefix}_rule_wby2">Win by 2</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input ${idPrefix}_rule_radio" type="radio" name="${idPrefix}_rule" id="${idPrefix}_rule_hit" value="HIT" ${!isWby2 ? 'checked' : ''} data-config-stage="${idPrefix}">
+                                <label class="form-check-label small" for="${idPrefix}_rule_hit">Hit Target (Chạm mốc)</label>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div id="${idPrefix}_max_target_container" style="display: ${isWby2 ? 'block' : 'none'};">
+                                <label for="${idPrefix}_max_target" class="form-label small text-danger fw-bold">Điểm Chạm Tối Đa</label>
+                                <input type="number" id="${idPrefix}_max_target" class="form-control form-control-sm" value="${maxTargetValue}" placeholder="Điểm tối đa (Ví dụ: 12)" data-config-stage="${idPrefix}" onchange="saveMatchConfigData('${idPrefix}')">
+                                <small class="text-danger small-muted">(*) Nếu đạt điểm này, thắng ngay lập tức.</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+function saveMatchConfigData(idPrefix) {
+    const tournament = getTournament(); 
+    const config = tournament.config || {};
+    let stageKey = '';
+    
+    switch (idPrefix) {
+        case 'rr': stageKey = 'rr_config'; break;
+        case 'qf': stageKey = 'ko_qf_config'; break;
+        case 'sf': stageKey = 'ko_sf_config'; break;
+        case 'final': stageKey = 'ko_final_config'; break;
+        default: return;
+    }
+
+    const sets = parseInt(document.getElementById(`${idPrefix}_sets`).value);
+    const target = parseInt(document.getElementById(`${idPrefix}_target`).value);
+    const rule = document.querySelector(`input[name="${idPrefix}_rule"]:checked`).value;
+    let maxTarget = parseInt(document.getElementById(`${idPrefix}_max_target`).value);
+    
+    // NEW: Courts and Duration
+    const courts = parseInt(document.getElementById(`${idPrefix}_courts`).value) || 1;
+    const duration = parseInt(document.getElementById(`${idPrefix}_duration`).value) || 20;
+
+
+    if (rule !== 'WBY2' || isNaN(maxTarget) || maxTarget <= target) {
+        maxTarget = null;
+    }
+
+    config[stageKey] = {
+        sets: sets,
+        target: target,
+        rule: rule,
+        maxTarget: maxTarget,
+        courts: courts,
+        duration: duration
+    };
+    
+    tournament.config = config; 
+    setTournament(tournament); 
+}
+
+function handleRuleChange(idPrefix) {
+    const isWby2 = document.getElementById(`${idPrefix}_rule_wby2`).checked;
+    const maxTargetContainer = document.getElementById(`${idPrefix}_max_target_container`);
+    if(maxTargetContainer) maxTargetContainer.style.display = isWby2 ? 'block' : 'none';
+    
+    saveMatchConfigData(idPrefix);
+}
+
+// --- RENDERING & INIT ---
+function renderBTC(){ 
+    const area=document.getElementById('btcList'); area.innerHTML=''; const list = getTournamentField('btc')||[]; if(list.length===0) area.innerHTML='<div class=\'muted-sm\'>Chưa có BTC</div>'; list.forEach((b,i)=>{ const div=document.createElement('div'); div.className='d-flex gap-2 align-items-center mb-1'; div.innerHTML = `<input class='form-control form-control-sm' value='${escapeHtml(b)}' onchange='editBTC(${i}, this.value)'><button class='btn btn-sm btn-outline-danger' onclick='removeBTC(${i})'>Xóa</button>`; area.appendChild(div); });
+} 
+function addBTC(){
+    const v=document.getElementById('btcName').value.trim(); if(!v) return; const arr=getTournamentField('btc')||[]; arr.push(v); setTournamentField('btc',arr); document.getElementById('btcName').value=''; renderBTC();
+} 
+function editBTC(i,v){
+    const arr=getTournamentField('btc')||[]; arr[i]=v; setTournamentField('btc',arr); renderBTC();
+} 
+function removeBTC(i){
+    const arr=getTournamentField('btc')||[]; arr.splice(i,1); setTournamentField('btc',arr); renderBTC();
+} 
+function clearBTC(){
+    setTournamentField('btc',[]); renderBTC();
+} 
+// --- PLAYER FUNCTIONS --- 
+function renderPlayersEditor(){
+    const area=document.getElementById('playersList'); area.innerHTML=''; playersEdited = getTournamentField('players')?JSON.parse(JSON.stringify(getTournamentField('players'))):[]; if(playersEdited.length===0) area.innerHTML='<div class=\'muted-sm\'>Danh sách trống</div>'; playersEdited.forEach((p,i)=>{ const row=document.createElement('div'); row.className='d-grid gap-2 align-items-center mb-1'; row.style.cssText = 'grid-template-columns: 2fr 1.5fr 1.5fr 60px;'; row.innerHTML = ` <input class='form-control form-control-sm' data-idx='${i}' data-field='name' value='${escapeHtml(p.name)}' placeholder='Tên'> <input class='form-control form-control-sm' data-idx='${i}' data-field='phone' value='${escapeHtml(p.phone || '')}' placeholder='SĐT'> <input class='form-control form-control-sm' data-idx='${i}' data-field='email' value='${escapeHtml(p.email || '')}' placeholder='Email'> <button class='btn btn-sm btn-outline-danger' onclick='removePlayer(${i})'>Xóa</button>`; area.appendChild(row); });
+}
+function addPlayerFromInputs(){ 
+    const name = document.getElementById('playerAddName').value.trim(); const phone = document.getElementById('playerAddPhone').value.trim(); const email = document.getElementById('playerAddEmail').value.trim(); if(!name) { alert('Tên người chơi không được để trống.'); return; } const arr=getTournamentField('players')||[]; arr.push({name, phone, email}); setTournamentField('players',arr); document.getElementById('playerAddName').value = ''; document.getElementById('playerAddPhone').value = ''; document.getElementById('playerAddEmail').value = ''; renderPlayersEditor(); renderTeams();
+}
+function removePlayer(i){
+    playersEdited.splice(i,1); setTournamentField('players', playersEdited); renderPlayersEditor(); renderTeams();
+}
+function applyPlayerEdits(){
+    const newPlayers = []; document.querySelectorAll('#playersList input').forEach(input => { const idx = input.dataset.idx; const field = input.dataset.field; if (!newPlayers[idx]) newPlayers[idx] = {}; newPlayers[idx][field] = input.value; }); setTournamentField('players', newPlayers); renderPlayersEditor(); renderTeams();
+} 
+function renderTeams(){
+    const area = document.getElementById('teamsArea'); area.innerHTML = ''; teams = getTournamentField('teams')||[]; if(teams.length===0) { area.innerHTML='<div class=\'muted-sm\'>Chưa có đội. Hãy thêm người chơi và ghép cặp.</div>'; return; } teams.forEach((t,i)=>{ const teamName = escapeHtml(t.name); const playerNames = t.players.map(p=>getTournamentField('players').find(pl=>pl.name===p)?.name || p).filter(Boolean); area.innerHTML += `<div class='d-flex gap-2 align-items-center mb-2'> <input class='form-control form-control-sm' value='${teamName}' onchange='editTeamName(${i}, this.value)'> <div class='muted-sm'>${playerNames.join(', ')}</div> </div>`; });
+}
+function makeTeams(method){
+    const players = getTournamentField('players')||[]; if(players.length<2) { alert('Cần ít nhất 2 người chơi.'); return; } let p = players.map(pl=>pl.name); if(method==='random') p.sort(()=>Math.random()-0.5); const newTeams = []; for(let i=0;i<p.length;i+=2){ newTeams.push({name: `Đội ${Math.ceil((i/2)+1)}`, players:[p[i], p[i+1]||null]}); } setTournamentField('teams', newTeams); renderTeams();
+}
+function shuffleTeams(){ 
+    teams = getTournamentField('teams')||[]; if(teams.length<2) return; teams.sort(()=>Math.random()-0.5); setTournamentField('teams', teams); renderTeams();
+} 
+function randomPlayers(){
+    const count = parseInt(document.getElementById('numRandom').value, 10); if(isNaN(count)||count<2) return; let players = []; for(let i=1;i<=count;i++) players.push({name: `Player ${i}`, phone:'', email:''}); setTournamentField('players', players); renderPlayersEditor(); renderTeams();
+}
+function clearPlayers(){
+    setTournamentField('players',[]); setTournamentField('teams',[]); setTournamentField('groups',[]); setTournamentField('groupMatches',{}); setTournamentField('knockout',[]); renderPlayersEditor(); renderTeams(); renderGroups(); renderGroupMatches(); renderRankings(); renderKnockout();
+} 
+function editTeamName(i, name){ teams = getTournamentField('teams')||[]; teams[i].name = name; setTournamentField('teams', teams); renderTeams(); }
+
+/**
+ * NEW: Simple CSV parser: expects Name,Phone,Email
+ */
+function parseCSV(csvText) {
+    const rows = csvText.trim().split('\n');
+    if (rows.length === 0) return [];
+    
+    // Simple logic to skip header if it looks like one (i.e., contains "Name" or "Tên")
+    let dataRows = rows;
+    const firstRow = rows[0].toLowerCase();
+    let skipHeader = false;
+    if (firstRow.includes('name') || firstRow.includes('tên')) {
+        skipHeader = true;
+        dataRows = rows.slice(1);
+    }
+    
+    return dataRows.map(row => {
+        // Use a simple split(',') - assumes no commas within fields
+        const cols = row.split(','); 
+        
+        // Map columns: 0=Name, 1=Phone, 2=Email 
+        const name = String(cols[0] || '').trim();
+        const phone = String(cols[1] || '').trim();
+        const email = String(cols[2] || '').trim();
+        
+        if (name) {
+            return { name, phone, email };
+        }
+        return null;
+    }).filter(p => p !== null);
+}
+
+/**
+ * NEW: Function to handle player file import (CSV or JSON)
+ */
+function importPlayers(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        let importedPlayers = [];
+        try {
+            const content = e.target.result;
+            const fileName = file.name.toLowerCase();
+
+            if (fileName.endsWith('.json')) {
+                // Handle JSON format: assumes array of {name, phone, email}
+                const data = JSON.parse(content);
+                if (Array.isArray(data)) {
+                    importedPlayers = data.map(p => ({
+                        name: String(p.name || '').trim(),
+                        phone: String(p.phone || '').trim(),
+                        email: String(p.email || '').trim()
+                    })).filter(p => p.name); // Only keep players with a name
+                } else {
+                    throw new Error("JSON format is invalid. Expecting an array of players.");
+                }
+            } else if (fileName.endsWith('.csv')) {
+                // Handle CSV format (assuming header row: Name,Phone,Email)
+                importedPlayers = parseCSV(content);
+            } else {
+                 throw new Error("Định dạng file không được hỗ trợ. Vui lòng sử dụng CSV hoặc JSON.");
+            }
+            
+            if (importedPlayers.length > 0) {
+                const currentPlayers = getTournamentField('players') || [];
+                // Filter out duplicates based on name (simple deduplication)
+                const existingNames = new Set(currentPlayers.map(p => p.name.toLowerCase()));
+                const uniqueNewPlayers = importedPlayers.filter(p => !existingNames.has(p.name.toLowerCase()));
+                
+                const newPlayers = [...currentPlayers, ...uniqueNewPlayers];
+                setTournamentField('players', newPlayers);
+                renderPlayersEditor();
+                renderTeams();
+                alert(`Đã import thành công ${uniqueNewPlayers.length} người chơi mới. (Tổng: ${newPlayers.length})`);
+            } else {
+                alert('Không tìm thấy người chơi hợp lệ nào trong file, hoặc tất cả đã tồn tại.');
+            }
+
+        } catch (error) {
+            console.error(error);
+            alert(`Lỗi import: ${error.message || 'Kiểm tra định dạng file (CSV: Tên,SĐT,Email) hoặc JSON ([{"name": "...", ...}])'}`);
+        }
+    };
+    reader.readAsText(file);
+    event.target.value = ''; // Reset file input
+}
+
+
+// --- MATCH GENERATION & RENDERING ---
+function generateGroups(){ 
+    groups = []; const t = getTournamentField('teams')||[]; if(t.length<3) { alert('Cần ít nhất 3 đội để chia bảng.'); return; } const minG = parseInt(document.getElementById('minPerGroup').value, 10); const maxG = parseInt(document.getElementById('maxPerGroup').value, 10); if(isNaN(minG)||isNaN(maxG)||minG>maxG||minG<3) { alert('Kiểm tra lại số đội min/max cho mỗi bảng (>=3).'); return; } const numGroups = Math.ceil(t.length / maxG); if(t.length/numGroups < minG) { alert('Số đội/bảng không hợp lệ. Vui lòng điều chỉnh Min/Max.'); return; } t.sort(()=>Math.random()-0.5); for(let i=0;i<numGroups;i++) groups.push([]); for(let i=0;i<t.length;i++) groups[i%numGroups].push(t[i].name); setTournamentField('groups', groups); renderGroups();
+}
+function generateAll(){
+    generateGroups(); 
+    if(groups.length===0) return;
+    groupMatches={}; groups.forEach((g,gi)=>{ groupMatches[gi] = []; for(let i=0;i<g.length;i++){ for(let j=i+1;j<g.length;j++){ 
+        // NEW: Include time fields
+        groupMatches[gi].push({teamA:g[i], teamB:g[j], sets:[], winner:null, court:null, scheduledTime: null, startTime: null, endTime: null}); 
+    } } }); 
+    setTournamentField('groupMatches', groupMatches); 
+    generateScheduledTimes(); // Also generates schedule immediately
+    renderGroups(); 
+    renderGroupMatches();
+}
+function renderGroups(){
+    const area=document.getElementById('groupsArea'); area.innerHTML=''; groups = getTournamentField('groups')||[]; if(groups.length===0) { area.innerHTML='<div class=\'muted-sm\'>Chưa chia bảng.</div>'; return; } groups.forEach((g,gi)=>{ area.innerHTML+=`<h6>Bảng ${String.fromCharCode(65+parseInt(gi, 10))} (${g.length} đội)</h6><p class='muted-sm'>${g.join(', ')}</p>`; });
+}
+function renderGroupMatches(){
+    const COURT_NAMES = getCourtNames();
+    const area=document.getElementById('groupMatchesArea'); area.innerHTML=''; groupMatches = getTournamentField('groupMatches')||{}; const rrConfig = getMatchSetConfig('group', 0); const ruleDisplay = rrConfig.rule==='WBY2' ? `(Hơn 2 ${rrConfig.maxTarget ? '/Max '+rrConfig.maxTarget : ''})` : '(Chạm mốc)';
+    const courtFilter = document.getElementById('courtFilterSelect').value;
+    
+    const courtSelect = document.getElementById('courtFilterSelect');
+    courtSelect.innerHTML = `<option value='all'>Tất cả Sân</option>`;
+    COURT_NAMES.forEach(c => courtSelect.innerHTML += `<option value='${c}' ${courtFilter===c?'selected':''}>${c}</option>`);
+
+    for(const gi in groupMatches){ 
+        let groupHtml = `<h6>Bảng ${String.fromCharCode(65+parseInt(gi, 10))} (${rrConfig.sets} Sets, ${rrConfig.target} điểm ${ruleDisplay}) (Sân dùng: ${rrConfig.courts}, TG: ${rrConfig.duration}p)</h6>`;
+        groupMatches[gi].forEach((m,mi)=>{
+            if (courtFilter !== 'all' && m.court !== courtFilter) return;
+
+            const result = calculateMatchResultFromSets(m.sets||[], rrConfig.target, rrConfig.rule, rrConfig.sets, rrConfig.maxTarget);
+            
+            const setScoresDisplay = formatSetScores(m.sets);
+            const matchScoreSummary = result.isCompleted 
+                ? `<span class='text-success'>${result.setsA}-${result.setsB}</span>`
+                : (m.sets && m.sets.filter(([a,b]) => a !== null || b !== null).length > 0 && (result.setsA > 0 || result.setsB > 0)) ? `${result.setsA}-${result.setsB}` : 'Chưa đấu';
+            
+            const winnerDisplay = m.winner ? `(Winner: ${m.winner})` : '';
+            const courtDisplay = m.court ? `<span class='muted-sm ms-3'>Sân: ${m.court}</span>` : '';
+            
+            // NEW: Time display
+            const scheduledTimeDisplay = m.scheduledTime ? `Lịch: ${m.scheduledTime}` : '';
+            const startTimeDisplay = m.startTime ? new Date(m.startTime).toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'}) : '...';
+            const endTimeDisplay = m.endTime ? new Date(m.endTime).toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'}) : '...';
+            const actualTimeDisplay = (m.startTime || m.endTime) ? 
+                ` | BĐ: ${startTimeDisplay} - KT: ${endTimeDisplay}` : '';
+            
+            const isMatchStarted = m.startTime !== null;
+            const isMatchFinished = m.endTime !== null;
+
+            groupHtml+=`<div class='match-row' id='group_match_row_${gi}_${mi}' data-editor-open='false'>
+                <div class='match-info' style='width: 350px;'>
+                    ${escapeHtml(m.teamA)} vs ${escapeHtml(m.teamB)} 
+                    <div class='muted-sm'>${scheduledTimeDisplay} ${actualTimeDisplay}</div>
+                </div>
+                <div class='match-score'>${matchScoreSummary} ${setScoresDisplay} ${winnerDisplay} ${courtDisplay}</div>
+                <div class='match-actions'>
+                    <select id='group_court_${gi}_${mi}' class='form-select form-select-sm court-select' onchange='saveSetsScore("group", ${gi}, ${mi})'>
+                        <option value=''>Chọn Sân</option>
+                        ${COURT_NAMES.map(c => `<option value='${c}' ${m.court===c?'selected':''}>${c}</option>`).join('')}
+                    </select>
+                    <button class='btn btn-sm btn-primary' onclick='openSetScoringEditor("group", ${gi}, ${mi})' ${isMatchFinished ? 'disabled' : ''}>Bắt đầu Trận đấu</button>
+                </div>
+            </div>`;
+        }); 
+        area.innerHTML+=groupHtml;
+    }
+}
+function renderKnockout(){
+    const COURT_NAMES = getCourtNames();
+    const area=document.getElementById('knockoutArea'); area.innerHTML=''; knockout = getTournamentField('knockout')||[]; 
+    
+    knockout.forEach((round,rIdx)=>{
+        const roundConfig = getMatchSetConfig('ko', rIdx);
+        const roundTitle = getRoundTitle(rIdx);
+        const ruleDisplay = roundConfig.rule==='WBY2' ? `(Hơn 2 ${roundConfig.maxTarget ? '/Max '+roundConfig.maxTarget : ''})` : '(Chạm mốc)';
+        area.innerHTML+=`<h5>${roundTitle} (${roundConfig.sets} Sets, ${roundConfig.target} điểm ${ruleDisplay}) (Sân dùng: ${roundConfig.courts}, TG: ${roundConfig.duration}p)</h5>`;
+        round.forEach((m,mIdx)=>{
+            const result = calculateMatchResultFromSets(m.sets||[], roundConfig.target, roundConfig.rule, roundConfig.sets, roundConfig.maxTarget);
+            
+            const setScoresDisplay = formatSetScores(m.sets);
+            const matchScoreSummary = result.isCompleted 
+                ? `<span class='text-success'>${result.setsA}-${result.setsB}</span>`
+                : (m.sets && m.sets.filter(([a,b]) => a !== null || b !== null).length > 0 && (result.setsA > 0 || result.setsB > 0)) ? `${result.setsA}-${result.setsB}` : 'Chưa đấu';
+            
+            const winnerDisplay = m.winner ? `(Winner: ${m.winner})` : '';
+            const teamBName = m.teamB || '(TBD)';
+            const courtDisplay = m.court ? `<span class='muted-sm ms-3'>Sân: ${m.court}</span>` : '';
+            
+            // NEW: Time display for KO
+            const scheduledTimeDisplay = m.scheduledTime ? `Lịch: ${m.scheduledTime}` : '';
+            const startTimeDisplay = m.startTime ? new Date(m.startTime).toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'}) : '...';
+            const endTimeDisplay = m.endTime ? new Date(m.endTime).toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'}) : '...';
+            const actualTimeDisplay = (m.startTime || m.endTime) ? 
+                ` | BĐ: ${startTimeDisplay} - KT: ${endTimeDisplay}` : '';
+            
+            const isMatchStarted = m.startTime !== null;
+            const isMatchFinished = m.endTime !== null;
+            const isDisabled = m.teamB === null || isMatchFinished;
+
+
+            area.innerHTML+=`<div class='match-row' id='ko_match_row_${rIdx}_${mIdx}' data-editor-open='false'>
+                <div class='match-info ko-team-name'>
+                    ${escapeHtml(m.teamA)} vs ${escapeHtml(teamBName)}
+                    <div class='muted-sm'>${scheduledTimeDisplay} ${actualTimeDisplay}</div>
+                </div>
+                <div class='match-score'>${matchScoreSummary} ${setScoresDisplay} ${winnerDisplay} ${courtDisplay}</div>
+                <div class='match-actions'>
+                     <select id='ko_court_${rIdx}_${mIdx}' class='form-select form-select-sm court-select' onchange='saveSetsScore("ko", ${rIdx}, ${mIdx})' ${m.teamB === null ? 'disabled' : ''}>
+                        <option value=''>Chọn Sân</option>
+                        ${COURT_NAMES.map(c => `<option value='${c}' ${m.court===c?'selected':''}>${c}</option>`).join('')}
+                    </select>
+                    <button class='btn btn-sm btn-primary' onclick='openSetScoringEditor("ko", ${rIdx}, ${mIdx})' ${isDisabled ? 'disabled' : ''}>Bắt đầu Trận đấu</button>
+                </div>
+            </div>`;
+        });
+    });
+}
+function selectTopAndBuildKO(){
+    standings = getTournamentField('standings')||{}; knockout=[];
+    const cfg = getTournamentField('config') || {}; const defaultAdvance = cfg.defaultAdvance==='auto'?2:parseInt(cfg.defaultAdvance,10)||2; const wildcardCount = parseInt(cfg.wildcardCount,10)||0;
+    let allAdvancers = []; for(const gi in standings){ const table=standings[gi]; const rows = Object.keys(table).map(t=>({team:t,...table[t]})); rows.sort((r1,r2)=> r2.pts - r1.pts || r2.setsDiff - r1.setsDiff || r2.pointsDiff - r1.pointsDiff); allAdvancers.push(...rows.slice(0, defaultAdvance).map(r=>r.team)); }
+    
+    let wildcardCandidates = []; for(const gi in standings){ const table=standings[gi]; const rows = Object.keys(table).map(t=>({team:t,...table[i][t]})); rows.sort((r1,r2)=> r2.pts - r1.pts || r2.setsDiff - r1.setsDiff || r2.pointsDiff - r1.pointsDiff); wildcardCandidates.push(...rows.slice(defaultAdvance).filter(r=>r.pts>0).map(r=>r.team)); }
+    wildcardCandidates.sort((t1,t2)=> { 
+        const s1 = (Object.values(standings).find(g => t1 in g) || {})[t1] || {setsDiff: 0, pointsDiff: 0};
+        const s2 = (Object.values(standings).find(g => t2 in g) || {})[t2] || {setsDiff: 0, pointsDiff: 0};
+        return s2.setsDiff - s1.setsDiff || s2.pointsDiff - s1.pointsDiff; 
+    });
+    let koTeams = allAdvancers.slice(0, allAdvancers.length - wildcardCount);
+    koTeams.push(...wildcardCandidates.slice(0, wildcardCount));
+    koTeams.sort(()=>Math.random()-0.5); 
+    
+    let koRoundSize = 1; while(koRoundSize<koTeams.length) koRoundSize*=2;
+    const byes = koRoundSize - koTeams.length; if(byes>0){ for(let i=0;i<byes;i++) koTeams.unshift(null); }
+    
+    // NEW: Initialize KO matches with null time fields
+    const initialRound = []; for(let i=0;i<koTeams.length;i+=2){ initialRound.push({teamA:koTeams[i],teamB:koTeams[i+1]||null,sets:[],winner:koTeams[i+1]===null?koTeams[i]:null,court:null, scheduledTime: null, startTime: null, endTime: null}); }
+    knockout = [initialRound].filter(r=>r.length>0); setTournamentField('knockout', knockout); renderKnockout();
+}
+
+// --- BUDGET & SPONSOR FUNCTIONS ---
+function renderSummary(){
+    const area = document.getElementById('summaryArea');
+    
+    // Revenue Calculations
+    // Thu khác (Other Income)
+    const plannedIncome = budget.income.reduce((sum, item) => sum + (item.planned || 0), 0);
+    const actualIncome = budget.income.reduce((sum, item) => sum + (item.actual || 0), 0);
+    // Tài trợ (Sponsor) - Assuming this is Actual Revenue
+    const sponsorTotal = budget.sponsors.reduce((sum, s) => sum + (s.amount || 0), 0);
+    
+    // Expense Calculations
+    const plannedExpense = budget.expense.reduce((sum, item) => sum + (item.planned || 0), 0);
+    const actualExpense = budget.expense.reduce((sum, item) => sum + (item.actual || 0), 0);
+    
+    // Total Calculations
+    // Planned Revenue: Just other planned income (excluding sponsors which are often confirmed/actual)
+    const totalPlannedRevenue = plannedIncome;
+    // Actual Revenue: Other actual income + sponsor money
+    const totalActualRevenue = actualIncome + sponsorTotal;
+    
+    const totalPlannedExpense = plannedExpense;
+    const totalActualExpense = actualExpense;
+    
+    const plannedBalance = totalPlannedRevenue - totalPlannedExpense;
+    const actualBalance = totalActualRevenue - totalActualExpense;
+
+    area.innerHTML = `
+        <div class="row g-3">
+            <div class="col-md-6">
+                <h6 class="fw-bold">1. Tổng hợp Dự toán (Planned)</h6>
+                <table class="table table-sm table-borderless">
+                    <tr><td>Thu nhập Dự toán:</td><td class="text-end fw-bold">${formatVND(plannedIncome)}</td></tr>
+                    <tr><td>Chi phí Dự toán:</td><td class="text-end text-danger fw-bold">${formatVND(plannedExpense)}</td></tr>
+                </table>
+                <p class='h5 text-${plannedBalance >= 0 ? 'success' : 'danger'} mt-2'><strong>Cân bằng Dự toán:</strong> ${formatVND(plannedBalance)}</p>
+            </div>
+            <div class="col-md-6">
+                <h6 class="fw-bold">2. Tổng hợp Thực tế (Actual)</h6>
+                <table class="table table-sm table-borderless">
+                    <tr><td>Thu nhập Thực tế (Không TL):</td><td class="text-end">${formatVND(actualIncome)}</td></tr>
+                    <tr><td>Tài trợ Thực tế:</td><td class="text-end">${formatVND(sponsorTotal)}</td></tr>
+                    <tr><td><strong class="text-primary">Tổng Thu Thực tế:</strong></td><td class="text-end text-primary"><strong>${formatVND(totalActualRevenue)}</strong></td></tr>
+                    <tr><td>Chi phí Thực tế:</td><td class="text-end text-danger">${formatVND(totalActualExpense)}</td></tr>
+                </table>
+                <p class='h5 text-${actualBalance >= 0 ? 'success' : 'danger'} mt-2'><strong>Cân bằng Thực tế:</strong> ${formatVND(actualBalance)}</p>
+            </div>
+        </div>
+    `;
+    calculatePartyCost();
+}
+function calculatePartyCost(){
+    const cfg = budget.partyConfig;
+    const cost = cfg.costPerPerson * (cfg.actualAttendees || cfg.plannedAttendees || 0);
+    const area = document.getElementById('partyBudgetingArea');
+    
+    area.innerHTML = `<p class="muted-sm">Tổng chi phí Tiệc: <strong>${formatVND(cost)}</strong> (dựa trên ${cfg.actualAttendees || cfg.plannedAttendees || 0} người)</p>`;
+}
+function setPartyConfig(){
+    const cost = parseInt(document.getElementById('partyCostPerPerson').value) || 0;
+    const planned = parseInt(document.getElementById('partyPlannedAttendees').value) || 0;
+    const actual = parseInt(document.getElementById('partyActualAttendees').value) || 0;
+    
+    budget.partyConfig = { costPerPerson: cost, plannedAttendees: planned, actualAttendees: actual };
+    setTournamentField('budget', budget);
+    calculatePartyCost();
+    renderSummary();
+}
+function addSponsor(){
+    const name = document.getElementById('newSponsorName').value.trim();
+    const amount = parseInt(document.getElementById('newSponsorAmount').value) || 0;
+    const inKind = document.getElementById('newSponsorInKind').value.trim();
+    const contact = document.getElementById('newSponsorContact').value.trim();
+    if(!name && !amount && !inKind) return;
+
+    budget.sponsors.push({name, amount, inKind, contact});
+    setTournamentField('budget', budget);
+    document.getElementById('newSponsorName').value = '';
+    document.getElementById('newSponsorAmount').value = '';
+    document.getElementById('newSponsorInKind').value = '';
+    document.getElementById('newSponsorContact').value = '';
+    renderSponsors();
+    renderSummary();
+}
+function renderSponsors(){
+    const area = document.getElementById('sponsorList'); area.innerHTML = '';
+    budget = getTournamentField('budget') || budget;
+    (budget.sponsors || []).forEach((s, i) => {
+        area.innerHTML += `
+            <div class='budget-grid' style='grid-template-columns: 2fr 1fr 1fr 1fr 50px;'>
+                <input class='form-control form-control-sm' value='${escapeHtml(s.name)}' onchange='updateSponsor(${i}, "name", this.value)'>
+                <input type='number' min='0' class='form-control form-control-sm' value='${s.amount || ''}' onchange='updateSponsor(${i}, "amount", parseInt(this.value) || 0)'>
+                <input class='form-control form-control-sm' value='${escapeHtml(s.inKind || '')}' onchange='updateSponsor(${i}, "inKind", this.value)'>
+                <input class='form-control form-control-sm' value='${escapeHtml(s.contact || '')}' onchange='updateSponsor(${i}, "contact", this.value)'>
+                <button class='btn btn-sm btn-outline-danger' onclick='deleteSponsor(${i})'>Xóa</button>
+            </div>
+        `;
+    });
+}
+function updateSponsor(i, field, value){
+    budget.sponsors[i][field] = value;
+    setTournamentField('budget', budget);
+    renderSummary();
+}
+function deleteSponsor(i){
+    budget.sponsors.splice(i, 1);
+    setTournamentField('budget', budget);
+    renderSponsors();
+    renderSummary();
+}
+function addItem(type){
+    const name = document.getElementById(`new${type.charAt(0).toUpperCase() + type.slice(1)}Name`).value.trim();
+    const planned = parseInt(document.getElementById(`new${type.charAt(0).toUpperCase() + type.slice(1)}Planned`).value) || 0;
+    if(!name) return;
+
+    budget[type].push({name, planned, actual: 0});
+    setTournamentField('budget', budget);
+    document.getElementById(`new${type.charAt(0).toUpperCase() + type.slice(1)}Name`).value = '';
+    document.getElementById(`new${type.charAt(0).toUpperCase() + type.slice(1)}Planned`).value = '';
+    renderBudgetItems(type);
+    renderSummary();
+}
+function renderBudgetItems(type){
+    const area = document.getElementById(`${type}List`); area.innerHTML = '';
+    budget = getTournamentField('budget') || budget;
+    (budget[type] || []).forEach((item, i) => {
+        area.innerHTML += `
+            <div class='budget-grid'>
+                <input class='form-control form-control-sm' value='${escapeHtml(item.name)}' onchange='updateBudgetItem("${type}", ${i}, "name", this.value)'>
+                <input type='number' min='0' class='form-control form-control-sm' value='${item.planned || ''}' onchange='updateBudgetItem("${type}", ${i}, "planned", parseInt(this.value) || 0)'>
+                <input type='number' min='0' class='form-control form-control-sm' value='${item.actual || ''}' onchange='updateBudgetItem("${type}", ${i}, "actual", parseInt(this.value) || 0)'>
+                <button class='btn btn-sm btn-outline-danger' onclick='deleteBudgetItem("${type}", ${i})'>Xóa</button>
+            </div>
+        `;
+    });
+}
+function updateBudgetItem(type, i, field, value){
+    budget[type][i][field] = value;
+    setTournamentField('budget', budget);
+    renderSummary();
+}
+function deleteBudgetItem(type, i){
+    budget[type].splice(i, 1);
+    setTournamentField('budget', budget);
+    renderBudgetItems(type);
+    renderSummary();
+}
+
+function initMatchConfigUI() {
+    let config = getTournamentField('config') || {};
+    config = { ...DEFAULT_CONFIG_SETS, ...config }; 
+    
+    const rrConfig = config.rr_config || DEFAULT_CONFIG_SETS.rr_config;
+    const qfConfig = config.ko_qf_config || DEFAULT_CONFIG_SETS.ko_qf_config;
+    const sfConfig = config.ko_sf_config || DEFAULT_CONFIG_SETS.ko_sf_config;
+    const finalConfig = config.ko_final_config || DEFAULT_CONFIG_SETS.ko_final_config;
+    const scheduling = config.scheduling || DEFAULT_SCHEDULING_CONFIG;
+
+
+    document.getElementById('rrConfigBlock').innerHTML = generateMatchConfigHTML('rr', 'Vòng Bảng (Round Robin)', rrConfig);
+    document.getElementById('qfConfigBlock').innerHTML = generateMatchConfigHTML('qf', 'Vòng KO Sớm (Tứ kết/1/8)', qfConfig);
+    document.getElementById('sfConfigBlock').innerHTML = generateMatchConfigHTML('sf', 'Bán kết (Semi-Final)', sfConfig);
+    document.getElementById('finalConfigBlock').innerHTML = generateMatchConfigHTML('final', 'Chung kết (Final)', finalConfig);
+
+    ['rr', 'qf', 'sf', 'final'].forEach(idPrefix => {
+        document.querySelectorAll(`input[name="${idPrefix}_rule"]`).forEach(element => {
+            element.addEventListener('change', () => handleRuleChange(idPrefix));
+        });
+        handleRuleChange(idPrefix); 
+    });
+    
+    document.getElementById('tourneyFormat').value = config.tourneyFormat || 'rr+ko';
+    document.getElementById('defaultAdvance').value = config.defaultAdvance || '2';
+    document.getElementById('wildcardCount').value = config.wildcardCount || '0';
+    
+    // NEW: Load Scheduling Config
+    document.getElementById('initialStartTime').value = scheduling.initialStartTime || '09:00';
+    document.getElementById('spareCourts').value = scheduling.spareCourts || 0;
+    document.getElementById('courtNamesConfig').value = scheduling.courtNames || 'Sân 1, Sân 2, Sân 3, Sân 4';
+}
+
+// --- SAVE / LOAD / EXPORT ---
+function saveTournament(){
+    const allTournaments = loadStateFromLocal(tournamentsKey) || {};
+    const current = getTournament();
+    current.id = current.id || uid();
+    current.lastUpdated = Date.now();
+    allTournaments[current.id] = current;
+    saveStateToLocal(tournamentsKey, allTournaments);
+    currentTournamentId = current.id;
+    alert(`Giải đấu '${current.title}' đã được lưu thành công.`);
+    renderSavedList();
+}
+function deleteTournament(){
+    if(!currentTournamentId || !confirm('Bạn có chắc chắn muốn XÓA giải đấu hiện tại không?')) return;
+    const allTournaments = loadStateFromLocal(tournamentsKey) || {};
+    delete allTournaments[currentTournamentId];
+    saveStateToLocal(tournamentsKey, allTournaments);
+    localStorage.removeItem('current_tournament_temp');
+    init(); 
+    alert('Giải đấu đã được xóa.');
+    renderSavedList();
+}
+function renderSavedList(){
+    const allTournaments = loadStateFromLocal(tournamentsKey) || {};
+    const list = document.getElementById('savedList'); list.innerHTML = '';
+    const sortedKeys = Object.keys(allTournaments).sort((a, b) => allTournaments[b].lastUpdated - allTournaments[a].lastUpdated);
+    if(sortedKeys.length === 0) { list.innerHTML = '<p>Chưa có giải đấu nào được lưu.</p>'; return; }
+    
+    sortedKeys.forEach(id => {
+        const t = allTournaments[id];
+        const date = new Date(t.lastUpdated).toLocaleString('vi-VN');
+        list.innerHTML += `<div class='d-flex justify-content-between align-items-center mb-1'>
+            <span class='small-muted'>${escapeHtml(t.title)} (${date})</span>
+            <button class='btn btn-sm btn-outline-dark' onclick='loadTournament("${id}")'>Load</button>
+        </div>`;
+    });
+}
+function loadTournament(id){
+    const allTournaments = loadStateFromLocal(tournamentsKey) || {};
+    if(allTournaments[id]){
+        saveStateToLocal('current_tournament_temp', allTournaments[id]);
+        init();
+        alert(`Đã tải giải đấu '${allTournaments[id].title}'`);
+    } else {
+        alert('Không tìm thấy giải đấu.');
+    }
+}
+function exportTournament(){
+    const data = getTournament();
+    const filename = `${data.title || 'pickleball_tournament'}_${new Date().toLocaleDateString('en-CA')}.json`;
+    const jsonString = JSON.stringify(data, null, 2);
+    const blob = new Blob([jsonString], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+}
+function importTournament(event){
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const importedData = JSON.parse(e.target.result);
+            if(importedData.title){
+                importedData.id = uid(); 
+                saveStateToLocal('current_tournament_temp', importedData);
+                init();
+                alert(`Import thành công giải đấu: ${importedData.title}`);
+            } else {
+                alert('File JSON không hợp lệ.');
+            }
+        } catch (error) {
+            alert('Lỗi đọc hoặc phân tích file JSON.');
+        }
+    };
+    reader.readAsText(file);
+    event.target.value = ''; 
+}
+
+
+// --- INITIALIZATION ---
+function init(){
+    const currentTournament = getTournament(); 
+    
+    if(currentTournament.config) inputTitle.value = currentTournament.title || 'Pickleball Cup';
+    
+    teams = currentTournament.teams||[];
+    groups = currentTournament.groups||[];
+    groupMatches = currentTournament.groupMatches||{};
+    standings = currentTournament.standings||{};
+    knockout = currentTournament.knockout||[];
+    budget = currentTournament.budget||{income:[],expense:[],sponsors:[],partyConfig:{costPerPerson:0,plannedAttendees:0,actualAttendees:0}};
+    currentTournamentId = currentTournament.id;
+    
+    document.getElementById('tournamentTitle').textContent = inputTitle.value;
+    
+    headerLogo.src = currentTournament.logo || '';
+    headerLogo.style.display = headerLogo.src ? 'inline-block' : 'none';
+
+    // Load Court Info
+    const court = currentTournament.court || {};
+    document.getElementById('courtName').value = court.name || '';
+    document.getElementById('courtAddress').value = court.address || '';
+    document.getElementById('courtMapLink').value = court.mapLink || '';
+    document.getElementById('courtContactPerson').value = court.contactPerson || '';
+    document.getElementById('courtContactPhone').value = court.contactPhone || '';
+
+    // Load Fee Info
+    const fee = currentTournament.fee || {};
+    document.getElementById('feeAmount').value = fee.amount || '';
+    qrCodePreview.src = fee.qrCode || '';
+    qrCodePreview.style.display = qrCodePreview.src ? 'inline-block' : 'none';
+
+    renderBTC();
+    renderPlayersEditor();
+    renderTeams();
+    
+    initMatchConfigUI();
+    
+    renderBudgetItems('income');
+    renderBudgetItems('expense');
+    renderSponsors();
+    
+    document.getElementById('partyCostPerPerson').value = budget.partyConfig.costPerPerson || '';
+    document.getElementById('partyPlannedAttendees').value = budget.partyConfig.plannedAttendees || '';
+    document.getElementById('partyActualAttendees').value = budget.partyConfig.actualAttendees || '';
+    calculatePartyCost();
+    
+    renderGroups();
+    renderGroupMatches();
+    renderRankings();
+    renderKnockout();
+    renderSummary();
+    
+    const configTab = document.getElementById('config-tab');
+    if (configTab) {
+        configTab.addEventListener('shown.bs.tab', initMatchConfigUI);
+    }
+}
+
+// Initial call
+init();
+</script>
+</body>
+</html>
