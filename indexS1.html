@@ -3,19 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pickleball Tournament Organizer V10.1</title>
+    <title>Pickleball Tournament Organizer V10.1 Nâng Cấp</title>
     <style>
         :root {
-            --primary-color: #4CAF50; /* Green */
-            --secondary-color: #FFC107; /* Amber */
-            --background-color: #f4f4f9;
-            --text-color: #333;
-            --alert-color: #F44336; /* Red */
-            --success-color: #2196F3; /* Blue */
-            --border-color: #ddd;
+            --primary-color: #00796B; /* Teal/Xanh ngọc */
+            --secondary-color: #FF9800; /* Cam/Hổ phách */
+            --background-color: #f0f4f7;
+            --text-color: #263238;
+            --alert-color: #D32F2F; /* Red/Cảnh báo */
+            --warning-color: #FBC02D; /* Yellow/Lệch lịch */
+            --success-color: #388E3C; /* Green/Thành công */
+            --border-color: #CFD8DC;
+            --card-bg: #FFFFFF;
         }
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Inter', Arial, sans-serif;
             margin: 0;
             padding: 0;
             background-color: var(--background-color);
@@ -23,73 +25,85 @@
         }
         .container {
             width: 95%;
+            max-width: 1200px;
             margin: 20px auto;
-            background: white;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-            border-radius: 8px;
-            min-height: 80vh;
+            background: var(--card-bg);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            border-radius: 12px;
+            min-height: 90vh;
         }
         header {
             background-color: var(--primary-color);
             color: white;
-            padding: 10px 20px;
-            border-radius: 8px 8px 0 0;
+            padding: 15px 20px;
+            border-radius: 12px 12px 0 0;
             display: flex;
             align-items: center;
         }
         header img {
-            height: 40px;
+            height: 45px;
             margin-right: 15px;
-            border-radius: 4px;
+            border-radius: 6px;
+            object-fit: contain;
         }
         .nav-bar {
             display: flex;
             background-color: #333;
+            border-radius: 0 0 12px 12px;
             overflow: hidden;
-            border-radius: 0 0 8px 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
         .nav-bar button {
             background-color: inherit;
             color: white;
-            padding: 14px 20px;
+            padding: 12px 15px;
             border: none;
             cursor: pointer;
             transition: 0.3s;
-            font-size: 16px;
+            font-size: 15px;
             flex-grow: 1;
+            outline: none;
+            border-right: 1px solid #444;
+        }
+        .nav-bar button:last-child {
+            border-right: none;
         }
         .nav-bar button:hover:not(.active) {
             background-color: #555;
         }
         .nav-bar button.active {
-            background-color: var(--primary-color);
+            background-color: var(--secondary-color);
+            color: var(--text-color);
+            font-weight: bold;
         }
         .tab-content {
-            padding: 20px;
+            padding: 25px;
         }
-        h2 {
+        h2, h3 {
             color: var(--primary-color);
             border-bottom: 2px solid var(--border-color);
-            padding-bottom: 10px;
-            margin-top: 0;
+            padding-bottom: 8px;
+            margin-top: 10px;
         }
-        /* Form & Input styles */
         .input-group {
-            margin-bottom: 15px;
-            padding: 10px;
+            margin-bottom: 20px;
+            padding: 15px;
             border: 1px solid var(--border-color);
-            border-radius: 4px;
+            border-radius: 8px;
+            background-color: #fafafa;
         }
-        .input-group label {
+        label {
             display: block;
             margin-bottom: 5px;
             font-weight: bold;
+            color: #455A64;
         }
-        .input-group input[type="text"],
-        .input-group input[type="number"],
-        .input-group select {
-            width: calc(100% - 12px);
-            padding: 8px;
+        input[type="text"],
+        input[type="number"],
+        input[type="time"],
+        select {
+            width: 100%;
+            padding: 10px;
             margin-top: 5px;
             border: 1px solid var(--border-color);
             border-radius: 4px;
@@ -98,95 +112,169 @@
         button {
             background-color: var(--primary-color);
             color: white;
-            padding: 10px 15px;
+            padding: 10px 18px;
             border: none;
-            border-radius: 4px;
+            border-radius: 6px;
             cursor: pointer;
-            transition: background-color 0.3s;
+            transition: background-color 0.3s, transform 0.1s;
             margin-right: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
         }
         button:hover {
-            background-color: #388E3C; /* Darker green */
+            background-color: #004D40; /* Darker teal */
+            transform: translateY(-1px);
         }
         button:disabled {
             background-color: #ccc;
             cursor: not-allowed;
+            box-shadow: none;
         }
         /* Table styles */
         table {
             width: 100%;
-            border-collapse: collapse;
+            border-collapse: separate;
+            border-spacing: 0;
             margin-top: 15px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            overflow: hidden;
         }
         table th, table td {
-            border: 1px solid var(--border-color);
-            padding: 10px;
+            padding: 12px;
             text-align: left;
+            border-bottom: 1px solid var(--border-color);
         }
         table th {
-            background-color: #eee;
+            background-color: #E0F2F1;
             color: var(--text-color);
+            font-weight: bold;
+            text-transform: uppercase;
         }
         /* Alert/Status styles */
         .alert {
             padding: 15px;
             margin-bottom: 15px;
-            border-radius: 4px;
+            border-radius: 8px;
             font-weight: bold;
         }
         .alert-success {
-            background-color: #d4edda;
-            color: #155724;
-            border-color: #c3e6cb;
+            background-color: #E8F5E9;
+            color: var(--success-color);
+            border: 1px solid var(--success-color);
         }
         .alert-error {
-            background-color: #f8d7da;
-            color: #721c24;
-            border-color: #f5c6cb;
+            background-color: #FFEBEE;
+            color: var(--alert-color);
+            border: 1px solid var(--alert-color);
         }
-        .court-slot {
-            padding: 5px;
-            margin: 5px 0;
-            border: 1px solid var(--primary-color);
-            border-left: 5px solid var(--primary-color);
-            border-radius: 4px;
-            font-size: 0.9em;
+        .alert-warning { /* F3a: Cảnh báo lệch lịch */
+            background-color: #FFFDE7;
+            color: var(--warning-color);
+            border: 1px solid var(--warning-color);
         }
-        .court-slot.warning {
-            border-left: 5px solid var(--alert-color);
-            background-color: #f8d7da;
+        /* Schedule/Monitoring Styles */
+        .time-monitor-alert {
+            color: var(--alert-color);
+            font-weight: bold;
         }
-        /* Knockout Bracket Styling (Simplified for text/table view) */
+        .time-monitor-warning {
+            color: var(--warning-color);
+            font-weight: bold;
+        }
+
+        /* Bracket Styling */
+        .bracket-container {
+            display: flex;
+            gap: 20px;
+            overflow-x: auto;
+            padding: 10px 0;
+        }
         .bracket-round {
-            margin-bottom: 20px;
+            min-width: 250px;
             padding: 10px;
-            border: 1px dashed var(--border-color);
+            flex-shrink: 0;
+        }
+        .bracket-round h4 {
+            color: #546E7A;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #CFD8DC;
+            font-size: 1.1em;
         }
         .bracket-match {
-            margin: 5px 0;
-            padding: 8px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
+            margin: 15px 0;
+            padding: 10px;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            background-color: var(--card-bg);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            transition: border-color 0.3s;
+        }
+        .bracket-match.completed {
+             border-color: var(--success-color);
+             background-color: #E8F5E9;
+        }
+        .match-info {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            background-color: #f9f9f9;
+            font-size: 0.9em;
+            margin-bottom: 5px;
         }
-        .bracket-match.completed {
-             background-color: #e0f2f1;
+        .match-teams strong {
+            display: block;
+            margin: 5px 0;
+            padding: 3px;
+            border-radius: 4px;
+            background-color: #f7f7f7;
         }
-        .team-slot {
-            font-weight: bold;
-            flex-basis: 45%;
-            text-align: center;
-        }
-        .score-slot {
-            font-size: 1.1em;
+        .match-teams strong.winner {
+            background-color: #C8E6C9;
             color: var(--success-color);
         }
-        .alert-time {
-            color: var(--alert-color);
+        .match-score {
             font-weight: bold;
+            color: var(--primary-color);
+        }
+        .match-status {
+            font-style: italic;
+            color: #78909C;
+        }
+
+        /* Public View (Tab L) Styling */
+        .public-card {
+            background-color: var(--card-bg);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .live-match-item {
+            border-left: 5px solid var(--primary-color);
+            padding: 15px;
+            margin-bottom: 10px;
+            background-color: #E0F7FA;
+            border-radius: 6px;
+        }
+        .live-match-item strong {
+            font-size: 1.2em;
+            color: var(--alert-color);
+        }
+        .final-result-item {
+            margin-top: 15px;
+            padding: 15px;
+            background-color: #FFF8E1;
+            border-radius: 8px;
+            border: 2px solid var(--secondary-color);
+            text-align: center;
+        }
+        .final-result-item h3 {
+            color: var(--secondary-color);
+            border-bottom: none;
+        }
+        .final-result-item p {
+            font-size: 1.1em;
+            font-weight: bold;
+            color: var(--text-color);
         }
     </style>
 </head>
@@ -212,7 +300,7 @@
         <h2>C: CẤU HÌNH ⚙️</h2>
         <div class="input-group">
             <label>C1a: Tên Giải Đấu</label>
-            <input type="text" id="config-name" value="Giải Pickleball Demo Mở Rộng">
+            <input type="text" id="config-name" value="Giải Pickleball Demo Nâng Cấp">
             <label>C1a: Upload Logo (Base64)</label>
             <input type="file" id="config-logo" accept="image/*" onchange="handleLogoUpload(this)">
             <label>C1f: Chế độ Trao Giải Nhất Độc Lập (2 Hạng)</label>
@@ -230,6 +318,8 @@
             <input type="number" id="config-cap-score" value="13" min="11" placeholder="Ví dụ: 13 (Thắng 11 điểm, điểm tối đa 13)">
             <label>C2a1: Điểm Thắng mỗi Set</label>
             <input type="number" id="config-win-score" value="11" min="1" placeholder="Ví dụ: 11">
+            <label>Số đội thăng hạng từ mỗi bảng</label>
+            <input type="number" id="config-advancing-teams" value="2" min="1" max="4">
         </div>
         <button onclick="saveConfig()">Lưu Cấu Hình</button>
         <div id="config-status" class="alert alert-success" style="margin-top:15px; display:none;"></div>
@@ -238,7 +328,7 @@
     <div id="D" class="tab-content" style="display:none;">
         <h2>D: NGƯỜI CHƠI & ĐỘI 👥</h2>
         
-        <h3>D2: Quản lý Đội/Cặp Đấu (Giả định mỗi đội 2 người)</h3>
+        <h3>D2: Quản lý Đội/Cặp Đấu</h3>
         <button onclick="generateRandomTeams()">D2e: GHÉP CẶP RANDOM (Tạo 8 đội demo)</button>
         <div id="team-list-status" class="alert" style="margin-top:10px; display:none;"></div>
 
@@ -253,7 +343,8 @@
                 </tr>
             </thead>
             <tbody>
-                </tbody>
+                <!-- Team rows populated by JS -->
+            </tbody>
         </table>
 
         <h3>D3: Phân Bảng Tự Động</h3>
@@ -274,7 +365,7 @@
             <input type="number" id="schedule-courts" value="2" min="1">
         </div>
         
-        <h3>E2: Quản Lý LỊCH TRÌNH TỔNG HỢP</h3>
+        <h3>E2: Quản Lý LỊCH TRÌNH TỔNG HỢP (E2a: Logic Tối Ưu)</h3>
         <button onclick="generateSchedule()">E2a: TẠO LỊCH TRÌNH TỐI ƯU</button>
         <button onclick="showScheduleSummary()">E2c: XEM TÓM TẮT LỊCH</button>
         <div id="schedule-status" class="alert" style="margin-top:15px; display:none;"></div>
@@ -289,11 +380,12 @@
                         <th>Thời Gian Dự Kiến</th>
                         <th>Sân</th>
                         <th>Trận Đấu</th>
-                        <th>Thời Gian Nghỉ (Cảnh báo)</th>
+                        <th>Tối ưu Giãn Cách</th>
                     </tr>
                 </thead>
                 <tbody>
-                    </tbody>
+                    <!-- Schedule rows populated by JS -->
+                </tbody>
             </table>
         </div>
     </div>
@@ -306,11 +398,13 @@
         
         <h3>F3: Nhập Kết Quả & Giám Sát</h3>
         <div id="f-match-list">
-            </div>
+            <!-- Matches to be scored -->
+        </div>
         
-        <h3>F4: Bảng Xếp Hạng</h3>
+        <h3>F4: Bảng Xếp Hạng (Logic tính toán nâng cao)</h3>
         <div id="f-standings">
-            </div>
+            <!-- Standings populated by JS -->
+        </div>
     </div>
 
     <div id="G" class="tab-content" style="display:none;">
@@ -320,20 +414,27 @@
         <button onclick="generateKnockoutBrackets()">G1: TẠO CÂY ĐẤU LOẠI (Dùng kết quả F4)</button>
         <div id="bracket-status" class="alert" style="margin-top:15px; display:none;"></div>
 
-        <h3>G2: Theo Dõi & Cập Nhật Tự Động</h3>
-        <div id="knockout-bracket">
-            </div>
+        <h3>G2: Theo Dõi & Cập Nhật Tự Động (Hỗ trợ Double Elimination)</h3>
+        <div class="bracket-container" id="knockout-bracket">
+            <!-- Knockout matches populated by JS -->
+        </div>
     </div>
 
     <div id="L" class="tab-content" style="display:none;">
         <h2>L: KẾT QUẢ ⭐ (Public Display)</h2>
-        <h3>L1: ĐANG DIỄN RA (LIVE) / SẮP DIỄN RA (L2)</h3>
-        <div id="live-upcoming-matches">
+        <div class="public-card">
+            <h3>L1/L2: ĐANG DIỄN RA (LIVE) / SẮP DIỄN RA</h3>
+            <div id="live-upcoming-matches">
+                <!-- Live and Upcoming matches -->
             </div>
+        </div>
 
-        <h3>L5: XẾP HẠNG CHUNG CUỘC</h3>
-        <div id="final-standings">
+        <div class="public-card">
+            <h3>L5: XẾP HẠNG CHUNG CUỘC</h3>
+            <div id="final-standings">
+                <!-- Final ranks -->
             </div>
+        </div>
     </div>
     
     <div id="H" class="tab-content" style="display:none;">
@@ -356,12 +457,13 @@
     // --- GLOBAL STATE ---
     let tournamentData = {
         config: {
-            name: 'Giải Pickleball Demo Mở Rộng',
+            name: 'Giải Pickleball Demo Nâng Cấp',
             logoUrl: '',
             eliminationType: 'SINGLE', // SINGLE or DOUBLE
             doubleChampion: false,
             capScore: 13,
-            winScore: 11
+            winScore: 11,
+            advancingTeams: 2 // F4 logic
         },
         teams: [],
         scheduleParams: {
@@ -380,6 +482,7 @@
 
     // Format time (e.g., "08:00")
     const formatTime = (time) => {
+        if (!time) return 'TBA';
         const [hours, minutes] = time.split(':').map(Number);
         const date = new Date();
         date.setHours(hours, minutes, 0, 0);
@@ -387,11 +490,21 @@
     };
 
     const addMinutes = (time, mins) => {
+        if (!time) return '00:00'; // Should not happen if scheduling correctly
         const [hours, minutes] = time.split(':').map(Number);
         const date = new Date();
         date.setHours(hours, minutes, 0, 0);
         date.setMinutes(date.getMinutes() + mins);
-        return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+        // Returns HH:MM format (24h)
+        return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false }).replace(' AM', '').replace(' PM', '').trim();
+    };
+    
+    // Time difference utility for monitoring (F3a)
+    const timeDiffInMinutes = (time1, time2) => {
+        if (!time1 || !time2) return 0;
+        const date1 = new Date(`2000/01/01 ${time1}`);
+        const date2 = new Date(`2000/01/01 ${time2}`);
+        return Math.abs((date1 - date2) / (1000 * 60));
     };
 
     // --- TAB NAVIGATION ---
@@ -437,6 +550,7 @@
         tournamentData.config.doubleChampion = document.getElementById('config-double-champion').checked;
         tournamentData.config.capScore = parseInt(document.getElementById('config-cap-score').value) || 13;
         tournamentData.config.winScore = parseInt(document.getElementById('config-win-score').value) || 11;
+        tournamentData.config.advancingTeams = parseInt(document.getElementById('config-advancing-teams').value) || 2;
 
         document.getElementById('tournament-title').innerText = tournamentData.config.name;
         document.getElementById('config-status').innerText = 'Lưu cấu hình thành công!';
@@ -487,7 +601,10 @@
         }
 
         const numGroups = 4; // Hardcode 4 groups for simplicity (A, B, C, D)
-        tournamentData.groups = { A: [], B: [], C: [], D: [] };
+        tournamentData.groups = {};
+        for (let i = 0; i < numGroups; i++) {
+            tournamentData.groups[String.fromCharCode(65 + i)] = []; // A, B, C, D
+        }
         const groupKeys = Object.keys(tournamentData.groups);
 
         // Simple Round Robin Distribution
@@ -501,8 +618,7 @@
         alert(`Đã phân ${officialTeams.length} đội vào ${numGroups} bảng thành công.`);
     }
 
-    // --- TAB E: LỊCH THI ĐẤU & TG ---
-    // E2a: Hàm generateSchedule() - Thuật toán Tối ưu
+    // --- TAB E: LỊCH THI ĐẤU & TG (E2a Logic Tối Ưu) ---
     function generateSchedule() {
         if (tournamentData.matches.length === 0) {
             alert('Vui lòng tạo danh sách trận đấu Vòng Bảng (Tab F) và/hoặc Vòng Loại (Tab G) trước.');
@@ -511,33 +627,45 @@
 
         const params = tournamentData.scheduleParams;
         const numCourts = params.numCourts;
-        let currentTime = params.startTime;
-        let teamsSchedule = {}; // { teamId: lastEndTime }
+        const matchDuration = params.duration;
+        
+        // Map to store last match end time for each team and court
+        let teamsSchedule = {}; // { teamId: lastEndTime (HH:MM) }
         let courtFreeTime = Array(numCourts).fill(params.startTime); // [Court1Free, Court2Free, ...]
         
-        // 1. Reset all schedule fields
+        // Reset schedule fields for matches that are not completed
         tournamentData.matches.forEach(match => {
-            match.scheduledTime = null;
-            match.courtId = null;
-            match.timeWarning = false;
+            if (match.status !== 'COMPLETED') {
+                match.scheduledTime = null;
+                match.courtId = null;
+                match.timeWarning = false;
+            }
         });
 
-        // 2. Sort matches (e.g., by round, then randomly within round)
-        const matchesToSchedule = tournamentData.matches.filter(m => m.status === 'SCHEDULED' || !m.status).sort((a, b) => {
-            // Priority: Group matches first, then Knockout
-            const roundA = a.roundId.startsWith('Group') ? 0 : 1;
-            const roundB = b.roundId.startsWith('Group') ? 0 : 1;
-            return roundA - roundB;
+        // Sort matches: Group matches first, then Knockout (KO) in order of round
+        const matchesToSchedule = tournamentData.matches.filter(m => m.status !== 'COMPLETED').sort((a, b) => {
+            const isGroupA = a.roundId.startsWith('Group');
+            const isGroupB = b.roundId.startsWith('Group');
+            
+            if (isGroupA && !isGroupB) return -1;
+            if (!isGroupA && isGroupB) return 1;
+            
+            // For Knockout matches, sort by round name (Tứ Kết, Bán Kết, Chung Kết)
+            if (!isGroupA && !isGroupB) {
+                const roundsOrder = { 'Tứ Kết': 1, 'Bán Kết': 2, 'Chung Kết': 3 };
+                return (roundsOrder[a.roundId] || 99) - (roundsOrder[b.roundId] || 99);
+            }
+            return 0;
         });
 
         matchesToSchedule.forEach(match => {
             const teamAId = match.teamAId;
             const teamBId = match.teamBId;
-
-            let earliestCourtTime = '23:59';
+            
             let bestCourtIndex = -1;
-
-            // Find the earliest free court
+            let earliestCourtTime = '23:59';
+            
+            // 1. Find the earliest free court time
             courtFreeTime.forEach((freeTime, index) => {
                 if (freeTime < earliestCourtTime) {
                     earliestCourtTime = freeTime;
@@ -547,49 +675,41 @@
 
             let scheduleTime = earliestCourtTime;
             let timeWarning = false;
+            let addedRestMinutes = 0;
 
-            // 3. Logic Giảm Đấu Liên Tục (E2aiii)
-            const checkTeamRestTime = (teamId, lastEndTime) => {
-                if (lastEndTime) {
-                    // Check if current match start time is too close to last match end time
-                    const lastEnd = new Date(`2000/01/01 ${lastEndTime}`);
-                    const currentStart = new Date(`2000/01/01 ${scheduleTime}`);
+            // 2. Logic Giãn Cách (E2aiii): Check team rest time and force 5 min rest if needed
+            const checkTeamRestTime = (teamId) => {
+                if (teamId && teamsSchedule[teamId]) {
+                    const lastEndTime = teamsSchedule[teamId];
+                    // Calculate time difference between scheduled start and team's last end time
+                    const diffInMins = timeDiffInMinutes(lastEndTime, scheduleTime);
                     
-                    // Convert to minutes difference
-                    const diffInMins = (currentStart - lastEnd) / (1000 * 60); 
-
-                    if (diffInMins < params.duration) {
-                        // Less than match duration rest time, force 5 min rest (E2aiii)
-                        scheduleTime = addMinutes(lastEndTime, 5);
+                    if (diffInMins < matchDuration) {
+                        // Force a 5-minute rest period
+                        addedRestMinutes = 5;
+                        scheduleTime = addMinutes(lastEndTime, addedRestMinutes);
                         return true; // Warning needed
                     }
                 }
                 return false;
             };
 
-            // Check Team A
-            if (teamAId && teamsSchedule[teamAId]) {
-                 timeWarning = checkTeamRestTime(teamAId, teamsSchedule[teamAId]) || timeWarning;
-            }
-            // Check Team B
-            if (teamBId && teamsSchedule[teamBId]) {
-                 timeWarning = checkTeamRestTime(teamBId, teamsSchedule[teamBId]) || timeWarning;
-            }
+            // Check Team A and Team B (adjust scheduleTime if necessary)
+            if (checkTeamRestTime(teamAId)) timeWarning = true;
+            if (checkTeamRestTime(teamBId)) timeWarning = true; // Re-check if A adjusted the time
             
             // Recalculate match end time based on final scheduleTime
-            const matchEndTime = addMinutes(scheduleTime, params.duration);
+            const matchEndTime = addMinutes(scheduleTime, matchDuration);
 
-            // Update schedule
+            // 3. Update schedule data
             match.scheduledTime = scheduleTime;
             match.courtId = bestCourtIndex + 1;
             match.timeWarning = timeWarning;
 
-            // Update court free time (Court is free only after this match ends)
+            // 4. Update court and team free times
             courtFreeTime[bestCourtIndex] = matchEndTime;
-            
-            // Update teams last end time
-            if (teamAId) teamsSchedule[teamAId] = matchEndTime;
-            if (teamBId) teamsSchedule[teamBId] = matchEndTime;
+            if (teamAId && !teamAId.startsWith('W') && !teamAId.startsWith('L')) teamsSchedule[teamAId] = matchEndTime;
+            if (teamBId && !teamBId.startsWith('W') && !teamBId.startsWith('L')) teamsSchedule[teamBId] = matchEndTime;
         });
 
         renderScheduleTable();
@@ -604,17 +724,18 @@
         tbody.innerHTML = '';
         
         const sortedMatches = tournamentData.matches.sort((a, b) => {
-             // Sort by scheduled time
-            if (!a.scheduledTime) return 1;
-            if (!b.scheduledTime) return -1;
+            if (!a.scheduledTime && b.scheduledTime) return 1;
+            if (a.scheduledTime && !b.scheduledTime) return -1;
+            if (!a.scheduledTime && !b.scheduledTime) return a.roundId.localeCompare(b.roundId); // Sort by round if no time
+            
             if (a.scheduledTime === b.scheduledTime) return a.courtId - b.courtId;
             return a.scheduledTime.localeCompare(b.scheduledTime);
         });
 
         sortedMatches.forEach(match => {
             const row = tbody.insertRow();
-            const teamA = getTeam(match.teamAId)?.name || 'TBD';
-            const teamB = getTeam(match.teamBId)?.name || 'TBD';
+            const teamA = getTeam(match.teamAId)?.name || match.teamAId || 'TBD';
+            const teamB = getTeam(match.teamBId)?.name || match.teamBId || 'TBD';
 
             row.insertCell().innerText = match.id;
             row.insertCell().innerText = match.roundId;
@@ -624,7 +745,7 @@
             
             const warningCell = row.insertCell();
             if (match.timeWarning) {
-                warningCell.innerHTML = `<span class="alert-time">⚠️ 5 phút nghỉ được thêm</span>`;
+                warningCell.innerHTML = `<span class="time-monitor-warning">⚠️ Nghỉ ít hơn ${tournamentData.scheduleParams.duration} phút.</span>`;
             } else {
                 warningCell.innerText = '-';
             }
@@ -642,8 +763,8 @@
             if (!displayMap[match.scheduledTime]) {
                 displayMap[match.scheduledTime] = {};
             }
-            const teamA = getTeam(match.teamAId)?.name || 'TBD';
-            const teamB = getTeam(match.teamBId)?.name || 'TBD';
+            const teamA = getTeam(match.teamAId)?.name || match.teamAId || 'TBD';
+            const teamB = getTeam(match.teamBId)?.name || match.teamBId || 'TBD';
             displayMap[match.scheduledTime][match.courtId] = `${teamA} vs ${teamB} (${match.roundId})`;
         });
 
@@ -657,8 +778,9 @@
         alert(summary);
     }
 
-    // --- TAB F: VÒNG BẢNG ---
-    // F2a: Tạo Danh Sách Trận Đấu Vòng Bảng
+
+    // --- TAB F: VÒNG BẢNG (F4 Logic Nâng Cấp) ---
+    // F2a: Tạo Danh Sách Trận Đấu Vòng Bảng (Logic giữ nguyên)
     function generateGroupMatches() {
         tournamentData.matches = tournamentData.matches.filter(m => !m.roundId.startsWith('Group')); // Keep Knockout if exists
         const matches = [];
@@ -674,6 +796,7 @@
                         teamBId: groupTeams[j],
                         score: { A: 0, B: 0, sets: [] },
                         winnerId: null,
+                        loserId: null,
                         status: 'SCHEDULED',
                         scheduledTime: null,
                         courtId: null,
@@ -685,41 +808,6 @@
         tournamentData.matches = [...matches, ...tournamentData.matches]; // Add group matches at the beginning
         renderGroupMatchList();
         alert(`Đã tạo ${matches.length} trận đấu Vòng Bảng.`);
-    }
-
-    // F3: Render Match List for Scoring
-    function renderGroupMatchList() {
-        const matchListEl = document.getElementById('f-match-list');
-        matchListEl.innerHTML = '';
-        const groupMatches = tournamentData.matches.filter(m => m.roundId.startsWith('Group'));
-
-        if (groupMatches.length === 0) {
-            matchListEl.innerHTML = '<p>Chưa có trận đấu Vòng Bảng. Vui lòng tạo (F2a).</p>';
-            return;
-        }
-        
-        let html = '<table><thead><tr><th>Trận</th><th>Thời gian/Sân</th><th>Tỉ số (Set 1)</th><th>Hành động</th></tr></thead><tbody>';
-        
-        groupMatches.forEach(match => {
-            const teamA = getTeam(match.teamAId)?.name || 'TBD';
-            const teamB = getTeam(match.teamBId)?.name || 'TBD';
-            const timeInfo = match.scheduledTime ? `${match.scheduledTime} / Sân ${match.courtId}` : 'Chưa xếp lịch';
-            const scoreDisplay = match.winnerId ? `WIN: ${getTeam(match.winnerId)?.name}` : 'Đang chờ';
-
-            html += `
-                <tr>
-                    <td>${match.roundId}: <strong>${teamA} vs ${teamB}</strong></td>
-                    <td>${timeInfo}</td>
-                    <td><input type="number" id="score-A-${match.id}" value="0" style="width:50px"> : <input type="number" id="score-B-${match.id}" value="0" style="width:50px"></td>
-                    <td>
-                        <button onclick="recordGroupScore('${match.id}')" ${match.winnerId ? 'disabled' : ''}>Nhập điểm</button>
-                    </td>
-                </tr>
-            `;
-        });
-        html += '</tbody></table>';
-        matchListEl.innerHTML = html;
-        renderGroupStandings();
     }
 
     // F3: Record Score & F4: Update Standings
@@ -735,9 +823,15 @@
         const capScore = config.capScore;
 
         let winnerId = null;
-        if (scoreA >= winScore && (scoreA - scoreB) >= 2 || scoreA >= capScore) {
+        
+        // C2a1i: Logic Điểm Thắng
+        const checkWin = (s1, s2) => {
+             return (s1 >= winScore && (s1 - s2) >= 2) || (s1 >= capScore && s1 > s2);
+        }
+
+        if (checkWin(scoreA, scoreB)) {
             winnerId = match.teamAId;
-        } else if (scoreB >= winScore && (scoreB - scoreA) >= 2 || scoreB >= capScore) {
+        } else if (checkWin(scoreB, scoreA)) {
             winnerId = match.teamBId;
         } else {
             alert('Điểm chưa đủ điều kiện thắng (Phải cách biệt 2 điểm hoặc đạt Cap Score).');
@@ -750,30 +844,33 @@
         match.winnerId = winnerId;
         match.loserId = (winnerId === match.teamAId) ? match.teamBId : match.teamAId;
         match.status = 'COMPLETED';
-        match.actualStartTime = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+        const currentTime = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+        match.actualStartTime = currentTime;
         
-        // F3a: Simple Time Alert (Check if actual start time is way off scheduled time)
+        // F3a: Giám sát Sai Lệch Thời Gian
         if (match.scheduledTime) {
-             const schTime = new Date(`2000/01/01 ${match.scheduledTime}`);
-             const actTime = new Date(`2000/01/01 ${match.actualStartTime}`);
-             const diffInMins = Math.abs((actTime - schTime) / (1000 * 60));
+             const diffInMins = timeDiffInMinutes(match.scheduledTime, match.actualStartTime);
+             let alertMessage = '';
              if (diffInMins > 10) {
-                 alert(`⚠️ Cảnh báo lệch lịch: Trận ${match.id} bắt đầu chậm/sớm ${Math.round(diffInMins)} phút so với dự kiến!`);
+                 alertMessage = `⚠️ Chậm ${Math.round(diffInMins)} phút.`;
+             } else if (diffInMins > 5) {
+                 alertMessage = `🟡 Lệch ${Math.round(diffInMins)} phút.`;
              }
+             if (alertMessage) console.log(`[F3a] Trận ${match.id}: ${alertMessage}`);
         }
 
-
-        // F4: Update Standings
+        // Trigger updates
         renderGroupStandings();
-        renderGroupMatchList(); // Re-render to disable button
+        renderGroupMatchList(); 
     }
 
+    // F4: Nâng cấp Logic tính toán BXH
     function renderGroupStandings() {
         const standingsEl = document.getElementById('f-standings');
         standingsEl.innerHTML = '';
         
         for (const groupId in tournamentData.groups) {
-            const teamStats = {}; // { teamId: { P: 0, W: 0, L: 0, PF: 0, PA: 0, Diff: 0 } }
+            const teamStats = {}; 
             tournamentData.groups[groupId].forEach(teamId => {
                 teamStats[teamId] = { P: 0, W: 0, L: 0, PF: 0, PA: 0, Diff: 0, teamName: getTeam(teamId).name, teamId: teamId };
             });
@@ -797,9 +894,13 @@
 
             // Final calculation and sorting (W > Diff > PF)
             const sortedStats = Object.values(teamStats).sort((a, b) => {
-                if (b.W !== a.W) return b.W - a.W;
                 b.Diff = b.PF - b.PA; a.Diff = a.PF - a.PA;
+
+                // 1. Thắng (W)
+                if (b.W !== a.W) return b.W - a.W;
+                // 2. Hiệu số điểm (Diff)
                 if (b.Diff !== a.Diff) return b.Diff - a.Diff;
+                // 3. Điểm Thắng (PF)
                 return b.PF - a.PF;
             });
             
@@ -807,7 +908,8 @@
             html += '<table style="font-size:0.9em"><thead><tr><th>Rank</th><th>Đội</th><th>W</th><th>L</th><th>PF</th><th>PA</th><th>Diff</th></tr></thead><tbody>';
             
             sortedStats.forEach((stat, index) => {
-                html += `<tr><td>${index + 1}</td><td>${stat.teamName}</td><td>${stat.W}</td><td>${stat.L}</td><td>${stat.PF}</td><td>${stat.PA}</td><td>${stat.PF - stat.PA}</td></tr>`;
+                const rankClass = (index < tournamentData.config.advancingTeams) ? 'font-weight: bold; background-color: #E0F2F1;' : '';
+                html += `<tr style="${rankClass}"><td>${index + 1}</td><td>${stat.teamName}</td><td>${stat.W}</td><td>${stat.L}</td><td>${stat.PF}</td><td>${stat.PA}</td><td>${stat.Diff}</td></tr>`;
             });
 
             html += '</tbody></table>';
@@ -815,118 +917,141 @@
         }
     }
 
-    // --- TAB G: VÒNG LOẠI ---
-    // G1: Thiết Kế Cây Đấu Loại
+    // --- TAB G: VÒNG LOẠI (G1c Double Elimination) ---
     function generateKnockoutBrackets() {
-        const finalStandings = getTeamsToAdvance(); // F4 -> G1 input
-        if (finalStandings.length === 0) {
+        const teamsToAdvance = getTeamsToAdvance(); // F4 -> G1 input
+        if (teamsToAdvance.length === 0) {
             document.getElementById('bracket-status').innerText = 'Chưa xác định đội thăng hạng (Cần có kết quả Vòng Bảng).';
             document.getElementById('bracket-status').className = 'alert alert-error';
             document.getElementById('bracket-status').style.display = 'block';
             return;
         }
 
-        const bracketMatches = generateBracketMatches(finalStandings, tournamentData.config.eliminationType);
+        // Calculate power of 2 size (8, 16, 32...)
+        let size = 8;
+        while (size < teamsToAdvance.length) size *= 2;
+
+        // Pad teams to fit bracket size (e.g., 6 teams -> 8 slots, 2 byes)
+        const paddedTeams = [...teamsToAdvance];
+        while (paddedTeams.length < size) paddedTeams.push(null);
+        
+        // Generate matches based on type
+        const eliminationType = tournamentData.config.eliminationType;
+        let bracketMatches = [];
+        
+        if (eliminationType === 'SINGLE') {
+             bracketMatches = generateSingleElimination(paddedTeams);
+        } else { // DOUBLE (G1c logic)
+             bracketMatches = generateDoubleElimination(paddedTeams);
+        }
         
         // Remove old knockout matches and add new ones
         tournamentData.matches = tournamentData.matches.filter(m => m.roundId.startsWith('Group')); 
         tournamentData.matches = [...tournamentData.matches, ...bracketMatches];
         
         renderKnockoutBracket();
-        document.getElementById('bracket-status').innerText = `Đã tạo ${bracketMatches.length} trận đấu Vòng Loại.`;
+        document.getElementById('bracket-status').innerText = `Đã tạo ${bracketMatches.length} trận đấu Vòng Loại (${eliminationType}).`;
         document.getElementById('bracket-status').className = 'alert alert-success';
         document.getElementById('bracket-status').style.display = 'block';
     }
-
-    // Helper: Determine teams advancing from F4
-    function getTeamsToAdvance() {
-        // Simple logic: Top 2 from each group advance
-        const advancingTeams = [];
-        for (const groupId in tournamentData.groups) {
-            const groupMatches = tournamentData.matches.filter(m => m.roundId === `Group ${groupId}` && m.status === 'COMPLETED');
-            if (groupMatches.length === 0) return []; // Incomplete data
-
-            const teamStats = {}; 
-            tournamentData.groups[groupId].forEach(teamId => {
-                teamStats[teamId] = { W: 0, Diff: 0, PF: 0, teamId: teamId };
-            });
-
-            // Re-calculate stats for sorting
-            groupMatches.forEach(match => {
-                const statA = teamStats[match.teamAId];
-                const statB = teamStats[match.teamBId];
-                if (match.winnerId === match.teamAId) statA.W++; else statB.W++;
-                statA.PF += match.score.A; statA.PF -= match.score.B; 
-                statB.PF += match.score.B; statB.PF -= match.score.A; 
-            });
-
-            const sortedStats = Object.values(teamStats).sort((a, b) => {
-                if (b.W !== a.W) return b.W - a.W;
-                return b.PF - a.PF;
-            });
-
-            advancingTeams.push(...sortedStats.slice(0, 2).map(s => s.teamId)); // Top 2 advance
-        }
-        return advancingTeams;
-    }
-
-    // G1a: Core Bracket Generation (Simplified Single Elimination 8 teams)
-    function generateBracketMatches(teamIds, eliminationType) {
-        if (teamIds.length === 0) return [];
-        
+    
+    // Helper: Generate Single Elimination Bracket
+    function generateSingleElimination(teams) {
         let matches = [];
-        let currentRoundTeams = [...teamIds];
-
-        // Ensure 8 teams for a simple 8-team bracket
-        if (currentRoundTeams.length < 8) {
-             const numNeeded = 8 - currentRoundTeams.length;
-             for(let i=0; i<numNeeded; i++) currentRoundTeams.push(null); // Add TBD slots
-        } else if (currentRoundTeams.length > 8) {
-             currentRoundTeams = currentRoundTeams.slice(0, 8); // Take top 8
-        }
+        let numRounds = Math.log2(teams.length);
+        let currentRoundTeams = [...teams];
         
-        const roundNames = ['Tứ Kết', 'Bán Kết', 'Chung Kết'];
-        let matchIndex = 0;
+        const roundNames = ['Vòng 1/8', 'Tứ Kết', 'Bán Kết', 'Chung Kết'];
+        let matchCounter = 0;
+        let numTeamsInRound = teams.length;
 
-        for (let round = 0; round < roundNames.length; round++) {
-            const numMatches = currentRoundTeams.length / 2;
+        for (let r = 0; r < numRounds; r++) {
+            const roundName = roundNames[roundNames.length - numRounds + r];
+            const numMatches = numTeamsInRound / 2;
             let nextRoundTeams = [];
-
+            
             for (let i = 0; i < numMatches; i++) {
-                matchIndex++;
-                const matchId = generateId(`KO${round + 1}M${i + 1}`);
+                matchCounter++;
+                const matchId = generateId(`W${matchCounter}`);
                 
-                let teamAId = currentRoundTeams[i * 2];
-                let teamBId = currentRoundTeams[i * 2 + 1];
-
-                if (round > 0) { // For later rounds, teams are determined by previous winners
-                    teamAId = teamAId || `W${matchIndex - numMatches}`; 
-                    teamBId = teamBId || `W${matchIndex}`; 
-                }
+                const teamAId = currentRoundTeams[i * 2];
+                const teamBId = currentRoundTeams[i * 2 + 1];
                 
                 matches.push({
                     id: matchId,
-                    roundId: `${roundNames[round]}`,
+                    roundId: roundName,
                     teamAId: teamAId,
                     teamBId: teamBId,
                     score: { A: 0, B: 0, sets: [] },
                     winnerId: null,
-                    status: (teamAId && teamBId) && !teamAId.startsWith('W') ? 'SCHEDULED' : 'TBD',
-                    nextMatchId: (round < roundNames.length - 1) ? `W${matchIndex + numMatches}` : null,
-                    loserMatchId: (eliminationType === 'DOUBLE' && roundNames[round] !== 'Chung Kết') ? `L${matchIndex}` : null
+                    loserId: null,
+                    status: (teamAId && teamBId) ? 'SCHEDULED' : (teamAId || teamBId ? 'BYE' : 'TBD'),
+                    nextMatchId: `W${matchCounter + numMatches - i % numMatches}`, // Link to next round
+                    bracket: 'Winner'
                 });
-
-                nextRoundTeams.push(`W${matchId}`);
+                nextRoundTeams.push(matchId);
             }
+            numTeamsInRound /= 2;
             currentRoundTeams = nextRoundTeams;
         }
+        return matches;
+    }
 
-        // Add Double Elimination logic if needed (Simplified)
-        if (eliminationType === 'DOUBLE') {
-            // For a basic demo, we'll stop here to avoid massive complexity.
-            // Full implementation would require generating Loser's Bracket matches (G1c)
+    // Helper: Generate Double Elimination Bracket (Simplified frame for G1c)
+    function generateDoubleElimination(teams) {
+        // This is a highly simplified FRAMEWORK to show G1c logic integration.
+        // Full implementation requires complex indexing (W1 -> W5, L1 -> L2, etc.)
+        let matches = [];
+        let numRounds = Math.log2(teams.length);
+        let roundMatchCounter = 0;
+        
+        // --- Nhánh Thắng (Winner Bracket) ---
+        let winnerMatches = generateSingleElimination(teams).map(m => {
+            m.bracket = 'Winner';
+            m.roundId = 'WB-' + m.roundId;
+            return m;
+        });
+        matches.push(...winnerMatches);
+        
+        // --- Nhánh Thua (Loser Bracket) ---
+        // Create L-Bracket matches placeholders (needs detailed G1c indexing)
+        let loserMatches = [];
+        // Example: WB-Round 1 losers go to LB-Round 1
+        const numWBR1 = teams.length / 2;
+        const numLBRounds = 2 * numRounds - 2; // Approximated
+        
+        for (let r = 1; r <= 3; r++) { // Only create 3 rounds for demo
+            roundMatchCounter++;
+            for (let i = 1; i <= Math.max(1, teams.length / (2 * r)); i++) {
+                 const matchId = generateId(`L${roundMatchCounter}-${i}`);
+                 loserMatches.push({
+                    id: matchId,
+                    roundId: `LB-R${r}`,
+                    teamAId: r === 1 ? `Loser-W${i}` : `Winner-${generateId('L')}`, // G2d: Link to WB Losers
+                    teamBId: `Winner-${generateId('L')}`,
+                    score: { A: 0, B: 0, sets: [] },
+                    winnerId: null,
+                    loserId: null,
+                    status: 'TBD',
+                    bracket: 'Loser'
+                 });
+            }
         }
+        matches.push(...loserMatches);
 
+        // Final Grand Final
+        matches.push({
+            id: generateId('GF'),
+            roundId: 'Grand Final',
+            teamAId: 'Winner-WB-Chung Kết',
+            teamBId: 'Winner-LB-R3', 
+            score: { A: 0, B: 0, sets: [] },
+            winnerId: null,
+            loserId: null,
+            status: 'TBD',
+            bracket: 'Final'
+        });
+        
         return matches;
     }
 
@@ -940,128 +1065,186 @@
             return;
         }
 
-        // Group matches by round
-        const rounds = knockoutMatches.reduce((acc, match) => {
-            acc[match.roundId] = acc[match.roundId] || [];
-            acc[match.roundId].push(match);
+        // Group matches by bracket and round
+        const structuredBrackets = knockoutMatches.reduce((acc, match) => {
+            const bracket = match.bracket || 'Single';
+            acc[bracket] = acc[bracket] || {};
+            acc[bracket][match.roundId] = acc[bracket][match.roundId] || [];
+            acc[bracket][match.roundId].push(match);
             return acc;
         }, {});
+        
+        const bracketOrder = ['Winner', 'Loser', 'Final', 'Single'];
+        
+        bracketOrder.forEach(bracketKey => {
+            const rounds = structuredBrackets[bracketKey];
+            if (!rounds) return;
 
-        for (const roundName in rounds) {
-            let html = `<div class="bracket-round"><h4>${roundName}</h4>`;
-            rounds[roundName].forEach(match => {
-                const teamA = getTeam(match.teamAId)?.name || match.teamAId || 'TBD';
-                const teamB = getTeam(match.teamBId)?.name || match.teamBId || 'TBD';
-                
-                const scoreDisplay = match.winnerId ? `WIN: ${getTeam(match.winnerId)?.name}` : (match.status === 'COMPLETED' ? 'LỖI' : 'vs');
+            let bracketHtml = `<div><h3>${bracketKey.toUpperCase()} BRACKET</h3><div class="bracket-container">`;
 
-                html += `
-                    <div class="bracket-match ${match.status === 'COMPLETED' ? 'completed' : ''}">
-                        <div class="team-slot">${teamA}</div>
-                        <div class="score-slot" id="ko-score-${match.id}">${scoreDisplay}</div>
-                        <div class="team-slot">${teamB}</div>
-                        <button onclick="recordKnockoutScore('${match.id}')" ${match.winnerId ? 'disabled' : ''}>Nhập điểm</button>
-                    </div>
-                `;
-            });
-            html += `</div>`;
-            bracketEl.innerHTML += html;
-        }
+            for (const roundName in rounds) {
+                let roundHtml = `<div class="bracket-round"><h4>${roundName}</h4>`;
+                rounds[roundName].forEach(match => {
+                    const teamA = getTeam(match.teamAId)?.name || match.teamAId || 'TBD';
+                    const teamB = getTeam(match.teamBId)?.name || match.teamBId || 'TBD';
+                    
+                    const winnerName = match.winnerId ? getTeam(match.winnerId)?.name : null;
+                    const teamAClass = winnerName === teamA ? 'winner' : '';
+                    const teamBClass = winnerName === teamB ? 'winner' : '';
+                    
+                    const statusText = match.status === 'COMPLETED' ? 'Kết thúc' : (match.status === 'TBD' ? 'Chờ đội' : 'Sắp xếp');
+
+                    roundHtml += `
+                        <div class="bracket-match ${match.status === 'COMPLETED' ? 'completed' : ''}">
+                            <div class="match-info">
+                                <span class="match-score">${match.score.A || 0} - ${match.score.B || 0}</span>
+                                <span class="match-status">${statusText}</span>
+                            </div>
+                            <div class="match-teams">
+                                <strong class="${teamAClass}">${teamA}</strong>
+                                <strong class="${teamBClass}">${teamB}</strong>
+                            </div>
+                            <button onclick="recordKnockoutScore('${match.id}')" ${match.winnerId ? 'disabled' : ''}>Nhập điểm</button>
+                        </div>
+                    `;
+                });
+                roundHtml += `</div>`;
+                bracketHtml += roundHtml;
+            }
+            bracketHtml += `</div></div>`;
+            bracketEl.innerHTML += bracketHtml;
+        });
     }
 
-    // G2: Record Knockout Score and Auto-Update
+    // G2: Record Knockout Score and Auto-Update (G2i/G2d)
     function recordKnockoutScore(matchId) {
         const match = tournamentData.matches.find(m => m.id === matchId);
-        if (!match || match.winnerId) return;
+        if (!match || match.winnerId || match.status === 'TBD') return;
 
-        // Simplified scoring for Knockout: Winner is the one with higher random score
+        // Simplified scoring for Knockout: Random Win/Loss
         const scoreA = Math.floor(Math.random() * 5) + 11; 
         const scoreB = Math.floor(Math.random() * 5) + 11; 
         
         let winnerId;
-        if (scoreA > scoreB) {
-            winnerId = match.teamAId;
-        } else if (scoreB > scoreA) {
-            winnerId = match.teamBId;
+        if (scoreA !== scoreB) {
+            winnerId = scoreA > scoreB ? match.teamAId : match.teamBId;
         } else {
-             // Tie, re-roll
              return recordKnockoutScore(matchId); 
         }
 
+        match.score.A = scoreA;
+        match.score.B = scoreB;
         match.winnerId = winnerId;
         match.loserId = (winnerId === match.teamAId) ? match.teamBId : match.teamAId;
         match.status = 'COMPLETED';
 
-        // G2i: Auto-fill next match slot
-        if (match.nextMatchId) {
-            const nextMatch = tournamentData.matches.find(m => m.id.startsWith(match.nextMatchId.substring(1)));
-            if (nextMatch) {
-                if (nextMatch.teamAId === match.nextMatchId) {
-                    nextMatch.teamAId = winnerId;
-                } else if (nextMatch.teamBId === match.nextMatchId) {
-                    nextMatch.teamBId = winnerId;
-                }
-                nextMatch.status = (nextMatch.teamAId && nextMatch.teamBId && !nextMatch.teamAId.startsWith('W')) ? 'SCHEDULED' : 'TBD';
+        // --- G2i/G2d: Auto-fill next match slot ---
+        tournamentData.matches.forEach(nextMatch => {
+            // Check for Winner Progression (G2i)
+            if (nextMatch.teamAId === match.id) { 
+                nextMatch.teamAId = winnerId;
+                console.log(`[G2i] ${winnerId} tiến vào trận ${nextMatch.id} (Slot A)`);
+            } else if (nextMatch.teamBId === match.id) {
+                nextMatch.teamBId = winnerId;
+                console.log(`[G2i] ${winnerId} tiến vào trận ${nextMatch.id} (Slot B)`);
             }
-        }
-        
-        // G2d: Logic Di chuyển Đội Thua (Nếu Double Elimination - Simplified)
-        // Omitted for brevity in this demo, but the logic would be similar to G2i, using loserMatchId.
+            
+            // Check for Loser Progression (G2d - Simplified for demo)
+            if (match.bracket === 'Winner' && tournamentData.config.eliminationType === 'DOUBLE') {
+                 // Logic: Send loser to the appropriate Loser Bracket match
+                 // Example: if nextMatch.teamBId === 'Loser-W1', then update
+                 // Due to simplified indexing, we only update if it's explicitly TBD
+                 if (nextMatch.bracket === 'Loser' && (nextMatch.teamAId === 'TBD' || nextMatch.teamBId === 'TBD')) {
+                     // Very simple logic to fill the first available TBD slot in LB
+                     if (nextMatch.teamAId === 'TBD') nextMatch.teamAId = match.loserId;
+                     else if (nextMatch.teamBId === 'TBD') nextMatch.teamBId = match.loserId;
+                     console.log(`[G2d] ${match.loserId} xuống nhánh thua trận ${nextMatch.id}`);
+                 }
+            }
+
+            // Update status if both teams are known
+            if (nextMatch.teamAId && nextMatch.teamBId && (nextMatch.status === 'TBD' || nextMatch.status === 'BYE')) {
+                 if (!nextMatch.teamAId.startsWith('W') && !nextMatch.teamAId.startsWith('L') && !nextMatch.teamBId.startsWith('W') && !nextMatch.teamBId.startsWith('L')) {
+                    nextMatch.status = 'SCHEDULED';
+                 }
+            }
+        });
+
 
         renderKnockoutBracket();
         renderFinalStandings();
     }
     
-    // --- TAB L: KẾT QUẢ ---
+    // --- TAB L: KẾT QUẢ (Nâng cấp giao diện) ---
     function renderLiveUpcomingMatches() {
         const liveUpcomingEl = document.getElementById('live-upcoming-matches');
         liveUpcomingEl.innerHTML = '';
         
-        const liveMatches = tournamentData.matches.filter(m => m.status === 'IN_PROGRESS'); // Requires real time update logic
-        const upcomingMatches = tournamentData.matches.filter(m => m.status === 'SCHEDULED' && m.scheduledTime);
+        const nowTime = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
         
-        let html = '<h4>SẮP DIỄN RA (L2)</h4>';
-        if (upcomingMatches.length === 0) {
-            html += '<p>Không có trận đấu sắp tới.</p>';
+        // Filter matches
+        const liveMatches = tournamentData.matches.filter(m => m.status === 'IN_PROGRESS'); // Needs external trigger to set IN_PROGRESS
+        const upcomingMatches = tournamentData.matches.filter(m => m.status === 'SCHEDULED' && m.scheduledTime && m.scheduledTime.localeCompare(nowTime) >= 0)
+                                                    .sort((a, b) => a.scheduledTime.localeCompare(b.scheduledTime)).slice(0, 5); // Top 5
+        
+        let html = '<h4>TRẬN ĐANG DIỄN RA (L1)</h4>';
+        if (liveMatches.length > 0) {
+            liveMatches.forEach(match => {
+                const teamA = getTeam(match.teamAId)?.name || 'TBD';
+                const teamB = getTeam(match.teamBId)?.name || 'TBD';
+                html += `<div class="live-match-item">Sân ${match.courtId}: <strong>${teamA} vs ${teamB}</strong> (${match.score.A}-${match.score.B})</div>`;
+            });
         } else {
-             html += '<table><thead><tr><th>Giờ Dự Kiến</th><th>Sân</th><th>Trận Đấu</th></tr></thead><tbody>';
+            html += '<p>Không có trận đấu đang diễn ra.</p>';
+        }
+
+
+        html += '<h4>SẮP DIỄN RA (L2)</h4>';
+        if (upcomingMatches.length > 0) {
+             html += '<table><thead><tr><th>Giờ Dự Kiến</th><th>Sân</th><th>Trận Đấu</th><th>Vòng</th></tr></thead><tbody>';
              upcomingMatches.forEach(match => {
                 const teamA = getTeam(match.teamAId)?.name || 'TBD';
                 const teamB = getTeam(match.teamBId)?.name || 'TBD';
-                html += `<tr><td>${match.scheduledTime}</td><td>${match.courtId}</td><td>${teamA} vs ${teamB} (${match.roundId})</td></tr>`;
+                html += `<tr><td>${match.scheduledTime}</td><td>${match.courtId}</td><td>${teamA} vs ${teamB}</td><td>${match.roundId}</td></tr>`;
              });
              html += '</tbody></table>';
+        } else {
+             html += '<p>Không có trận đấu nào trong danh sách sắp diễn ra.</p>';
         }
 
         liveUpcomingEl.innerHTML = html;
-        renderFinalStandings();
     }
 
-    // L5: Xếp Hạng Chung Cuộc (Simple Winner/Runner-up)
+    // L5: Xếp Hạng Chung Cuộc (Nâng cấp)
     function renderFinalStandings() {
         const finalEl = document.getElementById('final-standings');
         finalEl.innerHTML = '';
         
         const finalMatch = tournamentData.matches.find(m => m.roundId === 'Chung Kết' && m.winnerId);
+        const grandFinalMatch = tournamentData.matches.find(m => m.roundId === 'Grand Final' && m.winnerId);
+
+        let html = '';
         
-        if (finalMatch) {
-            const winner = getTeam(finalMatch.winnerId);
-            const runnerUp = getTeam(finalMatch.loserId);
+        if (grandFinalMatch || finalMatch) {
+            const match = grandFinalMatch || finalMatch;
+            const winner = getTeam(match.winnerId);
+            const runnerUp = getTeam(match.loserId);
             
-            let html = `
-                <div class="alert alert-success">
-                    <h3>🏆 VÔ ĐỊCH: ${winner.name}</h3>
-                    <p>🥈 Hạng nhì: ${runnerUp.name}</p>
+            html += `
+                <div class="final-result-item">
+                    <h3>🏆 VÔ ĐỊCH TOÀN GIẢI</h3>
+                    <p>${winner.name}</p>
+                    <p style="font-size:0.9em; color:#888;">🥈 Á Quân: ${runnerUp.name}</p>
                 </div>
             `;
             finalEl.innerHTML = html;
         } else {
-             finalEl.innerHTML = '<p>Xếp hạng chung cuộc sẽ được hiển thị sau khi trận Chung Kết hoàn tất.</p>';
+             finalEl.innerHTML = '<p>Xếp hạng chung cuộc sẽ được hiển thị sau khi Vòng Loại kết thúc.</p>';
         }
     }
 
     // --- TAB H: TEST (UTILITY) ---
-    // H1b: Simulate Group Results
+    // H1b: Simulate Group Results (Giữ nguyên, đảm bảo logic F4 được kích hoạt)
     function simulateGroupResults() {
         const groupMatches = tournamentData.matches.filter(m => m.roundId.startsWith('Group') && !m.winnerId);
         if (groupMatches.length === 0) {
@@ -1090,15 +1273,13 @@
         alert(`Đã giả lập ${groupMatches.length} trận đấu Vòng Bảng thành công!`);
     }
 
-    // H2a: Hard Reset
+    // H2a/H2b (Giữ nguyên)
     function hardReset() {
         if (confirm('CẢNH BÁO: Thao tác này sẽ XÓA TẤT CẢ dữ liệu của giải đấu. Bạn có chắc chắn?')) {
-            localStorage.removeItem('tournamentData'); // If using localStorage
             location.reload(); 
         }
     }
 
-    // H2b: Soft Reset
     function softReset() {
         if (confirm('Thao tác này sẽ XÓA Phân Bảng, Lịch Trình, Vòng Bảng và Vòng Loại, nhưng GIỮ LẠI danh sách Đội và Cấu Hình. Tiếp tục?')) {
             tournamentData.matches = [];
@@ -1113,7 +1294,6 @@
             alert('Soft Reset hoàn tất. Bạn có thể bắt đầu lại từ bước Phân Bảng (D3).');
         }
     }
-
 </script>
 
 </body>
