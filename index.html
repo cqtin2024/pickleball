@@ -18,7 +18,7 @@
 </head>
 <body>
 <div class="container">
-  <h3 class="mb-4 text-center fw-bold text-primary">🏓 Trình xem & đồng bộ dữ liệu Pickleball</h3>
+  <h3 class="mb-4 text-center fw-bold text-primary">🏓 Quản lý & đồng bộ dữ liệu Pickleball</h3>
 
   <!-- Cấu hình -->
   <div class="card p-3 mb-3">
@@ -29,8 +29,9 @@
       <div class="col-md-3"><input id="folder" class="form-control" placeholder="Thư mục (VD: data)" value="data"></div>
       <div class="col-md-3"><input id="file" class="form-control" placeholder="Tên file (VD: players.json)" value="players.json"></div>
     </div>
-    <div class="mt-2">
-      <input id="token" type="password" class="form-control" placeholder="Dán GitHub Token tại đây (chỉ dùng tạm thời)">
+    <div class="mt-2 d-flex">
+      <input id="token" type="password" class="form-control me-2" placeholder="Dán GitHub Token tại đây (chỉ lưu cục bộ)">
+      <button class="btn btn-outline-secondary" onclick="clearToken()">🧹 Xóa token</button>
     </div>
     <div class="mt-3 text-end">
       <button class="btn btn-outline-primary me-2" onclick="loadData()">📂 Đọc dữ liệu</button>
@@ -42,14 +43,29 @@
   <div class="card p-3">
     <h5 class="text-secondary mb-2">📋 Dữ liệu hiển thị</h5>
     <div id="dataArea" class="table-responsive border rounded p-2 bg-white">
-      <p class="text-muted">Chưa có dữ liệu. Hãy nhấn “Đọc dữ liệu” để tải từ GitHub.</p>
+      <p class="text-muted">Chưa có dữ liệu. Nhấn “Đọc dữ liệu” để tải từ GitHub.</p>
     </div>
   </div>
 
-  <div class="footer">Phiên bản demo hiển thị chuẩn tiếng Việt · Có thể chạy offline hoặc trên GitHub Pages</div>
+  <div class="footer">Phiên bản demo hiển thị chuẩn tiếng Việt · Dữ liệu đồng bộ qua GitHub API · Token lưu tạm cục bộ</div>
 </div>
 
 <script>
+window.addEventListener('load', () => {
+  const savedToken = localStorage.getItem('github_token');
+  if (savedToken) document.getElementById('token').value = savedToken;
+});
+
+document.getElementById('token').addEventListener('change', (e) => {
+  localStorage.setItem('github_token', e.target.value);
+});
+
+function clearToken() {
+  localStorage.removeItem('github_token');
+  document.getElementById('token').value = '';
+  alert('✅ Token đã được xóa khỏi bộ nhớ cục bộ.');
+}
+
 async function loadData() {
   const owner = document.getElementById('owner').value.trim();
   const repo = document.getElementById('repo').value.trim();
@@ -66,9 +82,7 @@ async function loadData() {
   const url = `https://api.github.com/repos/${owner}/${repo}/contents/${folder}/${file}`;
 
   try {
-    const res = await fetch(url, {
-      headers: { Authorization: `token ${token}` }
-    });
+    const res = await fetch(url, { headers: { Authorization: `token ${token}` } });
     if (!res.ok) throw new Error("Không thể đọc file từ GitHub (kiểm tra quyền truy cập hoặc tên file)");
     const json = await res.json();
     const content = decodeURIComponent(escape(atob(json.content)));
@@ -159,19 +173,11 @@ async function saveData() {
 // Chuẩn hoá tiêu đề tiếng Việt
 function chuanTieuDe(key) {
   const map = {
-    name: "Họ và tên",
-    fullname: "Họ và tên",
-    id: "Mã số",
-    team: "Đội",
-    age: "Tuổi",
-    gender: "Giới tính",
-    rank: "Hạng",
-    phone: "Số điện thoại",
-    email: "Email",
-    score: "Điểm",
-    result: "Kết quả",
-    match: "Trận đấu",
-    note: "Ghi chú"
+    name: "Họ và tên", fullname: "Họ và tên",
+    id: "Mã số", team: "Đội", age: "Tuổi",
+    gender: "Giới tính", rank: "Hạng", phone: "Số điện thoại",
+    email: "Email", score: "Điểm", result: "Kết quả",
+    match: "Trận đấu", note: "Ghi chú"
   };
   return map[key.toLowerCase()] || key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
 }
