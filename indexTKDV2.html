@@ -3,163 +3,208 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>TKD Championship 2025 — Quản lý giải Pickleball</title>
+  <title>TKD Championship 2025 — Quản lý giải Pickleball V10 Full</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
   <style>
     body { background:#f7f9fc; font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial; color:#222; padding:18px; }
     .tab-content { margin-top: 18px; }
     .logo { width:64px; height:64px; object-fit:contain; border-radius:8px; border:1px solid #e6eefc; padding:6px; background:#fff; }
-    table th { background:#0d6efd; color:#fff; }
+    table th { background:#0d6efd; color:#fff; position:sticky; top:0; }
+    .status { font-size:0.95rem; color:#555; }
   </style>
 </head>
 <body>
-  <div class="container">
-    <div class="d-flex align-items-center mb-3">
-      <img class="logo me-3" src="data/logoTKD.png" alt="Logo">
+<div class="container">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <div class="d-flex align-items-center gap-2">
+      <img class="logo" src="data/logoTKD.png" alt="Logo">
       <div>
-        <h3>TKD Championship 2025</h3>
-        <p class="mb-0 text-muted">Ngày thi đấu: 18/10/2025</p>
+        <h3 class="mb-0">TKD Championship 2025</h3>
+        <div>Ngày thi đấu: 18/10/2025</div>
       </div>
     </div>
-
-    <ul class="nav nav-tabs">
-      <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#overview">Tổng quan</button></li>
-      <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#players">Người chơi</button></li>
-      <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#schedule">Lịch thi đấu tối ưu</button></li>
-      <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#config">Cấu hình</button></li>
-    </ul>
-
-    <div class="tab-content">
-      <div class="tab-pane fade show active p-3" id="overview">
-        <h5>Tổng quan</h5>
-        <p>Quản lý và theo dõi toàn bộ thông tin giải đấu.</p>
-      </div>
-
-      <div class="tab-pane fade p-3" id="players">
-        <h5>Người chơi</h5>
-        <div id="playersContent">Đang tải...</div>
-      </div>
-
-      <div class="tab-pane fade p-3" id="schedule">
-        <h5>🗓️ Lịch thi đấu tối ưu</h5>
-        <div class="card p-3 mb-3 shadow-sm">
-          <h6 class="mb-3">⚙️ Cấu hình thời gian thi đấu</h6>
-          <div class="row g-3 align-items-center">
-            <div class="col-md-4">
-              <label class="form-label">Thời gian bắt đầu:</label>
-              <input type="datetime-local" id="startTime" class="form-control" value="2025-10-18T14:00" />
-            </div>
-            <div class="col-md-4">
-              <label class="form-label">Thời lượng mỗi trận (phút):</label>
-              <input type="number" id="duration" class="form-control" value="15" min="5" max="60" />
-            </div>
-            <div class="col-md-4 d-flex align-items-end">
-              <button class="btn btn-primary w-100" onclick="taoLichToiUu()">Tạo lịch tối ưu</button>
-            </div>
-          </div>
-        </div>
-        <div class="text-end mb-3">
-          <button class="btn btn-success" onclick="xuatJSON()">💾 Xuất lịch ra JSON</button>
-        </div>
-        <div id="scheduleContainer"></div>
-      </div>
-
-      <div class="tab-pane fade p-3" id="config">
-        <h5>⚙️ Cấu hình</h5>
-        <p>Thiết lập các thông số cho giải đấu và dữ liệu GitHub.</p>
-      </div>
+    <div>
+      <div id="autoSaveStatus" class="text-end status">Auto-save: <span id="autoState">Tắt</span></div>
+      <div id="lastSaved" class="text-end status">Chưa lưu</div>
     </div>
   </div>
 
-  <script>
-    function generateRounds(teams){
-      const n = teams.length;
-      if(n%2!==0) teams = teams.concat(['_bye']);
-      const rounds = [];
-      const arr = teams.slice();
-      const fix = arr[0];
-      const rot = arr.slice(1);
-      const R = (teams.length - 1);
-      for(let r=0;r<R;r++){
-        const pairs = [];
-        const left = [fix].concat(rot.slice(0, Math.floor(rot.length/2)));
-        const right = rot.slice(Math.floor(rot.length/2)).reverse();
-        for(let i=0;i<left.length;i++){
-          const a = left[i]; const b = right[i];
-          if(a !== '_bye' && b !== '_bye') pairs.push([a,b]);
-        }
-        rounds.push(pairs);
-        rot.unshift(rot.pop());
-      }
-      return rounds;
-    }
+  <ul class="nav nav-tabs">
+    <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#overview">Tổng quan</button></li>
+    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#players">Người chơi</button></li>
+    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#matches">Trận đấu</button></li>
+    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#results">Kết quả</button></li>
+    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#config">Cấu hình</button></li>
+  </ul>
 
-    function interleaveGroupSchedules(roundsA, roundsB, startTimeISO, durationMin, courtsA, courtsB){
-      const durationMs = durationMin * 60 * 1000;
-      let time = new Date(startTimeISO);
-      const final = [];
-      const maxRounds = Math.max(roundsA.length, roundsB.length);
-      for(let r=0;r<maxRounds;r++){
-        if(r < roundsA.length){
-          const pairs = roundsA[r].slice();
-          while(pairs.length){
-            const chunk = pairs.splice(0, courtsA.length);
-            chunk.forEach((p, idx)=> final.push({teamA:p[0],teamB:p[1],time: time.toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'}),court:courtsA[idx%courtsA.length],group:'A',round:r+1}));
-            time = new Date(time.getTime() + durationMs);
-          }
-        }
-        if(r < roundsB.length){
-          const pairs = roundsB[r].slice();
-          while(pairs.length){
-            const chunk = pairs.splice(0, courtsB.length);
-            chunk.forEach((p, idx)=> final.push({teamA:p[0],teamB:p[1],time: time.toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'}),court:courtsB[idx%courtsB.length],group:'B',round:r+1}));
-            time = new Date(time.getTime() + durationMs);
-          }
-        }
-      }
-      return final;
-    }
+  <div class="tab-content">
+    <div class="tab-pane fade show active p-3" id="overview"><div id="overviewContent"></div></div>
+    <div class="tab-pane fade p-3" id="players"><div id="playersTable"></div></div>
 
-    function taoLichToiUu(){
-      const start = document.getElementById('startTime').value || '2025-10-18T14:00:00';
-      const duration = parseInt(document.getElementById('duration').value) || 15;
-      const teamsA = ['Hậu-Dũng','Hạnh-Tiến','Giang-Long','Huyền-Luân','Linh-M.Hùng','Hường-Đạt'];
-      const teamsB = ['Thủy-Tiệp','Thanh-Phương','Minh-Triều','Tín-Khiêm','Ánh-Toàn','Hiển-P.Hùng'];
-      const roundsA = generateRounds(teamsA);
-      const roundsB = generateRounds(teamsB);
-      const courtsA = ['Sân 2','Sân 3'];
-      const courtsB = ['Sân 7','Sân 8'];
-      const finalSchedule = interleaveGroupSchedules(roundsA, roundsB, start, duration, courtsA, courtsB);
-      localStorage.setItem('pickleball_schedule', JSON.stringify(finalSchedule));
-      document.getElementById('scheduleContainer').innerHTML = scheduleToHtml(finalSchedule);
-    }
+    <div class="tab-pane fade p-3" id="matches">
+      <button class="btn btn-sm btn-primary mb-2" onclick="taoLichThiDau()">Tạo lịch thi đấu tự động</button>
+      <h6>Bảng A</h6><div id="tableMatchesA"></div>
+      <h6 class="mt-3">Bảng B</h6><div id="tableMatchesB"></div>
+      <button class="btn btn-success mt-3" onclick="tinhXepHang()">Cập nhật bảng xếp hạng</button>
+      <div id="rankingTables" class="mt-3"></div>
+    </div>
 
-    function scheduleToHtml(schedule){
-      const courts = Array.from(new Set(schedule.map(s=>s.court)));
-      const times = Array.from(new Set(schedule.map(s=>s.time)));
-      let html = `<table class='table table-bordered'><thead><tr><th>Giờ</th>${courts.map(c => `<th>${c}</th>`).join('')}</tr></thead><tbody>`;
-      times.forEach(t =>{
-        html += `<tr><td><strong>${t}</strong></td>`;
-        courts.forEach(c =>{
-          const m = schedule.find(s=>s.time===t && s.court===c);
-          html += `<td>${m? (m.teamA + ' vs ' + m.teamB + ' <small>(' + m.group + ' R'+m.round +')</small>') : '-'}</td>`;
-        });
-        html += '</tr>';
-      });
-      html += '</tbody></table>';
-      return html;
-    }
+    <div class="tab-pane fade p-3" id="results"><div id="resultsContent"></div></div>
 
-    function xuatJSON(){
-      const data = localStorage.getItem('pickleball_schedule');
-      if(!data){ alert('Chưa có dữ liệu để xuất!'); return; }
-      const blob = new Blob([data], {type:'application/json'});
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      a.download = 'pickleball_schedule.json';
-      a.click();
+    <div class="tab-pane fade p-3" id="config">
+      <div class="row g-2 mb-2">
+        <div class="col-md-3"><input id="cfgOwner" class="form-control" placeholder="Owner"></div>
+        <div class="col-md-3"><input id="cfgRepo" class="form-control" placeholder="Repo"></div>
+        <div class="col-md-3"><input id="cfgFolder" class="form-control" value="data"></div>
+        <div class="col-md-3"><input id="cfgFile" class="form-control" value="players.json"></div>
+      </div>
+      <input id="cfgToken" type="password" class="form-control mb-2" placeholder="Dán token tại đây">
+      <button class="btn btn-primary" onclick="saveConfig()">Lưu cấu hình</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* --- STATE & LỊCH THI ĐẤU --- */
+let state = { 
+  mixedTeams: ["Hậu-Dũng","Hạnh-Tiến","Giang-Long","Huyền-Luân","Linh-M.Hùng","Hường-Đạt"], 
+  maleTeams: ["Thủy-Tiệp","Thanh-Phương","Minh-Triều","Tín-Khiêm","Ánh-Toàn","Hiển-P.Hùng"], 
+  matchesA: [], matchesB: [] 
+};
+function taoLichThiDau(){
+  const thoiGianBatDau=new Date('2025-10-18T14:00:00');
+  const thoiLuong=15*60000;
+  state.matchesA=taoRoundRobin(state.mixedTeams,['Sân 2','Sân 3'],['Sân 7'],thoiGianBatDau,thoiLuong);
+  state.matchesB=taoRoundRobin(state.maleTeams,['Sân 7','Sân 8'],['Sân 8'],thoiGianBatDau,thoiLuong);
+  renderMatches();
+}
+function taoRoundRobin(teams,sanDau1,sanDau2,start,duration){
+  const lich=[];
+  let time=new Date(start);
+  for(let i=0;i<teams.length;i++){
+    for(let j=i+1;j<teams.length;j++){
+      const phase=time.getHours()<15?1:2;
+      const san=phase===1?sanDau1[(lich.length)%sanDau1.length]:sanDau2[(lich.length)%sanDau2.length];
+      lich.push({teamA:teams[i],teamB:teams[j],time:time.toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'}),court:san});
+      time=new Date(time.getTime()+duration);
     }
-  </script>
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  }
+  return lich;
+}
+function renderMatches(){
+  document.getElementById('tableMatchesA').innerHTML=renderMatchesTable(state.matchesA,'A');
+  document.getElementById('tableMatchesB').innerHTML=renderMatchesTable(state.matchesB,'B');
+}
+function renderMatchesTable(list,id){
+  if(!list.length)return'<div>Chưa có trận đấu</div>';
+  let html="<table class='table table-bordered table-sm'><thead><tr><th>Đội A</th><th>Đội B</th><th>Tỉ số</th><th>Giờ</th><th>Sân</th></tr></thead><tbody>";
+  list.forEach((m,i)=>{
+    html+=`<tr>
+      <td>${m.teamA}</td>
+      <td>${m.teamB}</td>
+      <td><input type='number' value='${m.scoreA||''}' style='width:50px' onchange='capNhatTiSo("${id}",${i},this.value,true)'> - 
+          <input type='number' value='${m.scoreB||''}' style='width:50px' onchange='capNhatTiSo("${id}",${i},this.value,false)'></td>
+      <td>${m.time}</td>
+      <td>${m.court}</td>
+    </tr>`;
+  });
+  return html+="</tbody></table>";
+}
+function capNhatTiSo(bang,index,val,isA){
+  const list=bang==='A'?state.matchesA:state.matchesB;
+  if(!list[index])return;
+  if(isA) list[index].scoreA=parseInt(val||0);
+  else list[index].scoreB=parseInt(val||0);
+}
+function tinhXepHang(){
+  const A=tinhDiemBang(state.matchesA);
+  const B=tinhDiemBang(state.matchesB);
+  state.tableA=A; state.tableB=B;
+  renderBangXepHang('A',A); renderBangXepHang('B',B);
+}
+function tinhDiemBang(matches){
+  const table={};
+  matches.forEach(m=>{
+    if(!m.teamA||!m.teamB) return;
+    if(!table[m.teamA]) table[m.teamA]={team:m.teamA,wins:0,losses:0,pointsW:0,pointsL:0};
+    if(!table[m.teamB]) table[m.teamB]={team:m.teamB,wins:0,losses:0,pointsW:0,pointsL:0};
+    if(m.scoreA==null||m.scoreB==null) return;
+    const aWin=m.scoreA>m.scoreB, bWin=m.scoreB>m.scoreA;
+    if(aWin) table[m.teamA].wins++, table[m.teamB].losses++;
+    else if(bWin) table[m.teamB].wins++, table[m.teamA].losses++;
+    table[m.teamA].pointsW+=m.scoreA; table[m.teamA].pointsL+=m.scoreB;
+    table[m.teamB].pointsW+=m.scoreB; table[m.teamB].pointsL+=m.scoreA;
+  });
+  let list=Object.values(table);
+  list.forEach(t=>{ t.diff=t.pointsW-t.pointsL; t.points=t.wins*2 });
+  list.sort((a,b)=>b.points-a.points||b.diff-a.diff||b.pointsW-a.pointsW||Math.random()-0.5);
+  return list;
+}
+function renderBangXepHang(bang,list){
+  let html=`<h6>Bảng ${bang}</h6><table class='table table-striped'><thead><tr><th>Đội</th><th>Thắng</th><th>Thua</th><th>Điểm</th><th>Hiệu số</th></tr></thead><tbody>`;
+  list.forEach(r=>{ html+=`<tr><td>${r.team}</td><td>${r.wins}</td><td>${r.losses}</td><td>${r.points}</td><td>${r.diff}</td></tr>` });
+  html+='</tbody></table>';
+  document.getElementById('rankingTables').innerHTML+=html;
+}
+
+/* --- LƯU CẤU HÌNH --- */
+function saveConfig(){
+  const cfg={owner:cfgOwner.value,repo:cfgRepo.value,folder:cfgFolder.value,file:cfgFile.value,token:cfgToken.value};
+  localStorage.setItem('pkb_config',JSON.stringify(cfg));
+  alert('Đã lưu cấu hình');
+}
+
+/* --- AUTO-SAVE GITHUB --- */
+let autoSaveEnabled=false, lastSavedHash="", autoTimer=null;
+function updateAutoStatus(){
+  document.getElementById('autoState').innerText=autoSaveEnabled?'Bật':'Tắt';
+  document.getElementById('autoSaveStatus').style.color=autoSaveEnabled?'green':'#555';
+}
+function toggleAutoSave(){ autoSaveEnabled=!autoSaveEnabled; updateAutoStatus(); autoSaveEnabled?startAutoSave():stopAutoSave(); }
+function startAutoSave(){ if(autoTimer) clearInterval(autoTimer); autoTimer=setInterval(autoSaveCheck,60000); autoSaveCheck(); }
+function stopAutoSave(){ if(autoTimer) clearInterval(autoTimer); autoTimer=null; }
+function getDataHash(){ return JSON.stringify(state); }
+async function autoSaveCheck(){
+  if(!autoSaveEnabled) return;
+  const cfg=JSON.parse(localStorage.getItem('pkb_config')||'{}');
+  if(!cfg.owner||!cfg.repo||!cfg.file||!cfg.token){ console.warn('Chưa có cấu hình GitHub'); return; }
+  const currentHash=getDataHash();
+  if(currentHash===lastSavedHash) return;
+  const ok=await saveToGitHub(cfg,state);
+  if(ok){ lastSavedHash=currentHash; document.getElementById('lastSaved').innerText='Đã lưu lúc: '+new Date().toLocaleTimeString(); }
+}
+async function saveToGitHub(cfg,data){
+  const apiUrl=`https://api.github.com/repos/${cfg.owner}/${cfg.repo}/contents/${cfg.folder}/${cfg.file}`;
+  const content=btoa(unescape(encodeURIComponent(JSON.stringify(data,null,2))));
+  try{
+    const getRes=await fetch(apiUrl,{headers:{Authorization:`token ${cfg.token}`}});
+    const getData=getRes.ok?await getRes.json():{};
+    const sha=getData.sha||null;
+    const res=await fetch(apiUrl,{
+      method:'PUT',
+      headers:{Authorization:`token ${cfg.token}`,'Content-Type':'application/json'},
+      body:JSON.stringify({message:'Auto-save from Pickleball App',content,sha})
+    });
+    if(res.ok){ console.log('Đã lưu GitHub:',cfg.file); return true; }
+    else { console.error('Lỗi khi lưu GitHub',await res.text()); return false; }
+  }catch(e){ console.error('Lỗi mạng:',e); return false; }
+}
+function downloadJSON(){
+  const blob=new Blob([JSON.stringify(state,null,2)],{type:"application/json"});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
+  a.download='pickleball_data.json'; a.click(); URL.revokeObjectURL(a.href);
+}
+window.addEventListener('DOMContentLoaded',()=>{
+  const toolbar=document.querySelector('.status').parentElement;
+  const btn=document.createElement('button');
+  btn.className='btn btn-sm btn-outline-secondary mt-1';
+  btn.textContent='Bật/Tắt Auto-save'; btn.onclick=toggleAutoSave; toolbar.appendChild(btn);
+  const btn2=document.createElement('button');
+  btn2.className='btn btn-sm btn-outline-primary mt-1 ms-2';
+  btn2.textContent='Tải file JSON'; btn2.onclick=downloadJSON; toolbar.appendChild(btn2);
+  updateAutoStatus();
+});
+</script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
