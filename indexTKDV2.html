@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>TKD Championship 2025 — Quản lý giải Pickleball</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body { background:#f7f9fc; font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial; color:#222; padding:18px; }
+    .tab-content { margin-top: 18px; }
+    .logo { width:64px; height:64px; object-fit:contain; border-radius:8px; border:1px solid #e6eefc; padding:6px; background:#fff; }
+    table th { background:#0d6efd; color:#fff; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="d-flex align-items-center mb-3">
+      <img class="logo me-3" src="data/logoTKD.png" alt="Logo">
+      <div>
+        <h3>TKD Championship 2025</h3>
+        <p class="mb-0 text-muted">Ngày thi đấu: 18/10/2025</p>
+      </div>
+    </div>
+
+    <ul class="nav nav-tabs">
+      <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#overview">Tổng quan</button></li>
+      <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#players">Người chơi</button></li>
+      <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#schedule">Lịch thi đấu tối ưu</button></li>
+      <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#config">Cấu hình</button></li>
+    </ul>
+
+    <div class="tab-content">
+      <div class="tab-pane fade show active p-3" id="overview">
+        <h5>Tổng quan</h5>
+        <p>Quản lý và theo dõi toàn bộ thông tin giải đấu.</p>
+      </div>
+
+      <div class="tab-pane fade p-3" id="players">
+        <h5>Người chơi</h5>
+        <div id="playersContent">Đang tải...</div>
+      </div>
+
+      <div class="tab-pane fade p-3" id="schedule">
+        <h5>🗓️ Lịch thi đấu tối ưu</h5>
+        <div class="card p-3 mb-3 shadow-sm">
+          <h6 class="mb-3">⚙️ Cấu hình thời gian thi đấu</h6>
+          <div class="row g-3 align-items-center">
+            <div class="col-md-4">
+              <label class="form-label">Thời gian bắt đầu:</label>
+              <input type="datetime-local" id="startTime" class="form-control" value="2025-10-18T14:00" />
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Thời lượng mỗi trận (phút):</label>
+              <input type="number" id="duration" class="form-control" value="15" min="5" max="60" />
+            </div>
+            <div class="col-md-4 d-flex align-items-end">
+              <button class="btn btn-primary w-100" onclick="taoLichToiUu()">Tạo lịch tối ưu</button>
+            </div>
+          </div>
+        </div>
+        <div class="text-end mb-3">
+          <button class="btn btn-success" onclick="xuatJSON()">💾 Xuất lịch ra JSON</button>
+        </div>
+        <div id="scheduleContainer"></div>
+      </div>
+
+      <div class="tab-pane fade p-3" id="config">
+        <h5>⚙️ Cấu hình</h5>
+        <p>Thiết lập các thông số cho giải đấu và dữ liệu GitHub.</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function generateRounds(teams){
+      const n = teams.length;
+      if(n%2!==0) teams = teams.concat(['_bye']);
+      const rounds = [];
+      const arr = teams.slice();
+      const fix = arr[0];
+      const rot = arr.slice(1);
+      const R = (teams.length - 1);
+      for(let r=0;r<R;r++){
+        const pairs = [];
+        const left = [fix].concat(rot.slice(0, Math.floor(rot.length/2)));
+        const right = rot.slice(Math.floor(rot.length/2)).reverse();
+        for(let i=0;i<left.length;i++){
+          const a = left[i]; const b = right[i];
+          if(a !== '_bye' && b !== '_bye') pairs.push([a,b]);
+        }
+        rounds.push(pairs);
+        rot.unshift(rot.pop());
+      }
+      return rounds;
+    }
+
+    function interleaveGroupSchedules(roundsA, roundsB, startTimeISO, durationMin, courtsA, courtsB){
+      const durationMs = durationMin * 60 * 1000;
+      let time = new Date(startTimeISO);
+      const final = [];
+      const maxRounds = Math.max(roundsA.length, roundsB.length);
+      for(let r=0;r<maxRounds;r++){
+        if(r < roundsA.length){
+          const pairs = roundsA[r].slice();
+          while(pairs.length){
+            const chunk = pairs.splice(0, courtsA.length);
+            chunk.forEach((p, idx)=> final.push({teamA:p[0],teamB:p[1],time: time.toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'}),court:courtsA[idx%courtsA.length],group:'A',round:r+1}));
+            time = new Date(time.getTime() + durationMs);
+          }
+        }
+        if(r < roundsB.length){
+          const pairs = roundsB[r].slice();
+          while(pairs.length){
+            const chunk = pairs.splice(0, courtsB.length);
+            chunk.forEach((p, idx)=> final.push({teamA:p[0],teamB:p[1],time: time.toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'}),court:courtsB[idx%courtsB.length],group:'B',round:r+1}));
+            time = new Date(time.getTime() + durationMs);
+          }
+        }
+      }
+      return final;
+    }
+
+    function taoLichToiUu(){
+      const start = document.getElementById('startTime').value || '2025-10-18T14:00:00';
+      const duration = parseInt(document.getElementById('duration').value) || 15;
+      const teamsA = ['Hậu-Dũng','Hạnh-Tiến','Giang-Long','Huyền-Luân','Linh-M.Hùng','Hường-Đạt'];
+      const teamsB = ['Thủy-Tiệp','Thanh-Phương','Minh-Triều','Tín-Khiêm','Ánh-Toàn','Hiển-P.Hùng'];
+      const roundsA = generateRounds(teamsA);
+      const roundsB = generateRounds(teamsB);
+      const courtsA = ['Sân 2','Sân 3'];
+      const courtsB = ['Sân 7','Sân 8'];
+      const finalSchedule = interleaveGroupSchedules(roundsA, roundsB, start, duration, courtsA, courtsB);
+      localStorage.setItem('pickleball_schedule', JSON.stringify(finalSchedule));
+      document.getElementById('scheduleContainer').innerHTML = scheduleToHtml(finalSchedule);
+    }
+
+    function scheduleToHtml(schedule){
+      const courts = Array.from(new Set(schedule.map(s=>s.court)));
+      const times = Array.from(new Set(schedule.map(s=>s.time)));
+      let html = `<table class='table table-bordered'><thead><tr><th>Giờ</th>${courts.map(c => `<th>${c}</th>`).join('')}</tr></thead><tbody>`;
+      times.forEach(t =>{
+        html += `<tr><td><strong>${t}</strong></td>`;
+        courts.forEach(c =>{
+          const m = schedule.find(s=>s.time===t && s.court===c);
+          html += `<td>${m? (m.teamA + ' vs ' + m.teamB + ' <small>(' + m.group + ' R'+m.round +')</small>') : '-'}</td>`;
+        });
+        html += '</tr>';
+      });
+      html += '</tbody></table>';
+      return html;
+    }
+
+    function xuatJSON(){
+      const data = localStorage.getItem('pickleball_schedule');
+      if(!data){ alert('Chưa có dữ liệu để xuất!'); return; }
+      const blob = new Blob([data], {type:'application/json'});
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'pickleball_schedule.json';
+      a.click();
+    }
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
