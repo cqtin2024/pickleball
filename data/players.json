@@ -1,21 +1,6 @@
-
-{
-  "mixedTeams": [
-    "Hậu-Dũng",
-    "Hạnh-Tiến",
-    "Giang-Long",
-    "Huyền-Luân",
-    "Linh-M.Hùng",
-    "Hường-Đạt"
-  ],
-  "maleTeams": [
-    "Thủy-Tiệp",
-    "Thanh-Phương",
-    "Minh-Triều",
-    "Tín-Khiêm",
-    "Ánh-Toàn",
-    "Hiển-P.Hùng"
-  ],
-  "matchesA": [],
-  "matchesB": []
-}
+[
+  {
+    "name": "Nguyen Van A",
+    "time": "2025-10-11T15:00:00Z"
+  }
+]
