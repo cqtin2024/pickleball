@@ -133,7 +133,8 @@
       "teamB": "Hường-Đạt",
       "time": "17:30",
       "court": "Sân 7",
-      "scoreA": 11
+      "scoreA": 11,
+      "scoreB": 9
     }
   ],
   "matchesB": [
@@ -231,62 +232,62 @@
   "tableA": [
     {
       "team": "Hậu-Dũng",
-      "wins": 1,
-      "losses": 0,
-      "pointsW": 11,
-      "pointsL": 1,
-      "diff": 10,
-      "points": 2
-    },
-    {
-      "team": "Hường-Đạt",
-      "wins": 0,
-      "losses": 0,
-      "pointsW": 0,
-      "pointsL": 0,
-      "diff": 0,
-      "points": 0
+      "wins": 3,
+      "losses": 2,
+      "pointsW": 47,
+      "pointsL": 36,
+      "diff": 11,
+      "points": 6
     },
     {
       "team": "Linh-M.Hùng",
-      "wins": 0,
-      "losses": 0,
-      "pointsW": 0,
-      "pointsL": 0,
-      "diff": 0,
-      "points": 0
-    },
-    {
-      "team": "Huyền-Luân",
-      "wins": 0,
-      "losses": 0,
-      "pointsW": 0,
-      "pointsL": 0,
-      "diff": 0,
-      "points": 0
+      "wins": 3,
+      "losses": 2,
+      "pointsW": 48,
+      "pointsL": 42,
+      "diff": 6,
+      "points": 6
     },
     {
       "team": "Giang-Long",
-      "wins": 0,
-      "losses": 0,
-      "pointsW": 0,
-      "pointsL": 0,
-      "diff": 0,
-      "points": 0
+      "wins": 3,
+      "losses": 2,
+      "pointsW": 44,
+      "pointsL": 43,
+      "diff": 1,
+      "points": 6
+    },
+    {
+      "team": "Hường-Đạt",
+      "wins": 2,
+      "losses": 3,
+      "pointsW": 48,
+      "pointsL": 44,
+      "diff": 4,
+      "points": 4
+    },
+    {
+      "team": "Huyền-Luân",
+      "wins": 2,
+      "losses": 3,
+      "pointsW": 41,
+      "pointsL": 50,
+      "diff": -9,
+      "points": 4
     },
     {
       "team": "Hạnh-Tiến",
-      "wins": 0,
-      "losses": 1,
-      "pointsW": 1,
-      "pointsL": 11,
-      "diff": -10,
-      "points": 0
+      "wins": 2,
+      "losses": 3,
+      "pointsW": 34,
+      "pointsL": 47,
+      "diff": -13,
+      "points": 4
     }
   ],
   "tableB": [
     {
-      "team": "Tín-Khiêm",
+      "team": "Thanh-Phương",
       "wins": 0,
       "losses": 0,
       "pointsW": 0,
@@ -304,6 +305,15 @@
       "points": 0
     },
     {
+      "team": "Tín-Khiêm",
+      "wins": 0,
+      "losses": 0,
+      "pointsW": 0,
+      "pointsL": 0,
+      "diff": 0,
+      "points": 0
+    },
+    {
       "team": "Ánh-Toàn",
       "wins": 0,
       "losses": 0,
@@ -313,25 +323,16 @@
       "points": 0
     },
     {
-      "team": "Hiển-P.Hùng",
-      "wins": 0,
-      "losses": 0,
-      "pointsW": 0,
-      "pointsL": 0,
-      "diff": 0,
-      "points": 0
-    },
-    {
-      "team": "Thanh-Phương",
-      "wins": 0,
-      "losses": 0,
-      "pointsW": 0,
-      "pointsL": 0,
-      "diff": 0,
-      "points": 0
-    },
-    {
       "team": "Minh-Triều",
+      "wins": 0,
+      "losses": 0,
+      "pointsW": 0,
+      "pointsL": 0,
+      "diff": 0,
+      "points": 0
+    },
+    {
+      "team": "Hiển-P.Hùng",
       "wins": 0,
       "losses": 0,
       "pointsW": 0,
