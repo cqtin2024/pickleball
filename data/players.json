@@ -406,7 +406,7 @@
       "id": "SF1",
       "teamA": "Hậu/Dũng",
       "teamB": "Phương/Thanh",
-      "scoreA": 12,
+      "scoreA": 0,
       "scoreB": 15,
       "time": "16:30",
       "court": "Sân 1",
@@ -429,12 +429,12 @@
     "id": "F",
     "teamA": "Phương/Thanh",
     "teamB": "Triều/Minh",
-    "scoreA": 15,
-    "scoreB": 9,
+    "scoreA": null,
+    "scoreB": null,
     "time": "17:00",
     "court": "Sân 1",
-    "winner": "Phương/Thanh",
+    "winner": null,
     "runnerUp": null,
-    "loser": "Triều/Minh"
+    "loser": null
   }
 }
