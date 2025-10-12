@@ -1,0 +1,385 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>TKD Championship 2025 — Quản lý giải Pickleball V10 Optimized</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body { background:#f7f9fc; font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial; color:#222; padding:18px; }
+    .tab-content { margin-top: 18px; }
+    /* Sử dụng placeholder image cho logo */
+    .logo { 
+      width:64px; 
+      height:64px; 
+      object-fit:contain; 
+      border-radius:8px; 
+      border:1px solid #e6eefc; 
+      padding:6px; 
+      background:url('https://placehold.co/64x64/0d6efd/ffffff?text=TKD') center center no-repeat;
+      background-size: cover;
+    }
+    table th { background:#0d6efd; color:#fff; position:sticky; top:0; }
+    .status { font-size:0.95rem; color:#555; }
+    /* Responsive adjustment for match inputs */
+    .match-score-cell input {
+      width: 45px;
+      text-align: center;
+      padding: 0.1rem;
+    }
+    @media (max-width: 576px) {
+      .match-score-cell input {
+        width: 35px;
+      }
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <div class="d-flex align-items-center gap-2">
+      <!-- Thay thế ảnh logo bằng placeholder image -->
+      <div class="logo" role="img" aria-label="Logo TKD"></div>
+      <div>
+        <h3 class="mb-0">TKD Championship 2025</h3>
+        <div>Ngày thi đấu: 18/10/2025</div>
+      </div>
+    </div>
+    <div>
+      <div id="autoSaveStatus" class="text-end status">Auto-save: <span id="autoState">Tắt</span></div>
+      <div id="lastSaved" class="text-end status">Chưa lưu</div>
+    </div>
+  </div>
+
+  <!-- Các tab điều hướng -->
+  <ul class="nav nav-tabs">
+    <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#overview">Tổng quan</button></li>
+    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#players">Người chơi</button></li>
+    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#matches">Trận đấu</button></li>
+    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#results">Kết quả</button></li>
+    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#config">Cấu hình</button></li>
+  </ul>
+
+  <!-- Nội dung của các tab -->
+  <div class="tab-content">
+    <div class="tab-pane fade show active p-3" id="overview"><div id="overviewContent">Chào mừng đến với hệ thống quản lý giải đấu TKD 2025. Vui lòng chuyển sang tab 'Trận đấu' để tạo lịch thi đấu.</div></div>
+    <div class="tab-pane fade p-3" id="players"><div id="playersTable">Danh sách đội đang được lưu trữ trong mã nguồn (mixedTeams & maleTeams).</div></div>
+
+    <div class="tab-pane fade p-3" id="matches">
+      <button class="btn btn-sm btn-primary mb-2" onclick="taoLichThiDauCungGio()">Tạo lịch thi đấu tối ưu cùng giờ</button>
+      
+      <!-- Bảng A (Nam-Nữ) -->
+      <h6 class="mt-4">Bảng A (Nam - Nữ)</h6><div id="tableMatchesA">Chưa có lịch thi đấu.</div>
+      
+      <!-- Bảng B (Nam) -->
+      <h6 class="mt-4">Bảng B (Nam)</h6><div id="tableMatchesB">Chưa có lịch thi đấu.</div>
+      
+      <!-- Nút cập nhật và hiển thị xếp hạng -->
+      <button class="btn btn-success mt-4" onclick="tinhXepHang()">Cập nhật bảng xếp hạng</button>
+      <div id="rankingTables" class="mt-3"></div>
+    </div>
+
+    <div class="tab-pane fade p-3" id="results"><div id="resultsContent">Kết quả chung cuộc sẽ được tổng hợp tại đây sau khi tất cả các trận đấu được cập nhật.</div></div>
+
+    <div class="tab-pane fade p-3" id="config">
+      <p class="text-muted">Các thông số này được sử dụng để lưu/tải dữ liệu giải đấu từ dịch vụ ngoài (ví dụ: GitHub) thông qua API (hiện tại chỉ lưu vào Local Storage).</p>
+      <div class="row g-2 mb-2">
+        <div class="col-md-3"><input id="cfgOwner" class="form-control" placeholder="Owner (Ví dụ: user_name)"></div>
+        <div class="col-md-3"><input id="cfgRepo" class="form-control" placeholder="Repo (Ví dụ: my-data-repo)"></div>
+        <div class="col-md-3"><input id="cfgFolder" class="form-control" value="data"></div>
+        <div class="col-md-3"><input id="cfgFile" class="form-control" value="players.json"></div>
+      </div>
+      <input id="cfgToken" type="password" class="form-control mb-2" placeholder="Dán token tại đây">
+      <button class="btn btn-primary" onclick="saveConfig()">Lưu cấu hình</button>
+      <div class="mt-2" id="configStatus"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Biến state lưu trữ dữ liệu chính của ứng dụng
+let state = { 
+  mixedTeams: ["Hậu-Dũng","Hạnh-Tiến","Giang-Long","Huyền-Luân","Linh-M.Hùng","Hường-Đạt"], 
+  maleTeams: ["Thủy-Tiệp","Thanh-Phương","Minh-Triều","Tín-Khiêm","Ánh-Toàn","Hiển-P.Hùng"], 
+  matchesA: [], 
+  matchesB: [],
+  config: {}
+};
+
+// --- Khởi tạo và Tải Cấu hình ---
+function loadConfig() {
+    const savedConfig = localStorage.getItem('pkb_config');
+    if (savedConfig) {
+        state.config = JSON.parse(savedConfig);
+        // Hiển thị lại cấu hình đã lưu
+        document.getElementById('cfgOwner').value = state.config.owner || '';
+        document.getElementById('cfgRepo').value = state.config.repo || '';
+        document.getElementById('cfgFolder').value = state.config.folder || 'data';
+        document.getElementById('cfgFile').value = state.config.file || 'players.json';
+        document.getElementById('cfgToken').value = state.config.token || '';
+    }
+}
+window.onload = loadConfig; // Tải cấu hình khi trang được load
+
+// --- Chức năng Tạo Lịch Thi Đấu ---
+
+/**
+ * Tạo lịch thi đấu cho cả Bảng A và Bảng B.
+ * Các trận đấu được phân bố tối ưu, đảm bảo các đội có thời gian nghỉ giữa các trận.
+ */
+function taoLichThiDauCungGio(){
+  const start = new Date('2025-10-18T14:00:00');
+  const duration = 15 * 60000; // 15 phút/trận
+
+  // Tạo lịch cho Bảng A (Nam - Nữ)
+  state.matchesA = distributeMatchesSameTime(state.mixedTeams, ['Sân 2','Sân 3'], start, duration);
+  // Tạo lịch cho Bảng B (Nam)
+  state.matchesB = distributeMatchesSameTime(state.maleTeams, ['Sân 7','Sân 8'], start, duration);
+
+  renderMatches();
+  document.getElementById('rankingTables').innerHTML = ''; // Xóa bảng xếp hạng cũ
+}
+
+/**
+ * Thuật toán phân bổ trận đấu vòng tròn 1 lượt, ưu tiên đấu cùng giờ
+ * và đảm bảo thời gian nghỉ tối thiểu (bằng duration) giữa các trận của một đội.
+ * @param {Array<string>} teams Danh sách các đội
+ * @param {Array<string>} courts Danh sách các sân đấu có sẵn
+ * @param {Date} start Thời gian bắt đầu trận đầu tiên
+ * @param {number} duration Thời gian mỗi trận (milliseconds)
+ * @returns {Array<Object>} Danh sách lịch thi đấu
+ */
+function distributeMatchesSameTime(teams, courts, start, duration){
+  const matches = [];
+  // Ghi lại thời điểm sớm nhất một đội có thể thi đấu lại
+  const nextTime = {}; 
+  // Khởi tạo nextTime cho tất cả các đội là thời điểm trước trận đấu đầu tiên
+  teams.forEach(t => nextTime[t] = new Date(start.getTime() - duration));
+
+  // Tạo danh sách tất cả các cặp đấu (vòng tròn 1 lượt)
+  let queue = [];
+  for(let i=0; i < teams.length; i++){
+    for(let j=i+1; j < teams.length; j++) queue.push([teams[i], teams[j]]);
+  }
+
+  let time = new Date(start);
+  let totalCourts = courts.length;
+
+  // Lặp cho đến khi hết các cặp đấu trong queue
+  while(queue.length){
+    let matchesScheduledInThisSlot = 0;
+    
+    // Thử phân bổ trận đấu cho tất cả các sân trong cùng một khe thời gian
+    for(let c=0; c < totalCourts && queue.length; c++){
+      // Tìm cặp đấu đầu tiên mà cả hai đội đều đã hết thời gian nghỉ (nextTime <= time)
+      let idx = queue.findIndex(p => new Date(nextTime[p[0]]) <= time && new Date(nextTime[p[1]]) <= time);
+      
+      if(idx >= 0){
+        // Lấy cặp đấu ra khỏi queue
+        let [teamA, teamB] = queue.splice(idx,1)[0];
+        
+        // Thêm trận đấu vào danh sách
+        matches.push({
+          teamA, 
+          teamB, 
+          scoreA: null, // Khởi tạo tỉ số
+          scoreB: null, // Khởi tạo tỉ số
+          time: time.toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'}), 
+          court: courts[c]
+        });
+        
+        // Cập nhật thời điểm thi đấu tiếp theo cho cả hai đội
+        nextTime[teamA] = new Date(time.getTime() + duration);
+        nextTime[teamB] = new Date(time.getTime() + duration);
+        matchesScheduledInThisSlot++;
+      }
+    }
+    
+    // Nếu không có trận đấu nào được sắp xếp trong khe thời gian này, 
+    // ta phải tăng thời gian lên để tránh vòng lặp vô tận (rất khó xảy ra với logic trên)
+    // Nhưng để đảm bảo, ta chỉ tăng thời gian khi đã cố gắng phân bổ trên tất cả các sân.
+    if (matchesScheduledInThisSlot > 0 || totalCourts > 0) {
+      time = new Date(time.getTime() + duration);
+    } else if (queue.length > 0) {
+        // Trường hợp không có sân nào và vẫn còn trận trong queue
+        time = new Date(time.getTime() + duration);
+    } else {
+        break; // Hết queue, thoát
+    }
+  }
+
+  return matches;
+}
+
+/**
+ * Hiển thị lịch thi đấu đã tạo ra giao diện.
+ */
+function renderMatches(){
+  document.getElementById('tableMatchesA').innerHTML = renderMatchesTable(state.matchesA,'A');
+  document.getElementById('tableMatchesB').innerHTML = renderMatchesTable(state.matchesB,'B');
+}
+
+/**
+ * Tạo bảng HTML cho danh sách các trận đấu.
+ * @param {Array<Object>} list Danh sách các trận đấu.
+ * @param {string} id ID bảng ('A' hoặc 'B').
+ * @returns {string} Chuỗi HTML của bảng trận đấu.
+ */
+function renderMatchesTable(list,id){
+  if(!list.length)return'<div>Chưa có trận đấu</div>';
+  let html="<div class='table-responsive'><table class='table table-bordered table-sm'><thead><tr><th>Đội A</th><th>Đội B</th><th class='text-center'>Tỉ số</th><th>Giờ</th><th>Sân</th></tr></thead><tbody>";
+  list.forEach((m,i)=>{
+    html+=`<tr>
+      <td>${m.teamA}</td>
+      <td>${m.teamB}</td>
+      <td class='match-score-cell d-flex justify-content-center align-items-center gap-1'>
+        <input type='number' min='0' value='${m.scoreA||''}' onchange='capNhatTiSo("${id}",${i},this.value,true)' class='form-control form-control-sm'> 
+        - 
+        <input type='number' min='0' value='${m.scoreB||''}' onchange='capNhatTiSo("${id}",${i},this.value,false)' class='form-control form-control-sm'>
+      </td>
+      <td>${m.time}</td>
+      <td>${m.court}</td>
+    </tr>`;
+  });
+  return html+="</tbody></table></div>";
+}
+
+/**
+ * Cập nhật tỉ số của một trận đấu vào biến state.
+ * @param {string} bang Bảng đấu ('A' hoặc 'B').
+ * @param {number} index Chỉ số trận đấu trong danh sách.
+ * @param {string} val Giá trị tỉ số (chuỗi).
+ * @param {boolean} isA True nếu là tỉ số của Đội A, False nếu là Đội B.
+ */
+function capNhatTiSo(bang,index,val,isA){
+  const list = bang === 'A' ? state.matchesA : state.matchesB;
+  if(!list[index]) return;
+  
+  // Chuyển giá trị nhập vào thành số nguyên (hoặc 0 nếu rỗng/null)
+  const score = parseInt(val) || 0;
+  if(score < 0) return; // Không cho nhập số âm
+
+  if(isA) list[index].scoreA = score;
+  else list[index].scoreB = score;
+  
+  // Tùy chọn: Lưu state vào Local Storage sau mỗi lần cập nhật (Tính năng chưa được implement đầy đủ)
+  // saveState();
+}
+
+// --- Chức năng Tính và Hiển thị Xếp Hạng ---
+
+/**
+ * Bắt đầu quá trình tính và hiển thị bảng xếp hạng cho cả hai bảng.
+ */
+function tinhXepHang(){
+  document.getElementById('rankingTables').innerHTML = ''; // Xóa bảng xếp hạng cũ trước khi tính mới
+
+  const A = tinhDiemBang(state.matchesA);
+  const B = tinhDiemBang(state.matchesB);
+  
+  state.tableA = A; 
+  state.tableB = B;
+  
+  renderBangXepHang('A', A); 
+  renderBangXepHang('B', B);
+}
+
+/**
+ * Tính toán điểm, hiệu số và xếp hạng cho một bảng đấu.
+ * @param {Array<Object>} matches Danh sách các trận đấu của bảng.
+ * @returns {Array<Object>} Danh sách các đội đã được xếp hạng.
+ */
+function tinhDiemBang(matches){
+  const table = {};
+  
+  // 1. Tổng hợp điểm từ tất cả các trận đấu
+  matches.forEach(m => {
+    // Bỏ qua trận đấu nếu thiếu thông tin đội hoặc tỉ số
+    if(!m.teamA || !m.teamB || m.scoreA == null || m.scoreB == null) return;
+    
+    // Khởi tạo đối tượng đội nếu chưa có
+    if(!table[m.teamA]) table[m.teamA] = {team: m.teamA, wins: 0, losses: 0, pointsW: 0, pointsL: 0};
+    if(!table[m.teamB]) table[m.teamB] = {team: m.teamB, wins: 0, losses: 0, pointsW: 0, pointsL: 0};
+    
+    const aWin = m.scoreA > m.scoreB; 
+    const bWin = m.scoreB > m.scoreA;
+    
+    // Cập nhật Thắng/Thua
+    if(aWin) {
+      table[m.teamA].wins++; 
+      table[m.teamB].losses++;
+    } else if(bWin) {
+      table[m.teamB].wins++; 
+      table[m.teamA].losses++;
+    }
+    
+    // Cập nhật Điểm ghi được (pointsW) và Điểm bị mất (pointsL)
+    table[m.teamA].pointsW += m.scoreA; 
+    table[m.teamA].pointsL += m.scoreB;
+    table[m.teamB].pointsW += m.scoreB; 
+    table[m.teamB].pointsL += m.scoreA;
+  });
+  
+  // 2. Tính Điểm tổng và Hiệu số
+  let list = Object.values(table);
+  list.forEach(t => { 
+    t.diff = t.pointsW - t.pointsL; // Hiệu số
+    t.points = t.wins * 2; // Mỗi trận thắng được 2 điểm
+  });
+  
+  // 3. Sắp xếp
+  // Ưu tiên: 1. Điểm tổng | 2. Hiệu số | 3. Điểm ghi được | 4. Ngẫu nhiên (khi tất cả hòa)
+  list.sort((a,b) => 
+    b.points - a.points || 
+    b.diff - a.diff || 
+    b.pointsW - a.pointsW || 
+    Math.random() - 0.5
+  ); 
+  
+  return list;
+}
+
+/**
+ * Hiển thị bảng xếp hạng ra giao diện.
+ * @param {string} bang Tên bảng đấu ('A' hoặc 'B').
+ * @param {Array<Object>} list Danh sách các đội đã được xếp hạng.
+ */
+function renderBangXepHang(bang,list){
+  let html=`<h6 class="mt-4">Bảng xếp hạng Bảng ${bang}</h6><div class='table-responsive'><table class='table table-striped table-sm'><thead><tr><th>Hạng</th><th>Đội</th><th>Thắng</th><th>Thua</th><th>Điểm</th><th>Hiệu số</th></tr></thead><tbody>`;
+  list.forEach((r, index)=>{ 
+    html+=`<tr>
+      <td>${index + 1}</td>
+      <td>${r.team}</td>
+      <td>${r.wins}</td>
+      <td>${r.losses}</td>
+      <td><span class="badge bg-primary">${r.points}</span></td>
+      <td>${r.diff}</td>
+    </tr>` 
+  });
+  html+='</tbody></table></div>';
+  document.getElementById('rankingTables').innerHTML += html;
+}
+
+// --- Chức năng Cấu hình ---
+
+/**
+ * Lưu các thông số cấu hình vào Local Storage.
+ */
+function saveConfig(){
+  const cfg = {
+    owner: document.getElementById('cfgOwner').value,
+    repo: document.getElementById('cfgRepo').value,
+    folder: document.getElementById('cfgFolder').value,
+    file: document.getElementById('cfgFile').value,
+    token: document.getElementById('cfgToken').value
+  };
+  localStorage.setItem('pkb_config', JSON.stringify(cfg));
+  document.getElementById('configStatus').innerHTML = '<div class="alert alert-success p-2 mt-2">Đã lưu cấu hình vào trình duyệt.</div>';
+  
+  // Thay vì alert, dùng giao diện người dùng
+  // alert('Đã lưu cấu hình'); 
+}
+</script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
