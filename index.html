@@ -2,41 +2,51 @@
 <html lang="vi">
 <head>
   <meta charset="utf-8">
-  <title>github Data Viewer</title>
+  <title>Quản lý dữ liệu Pickleball</title>
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
   <style>
-    body { background: #fafafa; padding: 20px; }
-    .card { margin-bottom: 20px; }
-    textarea, input { font-family: monospace; }
-    table { font-size: 14px; }
+    body { background-color: #f9fafb; color: #222; padding: 20px; font-family: "Segoe UI", "Roboto", sans-serif; }
+    .card { border-radius: 12px; box-shadow: 0 2px 6px rgba(0,0,0,0.08); }
+    table { font-size: 15px; border-collapse: collapse; width: 100%; }
+    th, td { text-align: left; padding: 8px 12px; }
+    th { background-color: #0d6efd; color: #fff; position: sticky; top: 0; }
+    tr:nth-child(even) { background-color: #f2f6ff; }
+    input, textarea { font-family: "Consolas", monospace; }
+    .footer { font-size: 13px; color: #666; margin-top: 20px; text-align: center; }
   </style>
 </head>
 <body>
 <div class="container">
-  <h3 class="mb-4 text-center">🏓 Pickleball Data Viewer</h3>
+  <h3 class="mb-4 text-center fw-bold text-primary">🏓 Trình xem & đồng bộ dữ liệu Pickleball</h3>
 
   <!-- Cấu hình -->
-  <div class="card p-3">
-    <h5>Cấu hình GitHub</h5>
+  <div class="card p-3 mb-3">
+    <h5 class="mb-3 text-secondary">⚙️ Cấu hình GitHub</h5>
     <div class="row g-2">
-      <div class="col-md-3"><input id="owner" class="form-control" placeholder="Owner (VD: your-username)"></div>
-      <div class="col-md-3"><input id="repo" class="form-control" placeholder="Repo (VD: Pickleball)"></div>
+      <div class="col-md-3"><input id="owner" class="form-control" placeholder="Chủ sở hữu (VD: your-username)"></div>
+      <div class="col-md-3"><input id="repo" class="form-control" placeholder="Tên repo (VD: Pickleball)"></div>
       <div class="col-md-3"><input id="folder" class="form-control" placeholder="Thư mục (VD: data)" value="data"></div>
       <div class="col-md-3"><input id="file" class="form-control" placeholder="Tên file (VD: players.json)" value="players.json"></div>
     </div>
-    <div class="mt-2"><input id="token" type="password" class="form-control" placeholder="Dán GitHub Token tại đây"></div>
+    <div class="mt-2">
+      <input id="token" type="password" class="form-control" placeholder="Dán GitHub Token tại đây (chỉ dùng tạm thời)">
+    </div>
     <div class="mt-3 text-end">
-      <button class="btn btn-primary me-2" onclick="loadData()">🔄 Đọc dữ liệu</button>
-      <button class="btn btn-success" onclick="saveData()">💾 Ghi dữ liệu</button>
+      <button class="btn btn-outline-primary me-2" onclick="loadData()">📂 Đọc dữ liệu</button>
+      <button class="btn btn-outline-success" onclick="saveData()">💾 Ghi dữ liệu</button>
     </div>
   </div>
 
   <!-- Hiển thị dữ liệu -->
   <div class="card p-3">
-    <h5>Dữ liệu hiển thị</h5>
-    <div id="dataArea" class="table-responsive border p-2 bg-white rounded"></div>
+    <h5 class="text-secondary mb-2">📋 Dữ liệu hiển thị</h5>
+    <div id="dataArea" class="table-responsive border rounded p-2 bg-white">
+      <p class="text-muted">Chưa có dữ liệu. Hãy nhấn “Đọc dữ liệu” để tải từ GitHub.</p>
+    </div>
   </div>
+
+  <div class="footer">Phiên bản demo hiển thị chuẩn tiếng Việt · Có thể chạy offline hoặc trên GitHub Pages</div>
 </div>
 
 <script>
@@ -49,7 +59,7 @@ async function loadData() {
   const dataArea = document.getElementById('dataArea');
 
   if (!owner || !repo || !file || !token) {
-    alert('Vui lòng nhập đầy đủ thông tin: Owner, Repo, File, Token!');
+    alert('⚠️ Vui lòng nhập đầy đủ thông tin: Chủ sở hữu, Repo, File, Token!');
     return;
   }
 
@@ -59,10 +69,10 @@ async function loadData() {
     const res = await fetch(url, {
       headers: { Authorization: `token ${token}` }
     });
-    if (!res.ok) throw new Error("Không thể đọc file trên GitHub");
+    if (!res.ok) throw new Error("Không thể đọc file từ GitHub (kiểm tra quyền truy cập hoặc tên file)");
     const json = await res.json();
-    const content = atob(json.content);
-    
+    const content = decodeURIComponent(escape(atob(json.content)));
+
     let data;
     if (file.endsWith('.csv')) {
       data = parseCSV(content);
@@ -72,12 +82,12 @@ async function loadData() {
       renderTableFromJSON(data);
     }
   } catch (err) {
-    dataArea.innerHTML = `<div class='text-danger'>❌ Lỗi: ${err.message}</div>`;
+    dataArea.innerHTML = `<div class='text-danger'>❌ Lỗi khi đọc dữ liệu: ${err.message}</div>`;
   }
 }
 
 function parseCSV(content) {
-  const lines = content.trim().split('\n');
+  const lines = content.trim().split(/\r?\n/);
   const headers = lines[0].split(',').map(h => h.trim());
   return lines.slice(1).map(line => {
     const values = line.split(',');
@@ -88,20 +98,19 @@ function parseCSV(content) {
 }
 
 function renderTable(data) {
-  if (!data.length) return document.getElementById('dataArea').innerHTML = "Không có dữ liệu.";
+  if (!data.length) return document.getElementById('dataArea').innerHTML = "Không có dữ liệu để hiển thị.";
   const headers = Object.keys(data[0]);
-  let html = "<table class='table table-bordered table-striped'>";
-  html += "<thead><tr>" + headers.map(h => `<th>${h}</th>`).join('') + "</tr></thead><tbody>";
+  let html = "<table class='table table-bordered table-hover align-middle'>";
+  html += "<thead><tr>" + headers.map(h => `<th>${chuanTieuDe(h)}</th>`).join('') + "</tr></thead><tbody>";
   html += data.map(row => "<tr>" + headers.map(h => `<td>${row[h] || ''}</td>`).join('') + "</tr>").join('');
   html += "</tbody></table>";
   document.getElementById('dataArea').innerHTML = html;
 }
 
 function renderTableFromJSON(data) {
-  if (Array.isArray(data)) {
-    renderTable(data);
-  } else if (typeof data === 'object') {
-    const rows = Object.entries(data).map(([k, v]) => ({ Trường: k, Giá_trị: JSON.stringify(v) }));
+  if (Array.isArray(data)) renderTable(data);
+  else if (typeof data === 'object') {
+    const rows = Object.entries(data).map(([k, v]) => ({ "Trường": chuanTieuDe(k), "Giá trị": JSON.stringify(v, null, 2) }));
     renderTable(rows);
   } else {
     document.getElementById('dataArea').innerHTML = `<pre>${data}</pre>`;
@@ -114,9 +123,9 @@ async function saveData() {
   const folder = document.getElementById('folder').value.trim();
   const file = document.getElementById('file').value.trim();
   const token = document.getElementById('token').value.trim();
-  
+
   if (!owner || !repo || !file || !token) {
-    alert('Vui lòng nhập đầy đủ thông tin!');
+    alert('⚠️ Vui lòng nhập đầy đủ thông tin!');
     return;
   }
 
@@ -129,7 +138,7 @@ async function saveData() {
   const sha = getData.sha;
 
   const body = {
-    message: "Cập nhật dữ liệu từ Web App",
+    message: "Cập nhật dữ liệu từ ứng dụng Pickleball",
     content: btoa(unescape(encodeURIComponent(newContent))),
     sha: sha
   };
@@ -144,7 +153,27 @@ async function saveData() {
   });
 
   if (res.ok) alert("✅ Dữ liệu đã được ghi thành công lên GitHub!");
-  else alert("❌ Ghi dữ liệu thất bại!");
+  else alert("❌ Ghi dữ liệu thất bại! Kiểm tra Token hoặc quyền repo.");
+}
+
+// Chuẩn hoá tiêu đề tiếng Việt
+function chuanTieuDe(key) {
+  const map = {
+    name: "Họ và tên",
+    fullname: "Họ và tên",
+    id: "Mã số",
+    team: "Đội",
+    age: "Tuổi",
+    gender: "Giới tính",
+    rank: "Hạng",
+    phone: "Số điện thoại",
+    email: "Email",
+    score: "Điểm",
+    result: "Kết quả",
+    match: "Trận đấu",
+    note: "Ghi chú"
+  };
+  return map[key.toLowerCase()] || key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
 }
 </script>
 </body>
