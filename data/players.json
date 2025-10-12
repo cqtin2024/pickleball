@@ -406,35 +406,35 @@
       "id": "SF1",
       "teamA": "Hậu/Dũng",
       "teamB": "Phương/Thanh",
-      "scoreA": null,
-      "scoreB": null,
+      "scoreA": 12,
+      "scoreB": 15,
       "time": "16:30",
       "court": "Sân 1",
-      "winner": null,
-      "loser": null
+      "winner": "Phương/Thanh",
+      "loser": "Hậu/Dũng"
     },
     {
       "id": "SF2",
       "teamA": "Triều/Minh",
       "teamB": "Hường/Đạt",
-      "scoreA": null,
-      "scoreB": null,
+      "scoreA": 15,
+      "scoreB": 6,
       "time": "16:30",
       "court": "Sân 2",
-      "winner": null,
-      "loser": null
+      "winner": "Triều/Minh",
+      "loser": "Hường/Đạt"
     }
   ],
   "final": {
     "id": "F",
-    "teamA": "Thắng SF1",
-    "teamB": "Thắng SF2",
-    "scoreA": null,
-    "scoreB": null,
+    "teamA": "Phương/Thanh",
+    "teamB": "Triều/Minh",
+    "scoreA": 15,
+    "scoreB": 9,
     "time": "17:00",
     "court": "Sân 1",
-    "winner": null,
+    "winner": "Phương/Thanh",
     "runnerUp": null,
-    "loser": null
+    "loser": "Triều/Minh"
   }
 }
