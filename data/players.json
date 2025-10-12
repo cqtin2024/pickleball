@@ -406,7 +406,7 @@
       "id": "SF1",
       "teamA": "Hậu/Dũng",
       "teamB": "Phương/Thanh",
-      "scoreA": 0,
+      "scoreA": null,
       "scoreB": null,
       "time": "16:30",
       "court": "Sân 1",
