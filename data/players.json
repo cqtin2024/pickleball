@@ -15,6 +15,188 @@
     "Ánh-Toàn",
     "Hiển-P.Hùng"
   ],
-  "matchesA": [],
-  "matchesB": []
+  "matchesA": [
+    {
+      "teamA": "Hậu-Dũng",
+      "teamB": "Hạnh-Tiến",
+      "time": "14:00",
+      "court": "Sân 2"
+    },
+    {
+      "teamA": "Hậu-Dũng",
+      "teamB": "Giang-Long",
+      "time": "14:15",
+      "court": "Sân 3"
+    },
+    {
+      "teamA": "Hậu-Dũng",
+      "teamB": "Huyền-Luân",
+      "time": "14:30",
+      "court": "Sân 2"
+    },
+    {
+      "teamA": "Hậu-Dũng",
+      "teamB": "Linh-M.Hùng",
+      "time": "14:45",
+      "court": "Sân 3"
+    },
+    {
+      "teamA": "Hậu-Dũng",
+      "teamB": "Hường-Đạt",
+      "time": "15:00",
+      "court": "Sân 7"
+    },
+    {
+      "teamA": "Hạnh-Tiến",
+      "teamB": "Giang-Long",
+      "time": "15:15",
+      "court": "Sân 7"
+    },
+    {
+      "teamA": "Hạnh-Tiến",
+      "teamB": "Huyền-Luân",
+      "time": "15:30",
+      "court": "Sân 7"
+    },
+    {
+      "teamA": "Hạnh-Tiến",
+      "teamB": "Linh-M.Hùng",
+      "time": "15:45",
+      "court": "Sân 7"
+    },
+    {
+      "teamA": "Hạnh-Tiến",
+      "teamB": "Hường-Đạt",
+      "time": "16:00",
+      "court": "Sân 7"
+    },
+    {
+      "teamA": "Giang-Long",
+      "teamB": "Huyền-Luân",
+      "time": "16:15",
+      "court": "Sân 7"
+    },
+    {
+      "teamA": "Giang-Long",
+      "teamB": "Linh-M.Hùng",
+      "time": "16:30",
+      "court": "Sân 7"
+    },
+    {
+      "teamA": "Giang-Long",
+      "teamB": "Hường-Đạt",
+      "time": "16:45",
+      "court": "Sân 7"
+    },
+    {
+      "teamA": "Huyền-Luân",
+      "teamB": "Linh-M.Hùng",
+      "time": "17:00",
+      "court": "Sân 7"
+    },
+    {
+      "teamA": "Huyền-Luân",
+      "teamB": "Hường-Đạt",
+      "time": "17:15",
+      "court": "Sân 7"
+    },
+    {
+      "teamA": "Linh-M.Hùng",
+      "teamB": "Hường-Đạt",
+      "time": "17:30",
+      "court": "Sân 7"
+    }
+  ],
+  "matchesB": [
+    {
+      "teamA": "Thủy-Tiệp",
+      "teamB": "Thanh-Phương",
+      "time": "14:00",
+      "court": "Sân 7"
+    },
+    {
+      "teamA": "Thủy-Tiệp",
+      "teamB": "Minh-Triều",
+      "time": "14:15",
+      "court": "Sân 8"
+    },
+    {
+      "teamA": "Thủy-Tiệp",
+      "teamB": "Tín-Khiêm",
+      "time": "14:30",
+      "court": "Sân 7"
+    },
+    {
+      "teamA": "Thủy-Tiệp",
+      "teamB": "Ánh-Toàn",
+      "time": "14:45",
+      "court": "Sân 8"
+    },
+    {
+      "teamA": "Thủy-Tiệp",
+      "teamB": "Hiển-P.Hùng",
+      "time": "15:00",
+      "court": "Sân 8"
+    },
+    {
+      "teamA": "Thanh-Phương",
+      "teamB": "Minh-Triều",
+      "time": "15:15",
+      "court": "Sân 8"
+    },
+    {
+      "teamA": "Thanh-Phương",
+      "teamB": "Tín-Khiêm",
+      "time": "15:30",
+      "court": "Sân 8"
+    },
+    {
+      "teamA": "Thanh-Phương",
+      "teamB": "Ánh-Toàn",
+      "time": "15:45",
+      "court": "Sân 8"
+    },
+    {
+      "teamA": "Thanh-Phương",
+      "teamB": "Hiển-P.Hùng",
+      "time": "16:00",
+      "court": "Sân 8"
+    },
+    {
+      "teamA": "Minh-Triều",
+      "teamB": "Tín-Khiêm",
+      "time": "16:15",
+      "court": "Sân 8"
+    },
+    {
+      "teamA": "Minh-Triều",
+      "teamB": "Ánh-Toàn",
+      "time": "16:30",
+      "court": "Sân 8"
+    },
+    {
+      "teamA": "Minh-Triều",
+      "teamB": "Hiển-P.Hùng",
+      "time": "16:45",
+      "court": "Sân 8"
+    },
+    {
+      "teamA": "Tín-Khiêm",
+      "teamB": "Ánh-Toàn",
+      "time": "17:00",
+      "court": "Sân 8"
+    },
+    {
+      "teamA": "Tín-Khiêm",
+      "teamB": "Hiển-P.Hùng",
+      "time": "17:15",
+      "court": "Sân 8"
+    },
+    {
+      "teamA": "Ánh-Toàn",
+      "teamB": "Hiển-P.Hùng",
+      "time": "17:30",
+      "court": "Sân 8"
+    }
+  ]
 }
