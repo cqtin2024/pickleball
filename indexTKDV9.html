@@ -117,8 +117,8 @@
     <div class="tab-pane fade p-3" id="config">
       <p class="text-muted">Nhập thông tin kho lưu trữ GitHub để tự động lưu trữ dữ liệu giải đấu.</p>
       <div class="row g-2 mb-2">
-        <div class="col-md-3"><input id="cfgOwner" class="form-control" placeholder="Owner (Ví dụ: user_name)"></div>
-        <div class="col-md-3"><input id="cfgRepo" class="form-control" placeholder="Repo (Ví dụ: my-data-repo)"></div>
+        <div class="col-md-3"><input id="cfgOwner" class="form-control" value="cqtin2024" placeholder="Owner (Ví dụ: user_name)"></div>
+        <div class="col-md-3"><input id="cfgRepo" class="form-control" value="pickleball" placeholder="Repo (Ví dụ: my-data-repo)"></div>
         <div class="col-md-3"><input id="cfgFolder" class="form-control" value="data"></div>
         <div class="col-md-3"><input id="cfgFile" class="form-control" value="state.json"></div>
       </div>
@@ -240,7 +240,7 @@ function showModal(title, body) {
 }
 
 /**
- * Hàm chuyển đổi tab
+ * Hàm chuyển đổi tab (Được cập nhật để tự động chuyển tab)
  */
 function switchTab(tabId) {
     const tabElement = document.querySelector(`#mainTabs button[data-bs-target="#${tabId}"]`);
@@ -271,7 +271,7 @@ function b64DecodeUnicode(str) {
 
 // --- GitHub API Functions ---
 
-// Hàm chung để lấy nội dung file bất kỳ từ GitHub
+// Hàm chung để lấy nội dung file bất kỳ từ GitHub (Giữ nguyên)
 async function fetchCSVContent(cfg, filePath) {
     const apiUrl = `https://api.github.com/repos/${cfg.owner}/${cfg.repo}/contents/${filePath}`;
     
@@ -327,9 +327,6 @@ async function fetchFileSha(cfg) {
 
 /**
  * Hợp nhất tỉ số đã lưu (savedMatches) vào cấu trúc lịch hiện tại (currentMatches).
- * Điều này cho phép cập nhật lịch từ CSV mà không mất tỉ số đã nhập.
- * @param {Array} currentMatches Lịch hiện tại (từ CSV).
- * @param {Array} savedMatches Lịch đã lưu (từ state.json, chứa tỉ số).
  */
 function mergeScores(currentMatches, savedMatches) {
     const savedScoresMap = new Map();
@@ -371,7 +368,6 @@ function mergeScores(currentMatches, savedMatches) {
 
 async function loadFromGitHub() {
     const cfg = state.config;
-    // Không cần kiểm tra cfg ở đây vì window.onload đã kiểm tra và gọi loadInitialSchedule trước
     
     updateStatus('configStatus', 'info', 'Đang tải dữ liệu trạng thái (tỉ số đã lưu) từ GitHub...');
     const result = await fetchFileSha(cfg);
@@ -506,12 +502,17 @@ async function checkConnection() {
         
         // 2. Tải state.json (để hợp nhất tỉ số)
         await loadFromGitHub();
+        
+        // Chuyển tab sau khi tải thành công
+        switchTab('matches');
 
     } catch (error) {
         updateStatus('configStatus', 'danger', `Kiểm tra kết nối thất bại: ${error.message}. Vui lòng kiểm tra lại Token/Repo.`);
         console.error("Lỗi kiểm tra kết nối:", error);
         // Thêm logic fallback nếu checkConnection bị lỗi
         loadFallbackSchedule(error.message);
+        // Chuyển tab ngay cả khi bị lỗi
+        switchTab('matches');
     }
 }
 
@@ -590,16 +591,36 @@ function loadFallbackSchedule(reason) {
 }
 
 
-// --- Cấu hình & Khởi tạo (Cập nhật logic tải) ---
+// --- Cấu hình & Khởi tạo (Cập nhật logic tải và giá trị mặc định) ---
 function loadConfig() {
     const savedConfig = localStorage.getItem('pkb_config');
+    const defaultOwner = 'cqtin2024';
+    const defaultRepo = 'pickleball';
+    const defaultFolder = 'data';
+    const defaultFile = 'state.json';
+
     if (savedConfig) {
         state.config = JSON.parse(savedConfig);
-        document.getElementById('cfgOwner').value = state.config.owner || '';
-        document.getElementById('cfgRepo').value = state.config.repo || '';
-        document.getElementById('cfgFolder').value = state.config.folder || 'data';
-        document.getElementById('cfgFile').value = state.config.file || 'state.json';
+        document.getElementById('cfgOwner').value = state.config.owner || defaultOwner;
+        document.getElementById('cfgRepo').value = state.config.repo || defaultRepo;
+        document.getElementById('cfgFolder').value = state.config.folder || defaultFolder;
+        document.getElementById('cfgFile').value = state.config.file || defaultFile;
         document.getElementById('cfgToken').value = state.config.token || '';
+    } else {
+        // Set initial defaults if nothing saved
+        state.config = {
+            owner: defaultOwner,
+            repo: defaultRepo,
+            folder: defaultFolder,
+            file: defaultFile,
+            token: ''
+        };
+        // Also update the input fields for the first time
+        document.getElementById('cfgOwner').value = defaultOwner;
+        document.getElementById('cfgRepo').value = defaultRepo;
+        document.getElementById('cfgFolder').value = defaultFolder;
+        document.getElementById('cfgFile').value = defaultFile;
+        document.getElementById('cfgToken').value = '';
     }
 }
 
@@ -636,26 +657,33 @@ function startAutoSave() {
     }
 }
 
-// [ĐIỀU CHỈNH LỚN] window.onload để chạy loadInitialSchedule
+// [ĐIỀU CHỈNH LỚN] window.onload để chạy loadInitialSchedule và switchTab
 window.onload = async function() {
     loadConfig();
     
     if (state.config.token && state.config.owner && state.config.repo) {
         try {
-            // 1. Tải lịch CSV từ GitHub (CalendarRound.csv). Nếu thất bại, chuyển sang catch.
+            // 1. Tải lịch CSV từ GitHub (CalendarRound.csv). 
             await loadInitialSchedule(state.config); 
             
-            // 2. Tải state.json và hợp nhất tỉ số. Nếu thất bại, chuyển sang catch.
+            // 2. Tải state.json và hợp nhất tỉ số.
             await loadFromGitHub(); 
+            
+            // NEW: Chuyển sang tab Vòng Bảng sau khi tải thành công
+            switchTab('matches');
             
         } catch (error) {
             console.error('Lỗi nghiêm trọng khi đồng bộ GitHub, chuyển sang lịch Cố định:', error);
             // Fallback nếu loadInitialSchedule hoặc loadFromGitHub thất bại.
             loadFallbackSchedule(error.message); 
+            // NEW: Chuyển sang tab Vòng Bảng sau khi fallback
+            switchTab('matches');
         }
     } else {
         // Không có Token hoặc Config, tải lịch Cố định và thông báo.
         loadFallbackSchedule('Chưa nhập đầy đủ Owner, Repo và Token GitHub.');
+        // NEW: Chuyển sang tab Vòng Bảng sau khi fallback
+        switchTab('matches');
     }
     
     startAutoSave(); 
@@ -723,7 +751,7 @@ function renderOverview() {
 // --- Vòng Bảng: Tạo Lịch Cố Định (Giữ nguyên logic) ---
 function parseFixedSchedule(csvContent, mixedTeams, maleTeams) {
     const allMatches = [];
-    const rows = csvContent.trim().split('\r\n');
+    const rows = csvContent.trim().split('\n');
     
     // Bỏ qua dòng tiêu đề đầu tiên
     const dataRows = rows.slice(1); 
@@ -900,7 +928,7 @@ function autoFillScores() {
 }
 
 
-// --- Vòng Bảng: Hiển thị và Cập nhật Tỉ số (Cập nhật renderMatches) ---
+// --- Vòng Bảng: Hiển thị và Cập nhật Tỉ số (Giữ nguyên) ---
 function renderMatches(){
   // NEW: Display the source status
   const statusDiv = document.getElementById('scheduleSourceStatus');
@@ -1167,6 +1195,7 @@ function handleFileSelect(event) {
             
             showModal('Thành công', `Đã import thành công ${matchesA.length} trận Bảng A và ${matchesB.length} trận Bảng B.`);
             event.target.value = null; // Reset input file
+            switchTab('matches'); // Chuyển tab sau khi import
         } catch (error) {
             showModal('Lỗi Import', `Không thể đọc file: ${error.message}. Vui lòng kiểm tra định dạng CSV.`);
         }
