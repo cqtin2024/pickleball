@@ -266,7 +266,7 @@ function b64DecodeUnicode(str) {
   }).join(''));
 }
 
-// --- GitHub API Functions (Giữ nguyên fetchCSVContent) ---
+// --- GitHub API Functions ---
 
 // Hàm chung để lấy nội dung file bất kỳ từ GitHub
 async function fetchCSVContent(cfg, filePath) {
@@ -284,7 +284,7 @@ async function fetchCSVContent(cfg, filePath) {
             const data = await response.json();
             return b64DecodeUnicode(data.content);
         } else if (response.status === 404) {
-            return null; // File not found
+            return null; // File not found (let the caller decide to throw/fallback)
         } else {
             throw new Error(`Lỗi HTTP: ${response.status} - ${response.statusText}`);
         }
@@ -368,53 +368,51 @@ function mergeScores(currentMatches, savedMatches) {
 
 async function loadFromGitHub() {
     const cfg = state.config;
-    if (!cfg.owner || !cfg.repo || !cfg.token) return;
+    // Không cần kiểm tra cfg ở đây vì window.onload đã kiểm tra và gọi loadInitialSchedule trước
+    
+    updateStatus('configStatus', 'info', 'Đang tải dữ liệu trạng thái (tỉ số đã lưu) từ GitHub...');
+    const result = await fetchFileSha(cfg);
+    
+    if (result.content) {
+        const jsonString = b64DecodeUnicode(result.content);
+        const loadedState = JSON.parse(jsonString);
 
-    try {
-        updateStatus('configStatus', 'info', 'Đang tải dữ liệu trạng thái (tỉ số đã lưu) từ GitHub...');
-        const result = await fetchFileSha(cfg);
+        // Hợp nhất tỉ số từ state.json vào lịch đã tải từ CalendarRound.csv
+        if (loadedState.matchesA && loadedState.matchesA.length > 0) {
+            state.matchesA = mergeScores(state.matchesA, loadedState.matchesA);
+        }
+        if (loadedState.matchesB && loadedState.matchesB.length > 0) {
+            state.matchesB = mergeScores(state.matchesB, loadedState.matchesB);
+        }
         
-        if (result.content) {
-            const jsonString = b64DecodeUnicode(result.content);
-            const loadedState = JSON.parse(jsonString);
-
-            // [ĐIỀU CHỈNH LỚN]: Hợp nhất tỉ số từ state.json vào lịch đã tải từ CSV
-            if (loadedState.matchesA && loadedState.matchesA.length > 0) {
-                state.matchesA = mergeScores(state.matchesA, loadedState.matchesA);
-            }
-            if (loadedState.matchesB && loadedState.matchesB.length > 0) {
-                state.matchesB = mergeScores(state.matchesB, loadedState.matchesB);
-            }
-            
-            // Cập nhật Vòng Chung Kết và các trạng thái khác (Giữ nguyên)
-            const loadedSemifinals = loadedState.semifinals;
-            if (loadedSemifinals && loadedSemifinals.length === 2 && 
-                loadedSemifinals[0].teamA !== 'Nhất A' && loadedSemifinals[0].teamB !== 'Nhất B' ||
-                loadedSemifinals[1].teamA !== 'Nhì B' && loadedSemifinals[1].teamB !== 'Nhì A'
-            ) {
-            } else {
-                state.semifinals = loadedSemifinals || state.semifinals;
-            }
-
-            state.final = loadedState.final || state.final;
-            
-            renderMatches();
-            tinhVaCapNhatXepHang();
-            renderFinals();
-            renderFinalResults();
-            renderOverview();
-            
-            updateStatus('configStatus', 'success', `Tải dữ liệu thành công từ: ${cfg.owner}/${cfg.repo}/${cfg.folder}/${cfg.file}. Tỉ số đã được hợp nhất.`);
-            document.getElementById('lastSaved').textContent = `Lần tải: ${new Date().toLocaleTimeString('vi-VN')}`;
-        } else {
-            updateStatus('configStatus', 'warning', 'File dữ liệu chưa tồn tại trên GitHub. Vui lòng nhấn Lưu hoặc Tự động lưu để tạo file.');
+        // Cập nhật Vòng Chung Kết và các trạng thái khác (Giữ nguyên)
+        const loadedSemifinals = loadedState.semifinals;
+        if (loadedSemifinals && loadedSemifinals.length === 2 && 
+            (loadedSemifinals[0].teamA !== 'Nhất A' || loadedSemifinals[0].teamB !== 'Nhất B') &&
+            (loadedSemifinals[1].teamA !== 'Nhì B' || loadedSemifinals[1].teamB !== 'Nhì A')
+        ) {
+            state.semifinals = loadedSemifinals || state.semifinals;
         }
 
-        startAutoSave();
-
-    } catch (error) {
-        updateStatus('configStatus', 'danger', `Lỗi tải dữ liệu: ${error.message}. Vui lòng kiểm tra lại Token/Repo.`);
-        console.error("Lỗi khi tải dữ liệu từ GitHub:", error);
+        state.final = loadedState.final || state.final;
+        
+        renderMatches();
+        tinhVaCapNhatXepHang();
+        renderFinals();
+        renderFinalResults();
+        renderOverview();
+        
+        updateStatus('configStatus', 'success', `Tải dữ liệu thành công từ: ${cfg.owner}/${cfg.repo}/${cfg.folder}/${cfg.file}. Tỉ số đã được hợp nhất.`);
+        document.getElementById('lastSaved').textContent = `Lần tải: ${new Date().toLocaleTimeString('vi-VN')}`;
+        
+    } else {
+        // Trường hợp file state.json chưa tồn tại (404), vẫn giữ lịch đã tải từ CSV và thông báo
+        renderMatches();
+        tinhVaCapNhatXepHang();
+        renderFinals();
+        renderFinalResults();
+        renderOverview();
+        updateStatus('configStatus', 'warning', 'Tải lịch thành công (từ CalendarRound.csv) nhưng file tỉ số (state.json) chưa tồn tại trên GitHub. Vui lòng nhấn Lưu hoặc Tự động lưu để tạo file.');
     }
 }
 
@@ -473,7 +471,6 @@ async function saveToGitHub() {
 }
 
 async function checkConnection() {
-    // (Logic check connection Giữ nguyên)
     const cfg = state.config;
     if (!cfg.owner || !cfg.repo || !cfg.token) {
         updateStatus('configStatus', 'warning', 'Vui lòng nhập đầy đủ Owner, Repo và Token.');
@@ -498,26 +495,28 @@ async function checkConnection() {
         updateStatus('configStatus', 'success', 'Kết nối GitHub thành công! Đang tải dữ liệu...');
         
         // 1. Tải lịch CSV trước (để có cấu trúc lịch mới nhất)
-        await loadInitialSchedule();
+        await loadInitialSchedule(cfg);
         
         // 2. Tải state.json (để hợp nhất tỉ số)
         await loadFromGitHub();
 
     } catch (error) {
-        updateStatus('configStatus', 'danger', `Kiểm tra kết nối thất bại: ${error.message}.`);
+        updateStatus('configStatus', 'danger', `Kiểm tra kết nối thất bại: ${error.message}. Vui lòng kiểm tra lại Token/Repo.`);
         console.error("Lỗi kiểm tra kết nối:", error);
+        // Thêm logic fallback nếu checkConnection bị lỗi
+        loadFallbackSchedule(error.message);
     }
 }
 
 // --- Logic tự động tải lịch Vòng Bảng từ CSV ---
 const CSV_SCHEDULE_PATH = 'data/CalendarRound.csv';
 
-async function loadInitialSchedule() {
-    const cfg = state.config;
-    if (!cfg.owner || !cfg.repo || !cfg.token) {
-        return;
-    }
-
+/**
+ * Tải cấu trúc lịch từ CalendarRound.csv trên GitHub.
+ * @param {object} cfg Cấu hình GitHub.
+ * @throws {Error} Nếu không thể tải hoặc file rỗng/không hợp lệ.
+ */
+async function loadInitialSchedule(cfg) {
     try {
         console.log(`Đang cố tải lịch từ ${CSV_SCHEDULE_PATH}...`);
         const csvContent = await fetchCSVContent(cfg, CSV_SCHEDULE_PATH);
@@ -526,25 +525,61 @@ async function loadInitialSchedule() {
             const { matchesA, matchesB } = parseScheduleCSV(csvContent);
             
             if (matchesA.length > 0 || matchesB.length > 0) {
-                // [ĐIỀU CHỈNH LỚN]: LUÔN CẬP NHẬT cấu trúc lịch từ CSV.
-                // Tỉ số (scoreA/scoreB) sẽ là null nếu không có trong CSV.
-                // Bước loadFromGitHub sẽ hợp nhất tỉ số đã lưu vào đây.
+                // LUÔN CẬP NHẬT cấu trúc lịch từ CSV. Tỉ số sẽ được hợp nhất sau.
                 state.matchesA = matchesA;
                 state.matchesB = matchesB;
                 console.log(`Tải lịch vòng đấu bảng từ ${CSV_SCHEDULE_PATH} thành công. (${matchesA.length + matchesB.length} trận).`);
+                return; 
             } else {
-                console.warn(`File ${CSV_SCHEDULE_PATH} rỗng hoặc không có trận đấu hợp lệ. Bỏ qua.`);
+                throw new Error(`File ${CSV_SCHEDULE_PATH} rỗng hoặc không có trận đấu hợp lệ.`);
             }
         } else {
-            console.warn(`Không tìm thấy file ${CSV_SCHEDULE_PATH} hoặc không thể tải.`);
+            // fetchCSVContent trả về null khi 404
+            throw new Error(`Không tìm thấy file ${CSV_SCHEDULE_PATH} (404 Not Found) trên GitHub.`);
         }
     } catch (error) {
-        console.error("Lỗi khi tải lịch CSV tự động:", error);
+        // Re-throw để window.onload bắt và gọi fallback
+        throw error; 
     }
 }
 
+/**
+ * Load lịch cố định từ mã nguồn và render, kèm thông báo lỗi.
+ * @param {string} reason Lý do thất bại (để hiển thị trong modal).
+ */
+function loadFallbackSchedule(reason) {
+    const csvData = parseFixedSchedule(FIXED_SCHEDULE_CSV, state.mixedTeams, state.maleTeams);
+    
+    // Cập nhật state với lịch cố định
+    state.matchesA = csvData.matchesA;
+    state.matchesB = csvData.matchesB;
+    
+    // Reset tỉ số và lịch vòng chung kết về trạng thái ban đầu để tránh dữ liệu cũ không đồng bộ
+    state.semifinals.forEach(sf => {
+        sf.scoreA = null; sf.scoreB = null; sf.winner = null; sf.loser = null;
+    });
+    state.final.scoreA = null;
+    state.final.scoreB = null;
+    state.final.winner = null;
+    state.final.loser = null;
+    state.final.teamA = 'Thắng SF1';
+    state.final.teamB = 'Thắng SF2';
 
-// --- Cấu hình & Khởi tạo (Giữ nguyên) ---
+    // Render UI
+    renderMatches();
+    tinhVaCapNhatXepHang();
+    renderFinals();
+    renderFinalResults();
+    renderOverview();
+    stateChanged = false; // Coi như trạng thái ban đầu, chưa có thay đổi
+
+    // Hiển thị thông báo
+    const msg = reason ? `Do lỗi: ${reason}.` : 'Do chưa nhập cấu hình GitHub Token.';
+    showModal('Lỗi Tải Dữ Liệu/Không Kết nối', `Không thể tải lịch thi đấu từ GitHub. Đã hiển thị lịch **Cố định** lưu trong mã nguồn. ${msg}`);
+}
+
+
+// --- Cấu hình & Khởi tạo (Cập nhật logic tải) ---
 function loadConfig() {
     const savedConfig = localStorage.getItem('pkb_config');
     if (savedConfig) {
@@ -590,25 +625,29 @@ function startAutoSave() {
     }
 }
 
-// [CẬP NHẬT] window.onload để chạy loadInitialSchedule
+// [ĐIỀU CHỈNH LỚN] window.onload để chạy loadInitialSchedule
 window.onload = async function() {
     loadConfig();
     
-    if (state.config.token) {
-        // 1. Tải lịch CSV tự động trước (để có cấu trúc lịch mới nhất)
-        await loadInitialSchedule(); 
-        
-        // 2. Tải state.json (để hợp nhất tỉ số)
-        await loadFromGitHub(); 
+    if (state.config.token && state.config.owner && state.config.repo) {
+        try {
+            // 1. Tải lịch CSV từ GitHub (CalendarRound.csv). Nếu thất bại, chuyển sang catch.
+            await loadInitialSchedule(state.config); 
+            
+            // 2. Tải state.json và hợp nhất tỉ số. Nếu thất bại, chuyển sang catch.
+            await loadFromGitHub(); 
+            
+        } catch (error) {
+            console.error('Lỗi nghiêm trọng khi đồng bộ GitHub, chuyển sang lịch Cố định:', error);
+            // Fallback nếu loadInitialSchedule hoặc loadFromGitHub thất bại.
+            loadFallbackSchedule(error.message); 
+        }
     } else {
-        // Tải config nhưng không có token, vẫn render local state (mặc định là rỗng)
-        renderMatches();
-        tinhVaCapNhatXepHang();
-        renderFinals();
-        renderFinalResults();
-        renderOverview(); 
-        startAutoSave(); 
+        // Không có Token hoặc Config, tải lịch Cố định và thông báo.
+        loadFallbackSchedule('Chưa nhập đầy đủ Owner, Repo và Token GitHub.');
     }
+    
+    startAutoSave(); 
 };
 
 // --- Tab Tổng quan (Giữ nguyên) ---
