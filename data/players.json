@@ -17,213 +17,213 @@
   ],
   "matchesA": [
     {
-      "teamA": "Hạnh/Tiến",
+      "teamA": "Huyền/Luân",
+      "teamB": "Linh/M.Hùng",
+      "time": "14:00",
+      "court": "Sân7",
+      "bang": "A",
+      "scoreA": null,
+      "scoreB": null
+    },
+    {
+      "teamA": "Giang/Long",
       "teamB": "Hường/Đạt",
       "time": "14:00",
       "court": "Sân 2",
       "bang": "A",
-      "scoreA": 7,
-      "scoreB": 11
+      "scoreA": null,
+      "scoreB": null
+    },
+    {
+      "teamA": "Hậu/Dũng",
+      "teamB": "Hạnh/Tiến",
+      "time": "14:00",
+      "court": "Sân 3",
+      "bang": "A",
+      "scoreA": null,
+      "scoreB": null
+    },
+    {
+      "teamA": "Giang/Long",
+      "teamB": "Huyền/Luân",
+      "time": "14:15",
+      "court": "Sân7",
+      "bang": "A",
+      "scoreA": null,
+      "scoreB": null
+    },
+    {
+      "teamA": "Hậu/Dũng",
+      "teamB": "Hường/Đạt",
+      "time": "14:15",
+      "court": "Sân 3",
+      "bang": "A",
+      "scoreA": null,
+      "scoreB": null
+    },
+    {
+      "teamA": "Hạnh/Tiến",
+      "teamB": "Linh/M.Hùng",
+      "time": "14:30",
+      "court": "Sân 3",
+      "bang": "A",
+      "scoreA": null,
+      "scoreB": null
+    },
+    {
+      "teamA": "Hậu/Dũng",
+      "teamB": "Linh/M.Hùng",
+      "time": "14:45",
+      "court": "Sân7",
+      "bang": "A",
+      "scoreA": null,
+      "scoreB": null
+    },
+    {
+      "teamA": "Huyền/Luân",
+      "teamB": "Hường/Đạt",
+      "time": "14:45",
+      "court": "Sân 2",
+      "bang": "A",
+      "scoreA": null,
+      "scoreB": null
+    },
+    {
+      "teamA": "Hạnh/Tiến",
+      "teamB": "Giang/Long",
+      "time": "14:45",
+      "court": "Sân 3",
+      "bang": "A",
+      "scoreA": null,
+      "scoreB": null
+    },
+    {
+      "teamA": "Giang/Long",
+      "teamB": "Linh/M.Hùng",
+      "time": "15:15",
+      "court": "Sân 3",
+      "bang": "A",
+      "scoreA": null,
+      "scoreB": null
+    },
+    {
+      "teamA": "Hạnh/Tiến",
+      "teamB": "Hường/Đạt",
+      "time": "15:30",
+      "court": "Sân 2",
+      "bang": "A",
+      "scoreA": null,
+      "scoreB": null
+    },
+    {
+      "teamA": "Hậu/Dũng",
+      "teamB": "Huyền/Luân",
+      "time": "15:30",
+      "court": "Sân 3",
+      "bang": "A",
+      "scoreA": null,
+      "scoreB": null
     },
     {
       "teamA": "Hậu/Dũng",
       "teamB": "Giang/Long",
-      "time": "14:00",
+      "time": "16:00",
       "court": "Sân 3",
       "bang": "A",
-      "scoreA": 11,
-      "scoreB": 9
-    },
-    {
-      "teamA": "Huyền/Luân",
-      "teamB": "Linh/M.Hùng",
-      "time": "14:00",
-      "court": "Sân 7",
-      "bang": "A",
-      "scoreA": 1,
-      "scoreB": 11
-    },
-    {
-      "teamA": "Hậu/Dũng",
-      "teamB": "Hường/Đạt",
-      "time": "14:15",
-      "court": "Sân 3",
-      "bang": "A",
-      "scoreA": 11,
-      "scoreB": 2
+      "scoreA": null,
+      "scoreB": null
     },
     {
       "teamA": "Hạnh/Tiến",
       "teamB": "Huyền/Luân",
-      "time": "14:15",
-      "court": "Sân 7",
-      "bang": "A",
-      "scoreA": 2,
-      "scoreB": 11
-    },
-    {
-      "teamA": "Giang/Long",
-      "teamB": "Linh/M.Hùng",
-      "time": "14:30",
-      "court": "Sân 3",
-      "bang": "A",
-      "scoreA": 2,
-      "scoreB": 11
-    },
-    {
-      "teamA": "Giang/Long",
-      "teamB": "Hạnh/Tiến",
-      "time": "14:45",
+      "time": "16:15",
       "court": "Sân 2",
       "bang": "A",
-      "scoreA": 11,
-      "scoreB": 0
-    },
-    {
-      "teamA": "Huyền/Luân",
-      "teamB": "Hường/Đạt",
-      "time": "14:45",
-      "court": "Sân 3",
-      "bang": "A",
-      "scoreA": 7,
-      "scoreB": 11
-    },
-    {
-      "teamA": "Hậu/Dũng",
-      "teamB": "Linh/M.Hùng",
-      "time": "14:45",
-      "court": "Sân 7",
-      "bang": "A",
-      "scoreA": 11,
-      "scoreB": 4
-    },
-    {
-      "teamA": "Hạnh/Tiến",
-      "teamB": "Linh/M.Hùng",
-      "time": "15:15",
-      "court": "Sân 3",
-      "bang": "A",
-      "scoreA": 10,
-      "scoreB": 11
-    },
-    {
-      "teamA": "Hậu/Dũng",
-      "teamB": "Huyền/Luân",
-      "time": "15:15",
-      "court": "Sân 7",
-      "bang": "A",
-      "scoreA": 11,
-      "scoreB": 7
-    },
-    {
-      "teamA": "Giang/Long",
-      "teamB": "Hường/Đạt",
-      "time": "15:30",
-      "court": "Sân 3",
-      "bang": "A",
-      "scoreA": 0,
-      "scoreB": 11
-    },
-    {
-      "teamA": "Hậu/Dũng",
-      "teamB": "Hạnh/Tiến",
-      "time": "15:45",
-      "court": "Sân 7",
-      "bang": "A",
-      "scoreA": 11,
-      "scoreB": 10
+      "scoreA": null,
+      "scoreB": null
     },
     {
       "teamA": "Linh/M.Hùng",
       "teamB": "Hường/Đạt",
-      "time": "16:00",
-      "court": "Sân 3",
-      "bang": "A",
-      "scoreA": 2,
-      "scoreB": 11
-    },
-    {
-      "teamA": "Giang/Long",
-      "teamB": "Huyền/Luân",
       "time": "16:15",
       "court": "Sân 3",
       "bang": "A",
-      "scoreA": 11,
-      "scoreB": 2
+      "scoreA": null,
+      "scoreB": null
     }
   ],
   "matchesB": [
     {
-      "teamA": "Tiệp/Thủy",
-      "teamB": "Phương/Thanh",
+      "teamA": "Triều/Minh",
+      "teamB": "Hiển/P.Hùng",
       "time": "14:00",
       "court": "Sân 1",
       "bang": "B",
-      "scoreA": 11,
-      "scoreB": 1
+      "scoreA": null,
+      "scoreB": null
     },
     {
-      "teamA": "Triều/Minh",
-      "teamB": "Ánh/Toàn",
+      "teamA": "Tiệp/Thủy",
+      "teamB": "Phương/Thanh",
       "time": "14:15",
       "court": "Sân 1",
       "bang": "B",
-      "scoreA": 3,
-      "scoreB": 11
+      "scoreA": null,
+      "scoreB": null
     },
     {
-      "teamA": "Hiển/P.Hùng",
-      "teamB": "Tín/Khiêm",
+      "teamA": "Tín/Khiêm",
+      "teamB": "Ánh/Toàn",
       "time": "14:15",
       "court": "Sân 2",
       "bang": "B",
-      "scoreA": 11,
-      "scoreB": 1
+      "scoreA": null,
+      "scoreB": null
     },
     {
       "teamA": "Phương/Thanh",
+      "teamB": "Ánh/Toàn",
+      "time": "14:30",
+      "court": "Sân7",
+      "bang": "B",
+      "scoreA": null,
+      "scoreB": null
+    },
+    {
+      "teamA": "Triều/Minh",
       "teamB": "Tín/Khiêm",
       "time": "14:30",
       "court": "Sân 1",
       "bang": "B",
-      "scoreA": 11,
-      "scoreB": 8
+      "scoreA": null,
+      "scoreB": null
     },
     {
-      "teamA": "Triều/Minh",
+      "teamA": "Tiệp/Thủy",
       "teamB": "Hiển/P.Hùng",
       "time": "14:30",
       "court": "Sân 2",
       "bang": "B",
-      "scoreA": 11,
-      "scoreB": 3
+      "scoreA": null,
+      "scoreB": null
     },
     {
       "teamA": "Tiệp/Thủy",
       "teamB": "Ánh/Toàn",
-      "time": "14:30",
-      "court": "Sân 7",
+      "time": "15:00",
+      "court": "Sân 2",
       "bang": "B",
-      "scoreA": 11,
-      "scoreB": 8
+      "scoreA": null,
+      "scoreB": null
     },
     {
-      "teamA": "Hiển/P.Hùng",
-      "teamB": "Ánh/Toàn",
+      "teamA": "Tín/Khiêm",
+      "teamB": "Hiển/P.Hùng",
       "time": "15:00",
       "court": "Sân 3",
       "bang": "B",
-      "scoreA": 11,
-      "scoreB": 7
-    },
-    {
-      "teamA": "Tiệp/Thủy",
-      "teamB": "Tín/Khiêm",
-      "time": "15:00",
-      "court": "Sân 7",
-      "bang": "B",
-      "scoreA": 6,
-      "scoreB": 11
+      "scoreA": null,
+      "scoreB": null
     },
     {
       "teamA": "Phương/Thanh",
@@ -231,181 +231,193 @@
       "time": "15:15",
       "court": "Sân 2",
       "bang": "B",
-      "scoreA": 11,
-      "scoreB": 2
-    },
-    {
-      "teamA": "Phương/Thanh",
-      "teamB": "Ánh/Toàn",
-      "time": "15:45",
-      "court": "Sân 3",
-      "bang": "B",
-      "scoreA": 11,
-      "scoreB": 4
+      "scoreA": null,
+      "scoreB": null
     },
     {
       "teamA": "Tiệp/Thủy",
-      "teamB": "Hiển/P.Hùng",
+      "teamB": "Tín/Khiêm",
       "time": "15:45",
       "court": "Sân 2",
       "bang": "B",
-      "scoreA": 8,
-      "scoreB": 11
-    },
-    {
-      "teamA": "Triều/Minh",
-      "teamB": "Tín/Khiêm",
-      "time": "16:00",
-      "court": "Sân 7",
-      "bang": "B",
-      "scoreA": 11,
-      "scoreB": 6
+      "scoreA": null,
+      "scoreB": null
     },
     {
       "teamA": "Phương/Thanh",
       "teamB": "Hiển/P.Hùng",
-      "time": "16:30",
+      "time": "15:45",
       "court": "Sân 3",
       "bang": "B",
-      "scoreA": 11,
-      "scoreB": 0
+      "scoreA": null,
+      "scoreB": null
     },
     {
-      "teamA": "Tín/Khiêm",
+      "teamA": "Triều/Minh",
       "teamB": "Ánh/Toàn",
-      "time": "16:30",
-      "court": "Sân 7",
+      "time": "16:00",
+      "court": "Sân 2",
       "bang": "B",
-      "scoreA": 11,
-      "scoreB": 3
+      "scoreA": null,
+      "scoreB": null
     },
     {
       "teamA": "Tiệp/Thủy",
       "teamB": "Triều/Minh",
-      "time": "16:45",
-      "court": "Sân 7",
+      "time": "16:30",
+      "court": "Sân 2",
       "bang": "B",
-      "scoreA": 9,
-      "scoreB": 11
+      "scoreA": null,
+      "scoreB": null
+    },
+    {
+      "teamA": "Ánh/Toàn",
+      "teamB": "Hiển/P.Hùng",
+      "time": "16:30",
+      "court": "Sân 3",
+      "bang": "B",
+      "scoreA": null,
+      "scoreB": null
+    },
+    {
+      "teamA": "Phương/Thanh",
+      "teamB": "Tín/Khiêm",
+      "time": "16:45",
+      "court": "Sân 2",
+      "bang": "B",
+      "scoreA": null,
+      "scoreB": null
     }
   ],
   "tableA": [
     {
-      "team": "Hậu/Dũng",
-      "wins": 5,
-      "losses": 0,
-      "pointsW": 55,
-      "pointsL": 32,
-      "diff": 23,
-      "points": 10
-    },
-    {
-      "team": "Hường/Đạt",
-      "wins": 4,
-      "losses": 1,
-      "pointsW": 46,
-      "pointsL": 27,
-      "diff": 19,
-      "points": 8
-    },
-    {
-      "team": "Linh/M.Hùng",
-      "wins": 3,
-      "losses": 2,
-      "pointsW": 39,
-      "pointsL": 35,
-      "diff": 4,
-      "points": 6
-    },
-    {
       "team": "Giang/Long",
-      "wins": 2,
-      "losses": 3,
-      "pointsW": 33,
-      "pointsL": 35,
-      "diff": -2,
-      "points": 4
-    },
-    {
-      "team": "Huyền/Luân",
-      "wins": 1,
-      "losses": 4,
-      "pointsW": 28,
-      "pointsL": 46,
-      "diff": -18,
-      "points": 2
+      "wins": 0,
+      "losses": 0,
+      "pointsW": 0,
+      "pointsL": 0,
+      "bang": "A",
+      "diff": 0,
+      "points": 0
     },
     {
       "team": "Hạnh/Tiến",
       "wins": 0,
-      "losses": 5,
-      "pointsW": 29,
-      "pointsL": 55,
-      "diff": -26,
+      "losses": 0,
+      "pointsW": 0,
+      "pointsL": 0,
+      "bang": "A",
+      "diff": 0,
+      "points": 0
+    },
+    {
+      "team": "Hậu/Dũng",
+      "wins": 0,
+      "losses": 0,
+      "pointsW": 0,
+      "pointsL": 0,
+      "bang": "A",
+      "diff": 0,
+      "points": 0
+    },
+    {
+      "team": "Hường/Đạt",
+      "wins": 0,
+      "losses": 0,
+      "pointsW": 0,
+      "pointsL": 0,
+      "bang": "A",
+      "diff": 0,
+      "points": 0
+    },
+    {
+      "team": "Huyền/Luân",
+      "wins": 0,
+      "losses": 0,
+      "pointsW": 0,
+      "pointsL": 0,
+      "bang": "A",
+      "diff": 0,
+      "points": 0
+    },
+    {
+      "team": "Linh/M.Hùng",
+      "wins": 0,
+      "losses": 0,
+      "pointsW": 0,
+      "pointsL": 0,
+      "bang": "A",
+      "diff": 0,
       "points": 0
     }
   ],
   "tableB": [
     {
-      "team": "Phương/Thanh",
-      "wins": 4,
-      "losses": 1,
-      "pointsW": 45,
-      "pointsL": 25,
-      "diff": 20,
-      "points": 8
-    },
-    {
-      "team": "Triều/Minh",
-      "wins": 3,
-      "losses": 2,
-      "pointsW": 38,
-      "pointsL": 40,
-      "diff": -2,
-      "points": 6
+      "team": "Ánh/Toàn",
+      "wins": 0,
+      "losses": 0,
+      "pointsW": 0,
+      "pointsL": 0,
+      "bang": "B",
+      "diff": 0,
+      "points": 0
     },
     {
       "team": "Hiển/P.Hùng",
-      "wins": 3,
-      "losses": 2,
-      "pointsW": 36,
-      "pointsL": 38,
-      "diff": -2,
-      "points": 6
+      "wins": 0,
+      "losses": 0,
+      "pointsW": 0,
+      "pointsL": 0,
+      "bang": "B",
+      "diff": 0,
+      "points": 0
+    },
+    {
+      "team": "Phương/Thanh",
+      "wins": 0,
+      "losses": 0,
+      "pointsW": 0,
+      "pointsL": 0,
+      "bang": "B",
+      "diff": 0,
+      "points": 0
     },
     {
       "team": "Tiệp/Thủy",
-      "wins": 2,
-      "losses": 3,
-      "pointsW": 45,
-      "pointsL": 42,
-      "diff": 3,
-      "points": 4
+      "wins": 0,
+      "losses": 0,
+      "pointsW": 0,
+      "pointsL": 0,
+      "bang": "B",
+      "diff": 0,
+      "points": 0
     },
     {
       "team": "Tín/Khiêm",
-      "wins": 2,
-      "losses": 3,
-      "pointsW": 37,
-      "pointsL": 42,
-      "diff": -5,
-      "points": 4
+      "wins": 0,
+      "losses": 0,
+      "pointsW": 0,
+      "pointsL": 0,
+      "bang": "B",
+      "diff": 0,
+      "points": 0
     },
     {
-      "team": "Ánh/Toàn",
-      "wins": 1,
-      "losses": 4,
-      "pointsW": 33,
-      "pointsL": 47,
-      "diff": -14,
-      "points": 2
+      "team": "Triều/Minh",
+      "wins": 0,
+      "losses": 0,
+      "pointsW": 0,
+      "pointsL": 0,
+      "bang": "B",
+      "diff": 0,
+      "points": 0
     }
   ],
   "semifinals": [
     {
       "id": "SF1",
-      "teamA": "Hậu/Dũng",
-      "teamB": "Phương/Thanh",
+      "teamA": "Giang/Long",
+      "teamB": "Ánh/Toàn",
       "scoreA": null,
       "scoreB": null,
       "time": "16:30",
@@ -415,8 +427,8 @@
     },
     {
       "id": "SF2",
-      "teamA": "Triều/Minh",
-      "teamB": "Hường/Đạt",
+      "teamA": "Hiển/P.Hùng",
+      "teamB": "Hạnh/Tiến",
       "scoreA": null,
       "scoreB": null,
       "time": "16:30",
@@ -436,5 +448,12 @@
     "winner": null,
     "runnerUp": null,
     "loser": null
+  },
+  "config": {
+    "owner": "cqtin2024",
+    "repo": "pickleball",
+    "folder": "data",
+    "file": "state.json",
+    "token": "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"
   }
 }
