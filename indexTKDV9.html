@@ -70,6 +70,8 @@
     </div>
     
     <div class="tab-pane fade p-3" id="matches">
+      <div id="scheduleSourceStatus" class="alert alert-light p-2 mb-3"></div>
+
       <div class="d-flex gap-2 mb-2 flex-wrap">
         <button class="btn btn-sm btn-primary" onclick="taoLichThiDauCungGio()">Tạo lịch thi đấu Tối ưu (Tự động)</button>
         <button class="btn btn-sm btn-secondary" onclick="taoLichCoDinh()">Tạo lịch Cố định</button>
@@ -224,6 +226,7 @@ let state = {
 let stateChanged = false; // Biến cờ theo dõi thay đổi dữ liệu
 let currentSha = null; // Biến lưu trữ SHA của file trên GitHub
 let autoSaveInterval = null; // Biến lưu trữ ID của interval
+let scheduleSource = 'Chưa tải'; // NEW: Biến lưu trữ nguồn lịch thi đấu
 
 // --- Custom Modal Function (Giữ nguyên) ---
 function showModal(title, body) {
@@ -396,6 +399,9 @@ async function loadFromGitHub() {
 
         state.final = loadedState.final || state.final;
         
+        // Cập nhật nguồn lịch: Đã hợp nhất CSV và State
+        scheduleSource = 'GitHub (CSV + State.json)'; 
+
         renderMatches();
         tinhVaCapNhatXepHang();
         renderFinals();
@@ -407,6 +413,7 @@ async function loadFromGitHub() {
         
     } else {
         // Trường hợp file state.json chưa tồn tại (404), vẫn giữ lịch đã tải từ CSV và thông báo
+        // scheduleSource đã được set là 'GitHub (CalendarRound.csv)' trong loadInitialSchedule
         renderMatches();
         tinhVaCapNhatXepHang();
         renderFinals();
@@ -528,6 +535,7 @@ async function loadInitialSchedule(cfg) {
                 // LUÔN CẬP NHẬT cấu trúc lịch từ CSV. Tỉ số sẽ được hợp nhất sau.
                 state.matchesA = matchesA;
                 state.matchesB = matchesB;
+                scheduleSource = 'GitHub (CalendarRound.csv)'; // <-- NEW: Set source
                 console.log(`Tải lịch vòng đấu bảng từ ${CSV_SCHEDULE_PATH} thành công. (${matchesA.length + matchesB.length} trận).`);
                 return; 
             } else {
@@ -564,6 +572,9 @@ function loadFallbackSchedule(reason) {
     state.final.loser = null;
     state.final.teamA = 'Thắng SF1';
     state.final.teamB = 'Thắng SF2';
+
+    // NEW: Cập nhật nguồn lịch
+    scheduleSource = 'Lịch Cố Định (FIXED_SCHEDULE_CSV)'; 
 
     // Render UI
     renderMatches();
@@ -774,6 +785,7 @@ function taoLichCoDinh() {
     const csvData = parseFixedSchedule(FIXED_SCHEDULE_CSV, state.mixedTeams, state.maleTeams);
     state.matchesA = csvData.matchesA;
     state.matchesB = csvData.matchesB;
+    scheduleSource = 'Lịch Cố Định (FIXED_SCHEDULE_CSV)'; // NEW: Update source
     renderMatches();
     tinhVaCapNhatXepHang();
     renderOverview();
@@ -799,7 +811,8 @@ function taoLichThiDauCungGio(){
 
   state.matchesA = distributeMatchesSameTime(state.mixedTeams, ['Sân 2','Sân 3'], start, duration);
   state.matchesB = distributeMatchesSameTime(state.maleTeams, ['Sân 7','Sân 8'], start, duration);
-
+  
+  scheduleSource = 'Lịch Tự động (Được tạo lại)'; // NEW: Update source
   renderMatches();
   tinhVaCapNhatXepHang();
   renderOverview();
@@ -887,8 +900,24 @@ function autoFillScores() {
 }
 
 
-// --- Vòng Bảng: Hiển thị và Cập nhật Tỉ số (Giữ nguyên) ---
+// --- Vòng Bảng: Hiển thị và Cập nhật Tỉ số (Cập nhật renderMatches) ---
 function renderMatches(){
+  // NEW: Display the source status
+  const statusDiv = document.getElementById('scheduleSourceStatus');
+  if (statusDiv) {
+      statusDiv.innerHTML = `<strong>Nguồn lịch:</strong> ${scheduleSource}`;
+      statusDiv.classList.remove('alert-light', 'alert-warning', 'alert-success', 'alert-info');
+      if (scheduleSource.includes('Lịch Cố Định')) {
+          statusDiv.classList.add('alert-warning');
+      } else if (scheduleSource.includes('GitHub (CSV + State.json)')) {
+          statusDiv.classList.add('alert-success');
+      } else if (scheduleSource.includes('GitHub (CalendarRound.csv)')) {
+          statusDiv.classList.add('alert-info');
+      } else {
+          statusDiv.classList.add('alert-light');
+      }
+  }
+
   document.getElementById('tableMatchesA').innerHTML = renderMatchesTable(state.matchesA,'A');
   document.getElementById('tableMatchesB').innerHTML = renderMatchesTable(state.matchesB,'B');
 }
@@ -1128,6 +1157,8 @@ function handleFileSelect(event) {
             // Cập nhật state
             state.matchesA = matchesA;
             state.matchesB = matchesB;
+            
+            scheduleSource = 'Lịch Import (CSV)'; // NEW: Update source
 
             renderMatches();
             tinhVaCapNhatXepHang();
