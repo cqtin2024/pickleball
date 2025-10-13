@@ -70,8 +70,6 @@
     </div>
     
     <div class="tab-pane fade p-3" id="matches">
-      <div id="scheduleSourceStatus" class="alert alert-light p-2 mb-3"></div>
-
       <div class="d-flex gap-2 mb-2 flex-wrap">
         <button class="btn btn-sm btn-primary" onclick="taoLichThiDauCungGio()">Tạo lịch thi đấu Tối ưu (Tự động)</button>
         <button class="btn btn-sm btn-secondary" onclick="taoLichCoDinh()">Tạo lịch Cố định</button>
@@ -117,8 +115,8 @@
     <div class="tab-pane fade p-3" id="config">
       <p class="text-muted">Nhập thông tin kho lưu trữ GitHub để tự động lưu trữ dữ liệu giải đấu.</p>
       <div class="row g-2 mb-2">
-        <div class="col-md-3"><input id="cfgOwner" class="form-control" value="cqtin2024" placeholder="Owner (Ví dụ: user_name)"></div>
-        <div class="col-md-3"><input id="cfgRepo" class="form-control" value="pickleball" placeholder="Repo (Ví dụ: my-data-repo)"></div>
+        <div class="col-md-3"><input id="cfgOwner" class="form-control" placeholder="Owner (Ví dụ: user_name)"></div>
+        <div class="col-md-3"><input id="cfgRepo" class="form-control" placeholder="Repo (Ví dụ: my-data-repo)"></div>
         <div class="col-md-3"><input id="cfgFolder" class="form-control" value="data"></div>
         <div class="col-md-3"><input id="cfgFile" class="form-control" value="state.json"></div>
       </div>
@@ -128,6 +126,12 @@
         <button class="btn btn-success" onclick="checkConnection()">Kiểm tra & Tải Dữ liệu</button>
       </div>
       <div class="mt-2" id="configStatus"></div>
+      
+      <div class="mt-4 pt-4 border-top">
+          <h5>Quản lý Dữ liệu Tổng thể</h5>
+          <p class="text-muted">Xuất toàn bộ trạng thái giải đấu hiện tại ra file JSON để sao lưu hoặc chuyển đổi.</p>
+          <button class="btn btn-danger" onclick="exportStateToJson()">Xuất Dữ liệu Giải đấu (dataTKD.json)</button>
+      </div>
       
       <div class="card bg-light mt-4 shadow-sm">
         <div class="card-body">
@@ -166,44 +170,41 @@
 </div>
 
 <script>
-// Dữ liệu lịch cố định từ file TKDPlayers - Sheet2 (1).csv (ĐÃ CẬP NHẬT)
-const FIXED_SCHEDULE_CSV = `Giờ bắt đầu,Giờ kết thúc,Lượt trận,Sân 1,Sân 2,Sân 3,Sân 7,Thời lượng dự kiến
-2:00,2:15,1,Tiệp/Thủy - Phương/Thanh,Giang/Long - Hường/Đạt,Hậu/Dũng - Hạnh/Tiến,Huyền/Luân - Linh/M.Hùng,0:15
-2:15,2:30,2,Triều/Minh - Hiển/P.Hùng,Tín/Khiêm - Ánh/Toàn,Hậu/Dũng - Hường/Đạt,Giang/Long - Huyền/Luân,0:15
-2:30,2:45,3,Phương/Thanh - Ánh/Toàn,Triều/Minh - Tín/Khiêm,Hạnh/Tiến - Linh/M.Hùng,Triều/Minh - Hiển/P.Hùng,0:15
-2:45,3:00,4,,Hạnh/Tiến - Giang/Long,Huyền/Luân - Hường/Đạt,Hậu/Dũng - Linh/M.Hùng,0:15
-3:00,3:15,5,,Tiệp/Thủy - Ánh/Toàn,Tín/Khiêm - Hiển/M.Hùng,,0:15
-3:15,3:30,6,,Phương/Thanh - Triều/Minh,Giang/Long - Linh/M.Hùng,,0:15
-3:30,3:45,7,,Hạnh/Tiến - Hường/Đạt,Hậu/Dũng - Huyền/Luân,,0:15
-3:45,4:00,8,,Tiệp/Thủy - Tín/Khiêm,Phương/Thanh - Hiển/P.Hùng,,0:15
-4:00,4:15,9,,Triều/Minh - Ánh/Toàn,Tiệp/Thủy - Phương/Thanh,Hạnh/Tiến - Huyền/Luân,0:15
-4:15,4:30,10,,Tín/Khiêm - Phương/Thanh,Giang/Long - Hậu/Dũng,,0:15
-4:30,4:45,11,Hậu/Dũng - Hạnh/Tiến,Giang/Long - Hường/Đạt,Huyền/Luân - Linh/M.Hùng,Hậu/Dũng - Linh/M.Hùng,0:15
-4:45,5:00,12,,,,0:15
-5:00,5:15,13,Hậu/Dũng - Giang/Long,Huyền/Luân - Hạnh/Tiến,Linh/M.Hùng - Hường/Đạt,,0:15
-5:15,5:30,14,Triều/Minh - Tiệp/Thủy,Ánh/Toàn - Hiển/P.Hùng,Phương/Thanh - Tín/Khiêm,,0:15
-5:30,5:45,15,Hậu/Dũng - Huyền/Luân,Giang/Long - Linh/M.Hùng,Hạnh/Tiến - Hường/Đạt,,0:15
-5:45,6:00,16,,,,0:15
-6:00,6:15,17,Huyền/Luân - Giang/Long,Hậu/Dũng - Hường/Đạt,Hạnh/Tiến - Linh/M.Hùng,,0:15
-6:15,6:30,18,Tiệp/Thủy - Hiển/P.Hùng,Phương/Thanh - Ánh/Toàn,Triều/Minh - Tín/Khiêm,,0:15
-6:30,6:45,19,Hậu/Dũng - Hạnh/Tiến,Giang/Long - Hường/Đạt,Huyền/Luân - Linh/M.Hùng,Tiệp/Thủy - Phương/Thanh,0:15
-6:45,7:00,20,Triều/Minh - Hiển/P.Hùng,Tín/Khiêm - Ánh/Toàn,Hậu/Dũng - Hường/Đạt,Giang/Long - Huyền/Luân,0:15
-7:00,7:15,21,Phương/Thanh - Ánh/Toàn,Triều/Minh - Tín/Khiêm,Hạnh/Tiến - Linh/M.Hùng,Tiệp/Thủy - Hiển/P.Hùng,0:15
-7:15,7:30,22,,Hạnh/Tiến - Giang/Long,Huyền/Luân - Hường/Đạt,Hậu/Dũng - Linh/M.Hùng,0:15
-7:30,7:45,23,,Tiệp/Thủy - Ánh/Toàn,Tín/Khiêm - Hiển/P.Hùng,,0:15
-7:45,8:00,24,,Phương/Thanh - Triều/Minh,Giang/Long - Linh/M.Hùng,,0:15
-8:00,8:15,25,,Hạnh/Tiến - Hường/Đạt,Hậu/Dũng - Huyền/Luân,,0:15
-8:15,8:30,26,,Tiệp/Thủy - Tín/Khiêm,Phương/Thanh - Hiển/P.Hùng,,0:15
-8:30,8:45,27,,Triều/Minh - Ánh/Toàn,Tiệp/Thủy - Phương/Thanh,Hạnh/Tiến - Huyền/Luân,0:15
-8:45,9:00,28,,Tín/Khiêm - Phương/Thanh,Giang/Long - Hậu/Dũng,,0:15
-9:00,9:15,29,Hậu/Dũng - Hạnh/Tiến,Giang/Long - Hường/Đạt,Huyền/Luân - Linh/M.Hùng,Hậu/Dũng - Linh/M.Hùng,0:15
-9:15,9:30,30,,,,0:15
-9:30,9:45,31,Hậu/Dũng - Giang/Long,Huyền/Luân - Hạnh/Tiến,Linh/M.Hùng - Hường/Đạt,,0:15
-9:45,10:00,32,Triều/Minh - Tiệp/Thủy,Ánh/Toàn - Hiển/P.Hùng,Phương/Thanh - Tín/Khiêm,,0:15
-10:00,10:15,33,Hậu/Dũng - Huyền/Luân,Giang/Long - Linh/M.Hùng,Hạnh/Tiến - Hường/Đạt,,0:15
-10:15,10:30,34,,,,0:15
-10:30,10:45,35,Huyền/Luân - Giang/Long,Hậu/Dũng - Hường/Đạt,Hạnh/Tiến - Linh/M.Hùng,,0:15
-10:45,11:00,36,Tiệp/Thủy - Hiển/P.Hùng,Phương/Thanh - Ánh/Toàn,Triều/Minh - Tín/Khiêm,,0:15`;
+// Dữ liệu lịch cố định từ file CSV mới (ĐÃ CẬP NHẬT)
+const FIXED_SCHEDULE_CSV = `Bảng,Giờ,Sân,Đội A,Đội B,Tỉ số A,Tỉ số B,Mã Đội A,Mã Đội B,Lượt trận
+A,14:00,Sân7,Huyền/Luân,Linh/M.Hùng,,,A4,A5,1
+A,14:00,Sân 2,Giang/Long,Hường/Đạt,,,A3,A6,1
+A,14:00,Sân 3,Hậu/Dũng,Hạnh/Tiến,,,A1,A2,1
+A,14:15,Sân7,Giang/Long,Huyền/Luân,,,A3,A4,2
+A,14:15,Sân 3,Hậu/Dũng,Hường/Đạt,,,A1,A6,2
+A,14:30,Sân 3,Hạnh/Tiến,Linh/M.Hùng,,,A2,A5,3
+A,14:45,Sân7,Hậu/Dũng,Linh/M.Hùng,,,A1,A5,4
+A,14:45,Sân 2,Huyền/Luân,Hường/Đạt,,,A4,A6,4
+A,14:45,Sân 3,Hạnh/Tiến,Giang/Long,,,A2,A3,4
+A,15:15,Sân 3,Giang/Long,Linh/M.Hùng,,,A3,A5,6
+A,15:30,Sân 2,Hạnh/Tiến,Hường/Đạt,,,A2,A6,6
+A,15:30,Sân 3,Hậu/Dũng,Huyền/Luân,,,A1,A4,7
+A,16:00,Sân 3,Hậu/Dũng,Giang/Long,,,A1,A3,9
+A,16:15,Sân 2,Hạnh/Tiến,Huyền/Luân,,,A2,A4,10
+A,16:15,Sân 3,Linh/M.Hùng,Hường/Đạt,,,A5,A6,10
+B,14:00,Sân 1,Triều/Minh,Hiển/P.Hùng,,,B3,B6,1
+B,14:15,Sân 1,Tiệp/Thủy,Phương/Thanh,,,B1,B2,2
+B,14:15,Sân 2,Tín/Khiêm,Ánh/Toàn,,,B4,B5,2
+B,14:30,Sân7,Phương/Thanh,Ánh/Toàn,,,B2,B5,3
+B,14:30,Sân 1,Triều/Minh,Tín/Khiêm,,,B3,B4,3
+B,14:30,Sân 2,Tiệp/Thủy,Hiển/P.Hùng,,,B1,B6,3
+B,15:00,Sân 2,Tiệp/Thủy,Ánh/Toàn,,,B1,B5,5
+B,15:00,Sân 3,Tín/Khiêm,Hiển/P.Hùng,,,B4,B6,6
+B,15:15,Sân 2,Phương/Thanh,Triều/Minh,,,B2,B3,8
+B,15:45,Sân 2,Tiệp/Thủy,Tín/Khiêm,,,B1,B4,9
+B,15:45,Sân 3,Phương/Thanh,Hiển/P.Hùng,,,B2,B6,10
+B,16:00,Sân 2,Triều/Minh,Ánh/Toàn,,,B3,B5,11
+B,16:30,Sân 2,Tiệp/Thủy,Triều/Minh,,,B1,B3,11
+B,16:30,Sân 3,Ánh/Toàn,Hiển/P.Hùng,,,B5,B6,12
+B,16:45,Sân 2,Phương/Thanh,Tín/Khiêm,,,B2,B4,
+Bán Kết Bảng A,16:45,Sân 3,Nhất bảng A,Nhì bảng A,,,,,12
+Bán Kết Bảng B,17:05,Sân 3,Nhất bảng B,Nhì bảng B,,,,,13
+Chung Kết,17:25,Sân 3,Thắng BKA,Thắng BK B,,,,,14`;
 
 // Biến state lưu trữ dữ liệu chính của ứng dụng.
 let state = { 
@@ -226,21 +227,18 @@ let state = {
 let stateChanged = false; // Biến cờ theo dõi thay đổi dữ liệu
 let currentSha = null; // Biến lưu trữ SHA của file trên GitHub
 let autoSaveInterval = null; // Biến lưu trữ ID của interval
-let scheduleSource = 'Chưa tải'; // NEW: Biến lưu trữ nguồn lịch thi đấu
 
-// --- Custom Modal Function (Giữ nguyên) ---
+// --- Custom Modal Function ---
 function showModal(title, body) {
-    const modalElement = document.getElementById('customAlertModal');
-    if (!modalElement) return; 
-    
     document.getElementById('customAlertModalLabel').textContent = title;
     document.getElementById('customAlertModalBody').innerHTML = body;
-    const modal = new bootstrap.Modal(modalElement);
+    const modal = new bootstrap.Modal(document.getElementById('customAlertModal'));
     modal.show();
 }
 
 /**
- * Hàm chuyển đổi tab (Được cập nhật để tự động chuyển tab)
+ * Hàm chuyển đổi tab
+ * @param {string} tabId - ID của tab cần chuyển (ví dụ: 'matches', 'overview')
  */
 function switchTab(tabId) {
     const tabElement = document.querySelector(`#mainTabs button[data-bs-target="#${tabId}"]`);
@@ -255,7 +253,7 @@ function switchTab(tabId) {
     }
 }
 
-// --- Helper Functions cho Base64 (Giữ nguyên) ---
+// --- Helper Functions cho Base64 ---
 function b64EncodeUnicode(str) {
   return btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g,
     function(match, p1) {
@@ -269,33 +267,7 @@ function b64DecodeUnicode(str) {
   }).join(''));
 }
 
-// --- GitHub API Functions ---
-
-// Hàm chung để lấy nội dung file bất kỳ từ GitHub (Giữ nguyên)
-async function fetchCSVContent(cfg, filePath) {
-    const apiUrl = `https://api.github.com/repos/${cfg.owner}/${cfg.repo}/contents/${filePath}`;
-    
-    try {
-        const response = await fetch(apiUrl, {
-            headers: {
-                'Authorization': `token ${cfg.token}`,
-                'Accept': 'application/vnd.github.v3+json'
-            }
-        });
-        
-        if (response.ok) {
-            const data = await response.json();
-            return b64DecodeUnicode(data.content);
-        } else if (response.status === 404) {
-            return null; // File not found (let the caller decide to throw/fallback)
-        } else {
-            throw new Error(`Lỗi HTTP: ${response.status} - ${response.statusText}`);
-        }
-    } catch (error) {
-        console.error(`Lỗi Fetch CSV từ ${filePath}:`, error);
-        throw new Error(`Lỗi kết nối hoặc API khi tải ${filePath}: ${error.message}`);
-    }
-}
+// --- GitHub API Functions (Giữ nguyên) ---
 
 async function fetchFileSha(cfg) {
     const filePath = `${cfg.folder}/${cfg.file}`;
@@ -325,103 +297,55 @@ async function fetchFileSha(cfg) {
     }
 }
 
-/**
- * Hợp nhất tỉ số đã lưu (savedMatches) vào cấu trúc lịch hiện tại (currentMatches).
- */
-function mergeScores(currentMatches, savedMatches) {
-    const savedScoresMap = new Map();
-    
-    // 1. Tạo bản đồ tỉ số đã lưu với key đại diện cho trận đấu (độc lập với thứ tự đội)
-    savedMatches.forEach(m => {
-        // Key: Tên đội A, B được sắp xếp, Giờ, Sân
-        const key = [m.teamA, m.teamB, m.time, m.court].sort().join('|');
-        // Lưu cả tỉ số và tên đội A gốc để xác định thứ tự
-        if (m.scoreA !== null || m.scoreB !== null) {
-            savedScoresMap.set(key, { scoreA: m.scoreA, scoreB: m.scoreB, originalTeamA: m.teamA });
-        }
-    });
-
-    // 2. Lặp qua lịch hiện tại (từ CSV) và hợp nhất tỉ số
-    const mergedMatches = currentMatches.map(currentMatch => {
-        const key = [currentMatch.teamA, currentMatch.teamB, currentMatch.time, currentMatch.court].sort().join('|');
-        const savedData = savedScoresMap.get(key);
-
-        if (savedData) {
-            const newMatch = { ...currentMatch };
-            
-            // Nếu thứ tự đội trong CSV giống với thứ tự lưu, giữ nguyên tỉ số
-            if (currentMatch.teamA === savedData.originalTeamA) {
-                newMatch.scoreA = savedData.scoreA;
-                newMatch.scoreB = savedData.scoreB;
-            } else {
-                // Thứ tự đội bị đảo ngược (ví dụ: CSV là A-B, lưu là B-A), cần đảo ngược tỉ số
-                newMatch.scoreA = savedData.scoreB;
-                newMatch.scoreB = savedData.scoreA;
-            }
-            return newMatch;
-        }
-        return currentMatch; // Không có tỉ số đã lưu, giữ nguyên match (score: null)
-    });
-    
-    return mergedMatches;
-}
-
 async function loadFromGitHub() {
     const cfg = state.config;
-    
-    updateStatus('configStatus', 'info', 'Đang tải dữ liệu trạng thái (tỉ số đã lưu) từ GitHub...');
-    const result = await fetchFileSha(cfg);
-    
-    if (result.content) {
-        const jsonString = b64DecodeUnicode(result.content);
-        const loadedState = JSON.parse(jsonString);
+    if (!cfg.owner || !cfg.repo || !cfg.token) return;
 
-        // Hợp nhất tỉ số từ state.json vào lịch đã tải từ CalendarRound.csv
-        if (loadedState.matchesA && loadedState.matchesA.length > 0) {
-            state.matchesA = mergeScores(state.matchesA, loadedState.matchesA);
-        }
-        if (loadedState.matchesB && loadedState.matchesB.length > 0) {
-            state.matchesB = mergeScores(state.matchesB, loadedState.matchesB);
-        }
+    try {
+        updateStatus('configStatus', 'info', 'Đang tải dữ liệu từ GitHub...');
+        const result = await fetchFileSha(cfg);
         
-        // Cập nhật Vòng Chung Kết và các trạng thái khác (Giữ nguyên)
-        const loadedSemifinals = loadedState.semifinals;
-        if (loadedSemifinals && loadedSemifinals.length === 2 && 
-            (loadedSemifinals[0].teamA !== 'Nhất A' || loadedSemifinals[0].teamB !== 'Nhất B') &&
-            (loadedSemifinals[1].teamA !== 'Nhì B' || loadedSemifinals[1].teamB !== 'Nhì A')
-        ) {
-            state.semifinals = loadedSemifinals || state.semifinals;
+        if (result.content) {
+            const jsonString = b64DecodeUnicode(result.content);
+            const loadedState = JSON.parse(jsonString);
+
+            state.matchesA = loadedState.matchesA || [];
+            state.matchesB = loadedState.matchesB || [];
+            
+            const loadedSemifinals = loadedState.semifinals;
+            if (loadedSemifinals && loadedSemifinals.length === 2 && 
+                loadedSemifinals[0].teamA !== 'Nhất A' && loadedSemifinals[0].teamB !== 'Nhất B' ||
+                loadedSemifinals[1].teamA !== 'Nhì B' && loadedSemifinals[1].teamB !== 'Nhì A'
+            ) {
+            } else {
+                state.semifinals = loadedSemifinals || state.semifinals;
+            }
+
+            state.final = loadedState.final || state.final;
+            
+            renderMatches();
+            tinhVaCapNhatXepHang();
+            renderFinals();
+            renderFinalResults();
+            renderOverview();
+            
+            updateStatus('configStatus', 'success', `Tải dữ liệu thành công từ: ${cfg.owner}/${cfg.repo}/${cfg.folder}/${cfg.file}`);
+            document.getElementById('lastSaved').textContent = `Lần tải: ${new Date().toLocaleTimeString('vi-VN')}`;
+        } else {
+            updateStatus('configStatus', 'warning', 'File dữ liệu chưa tồn tại trên GitHub. Vui lòng nhấn Lưu hoặc Tự động lưu để tạo file.');
         }
 
-        state.final = loadedState.final || state.final;
-        
-        // Cập nhật nguồn lịch: Đã hợp nhất CSV và State
-        scheduleSource = 'GitHub (CSV + State.json)'; 
+        startAutoSave();
 
-        renderMatches();
-        tinhVaCapNhatXepHang();
-        renderFinals();
-        renderFinalResults();
-        renderOverview();
-        
-        updateStatus('configStatus', 'success', `Tải dữ liệu thành công từ: ${cfg.owner}/${cfg.repo}/${cfg.folder}/${cfg.file}. Tỉ số đã được hợp nhất.`);
-        document.getElementById('lastSaved').textContent = `Lần tải: ${new Date().toLocaleTimeString('vi-VN')}`;
-        
-    } else {
-        // Trường hợp file state.json chưa tồn tại (404), vẫn giữ lịch đã tải từ CSV và thông báo
-        // scheduleSource đã được set là 'GitHub (CalendarRound.csv)' trong loadInitialSchedule
-        renderMatches();
-        tinhVaCapNhatXepHang();
-        renderFinals();
-        renderFinalResults();
-        renderOverview();
-        updateStatus('configStatus', 'warning', 'Tải lịch thành công (từ CalendarRound.csv) nhưng file tỉ số (state.json) chưa tồn tại trên GitHub. Vui lòng nhấn Lưu hoặc Tự động lưu để tạo file.');
+    } catch (error) {
+        updateStatus('configStatus', 'danger', `Lỗi tải dữ liệu: ${error.message}. Vui lòng kiểm tra lại Token/Repo.`);
+        console.error("Lỗi khi tải dữ liệu từ GitHub:", error);
     }
 }
 
 async function saveToGitHub() {
     if (!stateChanged) return;
-    // (Logic lưu file Giữ nguyên)
+
     const cfg = state.config;
     if (!cfg.owner || !cfg.repo || !cfg.token) {
         console.warn("Không thể tự động lưu: Thiếu cấu hình GitHub.");
@@ -496,131 +420,24 @@ async function checkConnection() {
         }
         
         updateStatus('configStatus', 'success', 'Kết nối GitHub thành công! Đang tải dữ liệu...');
-        
-        // 1. Tải lịch CSV trước (để có cấu trúc lịch mới nhất)
-        await loadInitialSchedule(cfg);
-        
-        // 2. Tải state.json (để hợp nhất tỉ số)
         await loadFromGitHub();
-        
-        // Chuyển tab sau khi tải thành công
-        switchTab('matches');
 
     } catch (error) {
-        updateStatus('configStatus', 'danger', `Kiểm tra kết nối thất bại: ${error.message}. Vui lòng kiểm tra lại Token/Repo.`);
+        updateStatus('configStatus', 'danger', `Kiểm tra kết nối thất bại: ${error.message}.`);
         console.error("Lỗi kiểm tra kết nối:", error);
-        // Thêm logic fallback nếu checkConnection bị lỗi
-        loadFallbackSchedule(error.message);
-        // Chuyển tab ngay cả khi bị lỗi
-        switchTab('matches');
     }
 }
 
-// --- Logic tự động tải lịch Vòng Bảng từ CSV ---
-const CSV_SCHEDULE_PATH = 'data/CalendarRound.csv';
-
-/**
- * Tải cấu trúc lịch từ CalendarRound.csv trên GitHub.
- * @param {object} cfg Cấu hình GitHub.
- * @throws {Error} Nếu không thể tải hoặc file rỗng/không hợp lệ.
- */
-async function loadInitialSchedule(cfg) {
-    try {
-        console.log(`Đang cố tải lịch từ ${CSV_SCHEDULE_PATH}...`);
-        const csvContent = await fetchCSVContent(cfg, CSV_SCHEDULE_PATH);
-
-        if (csvContent) {
-            const { matchesA, matchesB } = parseScheduleCSV(csvContent);
-            
-            if (matchesA.length > 0 || matchesB.length > 0) {
-                // LUÔN CẬP NHẬT cấu trúc lịch từ CSV. Tỉ số sẽ được hợp nhất sau.
-                state.matchesA = matchesA;
-                state.matchesB = matchesB;
-                scheduleSource = 'GitHub (CalendarRound.csv)'; // <-- NEW: Set source
-                console.log(`Tải lịch vòng đấu bảng từ ${CSV_SCHEDULE_PATH} thành công. (${matchesA.length + matchesB.length} trận).`);
-                return; 
-            } else {
-                throw new Error(`File ${CSV_SCHEDULE_PATH} rỗng hoặc không có trận đấu hợp lệ.`);
-            }
-        } else {
-            // fetchCSVContent trả về null khi 404
-            throw new Error(`Không tìm thấy file ${CSV_SCHEDULE_PATH} (404 Not Found) trên GitHub.`);
-        }
-    } catch (error) {
-        // Re-throw để window.onload bắt và gọi fallback
-        throw error; 
-    }
-}
-
-/**
- * Load lịch cố định từ mã nguồn và render, kèm thông báo lỗi.
- * @param {string} reason Lý do thất bại (để hiển thị trong modal).
- */
-function loadFallbackSchedule(reason) {
-    const csvData = parseFixedSchedule(FIXED_SCHEDULE_CSV, state.mixedTeams, state.maleTeams);
-    
-    // Cập nhật state với lịch cố định
-    state.matchesA = csvData.matchesA;
-    state.matchesB = csvData.matchesB;
-    
-    // Reset tỉ số và lịch vòng chung kết về trạng thái ban đầu để tránh dữ liệu cũ không đồng bộ
-    state.semifinals.forEach(sf => {
-        sf.scoreA = null; sf.scoreB = null; sf.winner = null; sf.loser = null;
-    });
-    state.final.scoreA = null;
-    state.final.scoreB = null;
-    state.final.winner = null;
-    state.final.loser = null;
-    state.final.teamA = 'Thắng SF1';
-    state.final.teamB = 'Thắng SF2';
-
-    // NEW: Cập nhật nguồn lịch
-    scheduleSource = 'Lịch Cố Định (FIXED_SCHEDULE_CSV)'; 
-
-    // Render UI
-    renderMatches();
-    tinhVaCapNhatXepHang();
-    renderFinals();
-    renderFinalResults();
-    renderOverview();
-    stateChanged = false; // Coi như trạng thái ban đầu, chưa có thay đổi
-
-    // Hiển thị thông báo
-    const msg = reason ? `Do lỗi: ${reason}.` : 'Do chưa nhập cấu hình GitHub Token.';
-    showModal('Lỗi Tải Dữ Liệu/Không Kết nối', `Không thể tải lịch thi đấu từ GitHub. Đã hiển thị lịch **Cố định** lưu trong mã nguồn. ${msg}`);
-}
-
-
-// --- Cấu hình & Khởi tạo (Cập nhật logic tải và giá trị mặc định) ---
+// --- Cấu hình & Khởi tạo (Giữ nguyên) ---
 function loadConfig() {
     const savedConfig = localStorage.getItem('pkb_config');
-    const defaultOwner = 'cqtin2024';
-    const defaultRepo = 'pickleball';
-    const defaultFolder = 'data';
-    const defaultFile = 'state.json';
-
     if (savedConfig) {
         state.config = JSON.parse(savedConfig);
-        document.getElementById('cfgOwner').value = state.config.owner || defaultOwner;
-        document.getElementById('cfgRepo').value = state.config.repo || defaultRepo;
-        document.getElementById('cfgFolder').value = state.config.folder || defaultFolder;
-        document.getElementById('cfgFile').value = state.config.file || defaultFile;
+        document.getElementById('cfgOwner').value = state.config.owner || '';
+        document.getElementById('cfgRepo').value = state.config.repo || '';
+        document.getElementById('cfgFolder').value = state.config.folder || 'data';
+        document.getElementById('cfgFile').value = state.config.file || 'state.json';
         document.getElementById('cfgToken').value = state.config.token || '';
-    } else {
-        // Set initial defaults if nothing saved
-        state.config = {
-            owner: defaultOwner,
-            repo: defaultRepo,
-            folder: defaultFolder,
-            file: defaultFile,
-            token: ''
-        };
-        // Also update the input fields for the first time
-        document.getElementById('cfgOwner').value = defaultOwner;
-        document.getElementById('cfgRepo').value = defaultRepo;
-        document.getElementById('cfgFolder').value = defaultFolder;
-        document.getElementById('cfgFile').value = defaultFile;
-        document.getElementById('cfgToken').value = '';
     }
 }
 
@@ -657,36 +474,20 @@ function startAutoSave() {
     }
 }
 
-// [ĐIỀU CHỈNH LỚN] window.onload để chạy loadInitialSchedule và switchTab
-window.onload = async function() {
+
+window.onload = function() {
     loadConfig();
     
-    if (state.config.token && state.config.owner && state.config.repo) {
-        try {
-            // 1. Tải lịch CSV từ GitHub (CalendarRound.csv). 
-            await loadInitialSchedule(state.config); 
-            
-            // 2. Tải state.json và hợp nhất tỉ số.
-            await loadFromGitHub(); 
-            
-            // NEW: Chuyển sang tab Vòng Bảng sau khi tải thành công
-            switchTab('matches');
-            
-        } catch (error) {
-            console.error('Lỗi nghiêm trọng khi đồng bộ GitHub, chuyển sang lịch Cố định:', error);
-            // Fallback nếu loadInitialSchedule hoặc loadFromGitHub thất bại.
-            loadFallbackSchedule(error.message); 
-            // NEW: Chuyển sang tab Vòng Bảng sau khi fallback
-            switchTab('matches');
-        }
+    if (state.config.token) {
+        loadFromGitHub(); 
     } else {
-        // Không có Token hoặc Config, tải lịch Cố định và thông báo.
-        loadFallbackSchedule('Chưa nhập đầy đủ Owner, Repo và Token GitHub.');
-        // NEW: Chuyển sang tab Vòng Bảng sau khi fallback
-        switchTab('matches');
+        renderMatches();
+        tinhVaCapNhatXepHang();
+        renderFinals();
+        renderFinalResults();
+        renderOverview(); 
+        startAutoSave(); 
     }
-    
-    startAutoSave(); 
 };
 
 // --- Tab Tổng quan (Giữ nguyên) ---
@@ -748,72 +549,71 @@ function renderOverview() {
     document.getElementById('overviewContent').innerHTML = html;
 }
 
-// --- Vòng Bảng: Tạo Lịch Cố Định (Giữ nguyên logic) ---
+// --- Vòng Bảng: Tạo Lịch Cố Định ---
+
+/**
+ * Phân tích cú pháp file CSV mới (một trận/dòng) để tạo lịch thi đấu.
+ * Định dạng: Bảng,Giờ,Sân,Đội A,Đội B,Tỉ số A,Tỉ số B,...
+ */
 function parseFixedSchedule(csvContent, mixedTeams, maleTeams) {
     const allMatches = [];
-    const rows = csvContent.trim().split('\n');
+    // Sử dụng split('\n') vì đây là định dạng CSV do người dùng cung cấp
+    const rows = csvContent.trim().split('\n'); 
     
     // Bỏ qua dòng tiêu đề đầu tiên
     const dataRows = rows.slice(1); 
     
-    const COURT_CONFIG = [
-        { colIndex: 3, courtName: 'Sân 1' },
-        { colIndex: 4, courtName: 'Sân 2' },
-        { colIndex: 5, courtName: 'Sân 3' },
-        { colIndex: 6, courtName: 'Sân 7' },
-    ];
-    
     dataRows.forEach(row => {
+        // Dùng split(',') đơn giản cho cấu trúc CSV này
         const columns = row.split(',').map(c => c.trim()); 
-        const time = columns[0] ? columns[0] : '';
+        
+        if (columns.length >= 5) {
+            const [bang, time, court, teamA, teamB] = columns;
 
-        COURT_CONFIG.forEach(court => {
-            let matchString = columns[court.colIndex] ? columns[court.colIndex] : '';
+            // Chỉ xử lý các trận đấu thuộc Vòng Bảng (Bảng A và Bảng B)
+            if (bang === 'A' || bang === 'B') {
+                const isValidA = mixedTeams.includes(teamA) && mixedTeams.includes(teamB) && bang === 'A';
+                const isValidB = maleTeams.includes(teamA) && maleTeams.includes(teamB) && bang === 'B';
 
-            if (matchString && matchString.toLowerCase() !== 'dự phòng' && matchString !== '-' && matchString.includes(' - ')) {
-                const teams = matchString.split(' - ');
-                if (teams.length === 2) {
-                    const teamA = teams[0].trim();
-                    const teamB = teams[1].trim();
-                    let bang = null;
-                    
-                    const teamAExistsA = mixedTeams.includes(teamA);
-                    const teamBExistsA = mixedTeams.includes(teamB);
-                    const teamAExistsB = maleTeams.includes(teamA);
-                    const teamBExistsB = maleTeams.includes(teamB);
-                    
-                    if (teamAExistsA && teamBExistsA) {
-                        bang = 'A'; 
-                    } else if (teamAExistsB && teamBExistsB) {
-                        bang = 'B'; 
-                    } else {
-                        return; 
-                    }
-                    
+                // Đảm bảo cả hai đội đều thuộc bảng đấu đó
+                if (isValidA || isValidB) {
                     allMatches.push({
-                        teamA, teamB, time, court: court.courtName, bang, scoreA: null, scoreB: null
+                        teamA: teamA,
+                        teamB: teamB,
+                        time: time,
+                        court: court,
+                        bang: bang,
+                        scoreA: null,
+                        scoreB: null
                     });
                 }
             }
-        });
+        }
     });
 
+    // Sắp xếp lại lịch theo thời gian và sân
     allMatches.sort((a, b) => {
         const timeToMinutes = (t) => {
             const [h, m] = t.split(':').map(Number);
             return h * 60 + m;
         };
-        return timeToMinutes(a.time) - timeToMinutes(b.time);
+        const timeA = timeToMinutes(a.time);
+        const timeB = timeToMinutes(b.time);
+        
+        if (timeA === timeB) {
+             return a.court.localeCompare(b.court); // Sắp xếp theo tên sân
+        }
+        return timeA - timeB; // Sắp xếp theo thời gian
     });
 
     return { matchesA: allMatches.filter(m => m.bang === 'A'), matchesB: allMatches.filter(m => m.bang === 'B') };
 }
 
+
 function taoLichCoDinh() {
     const csvData = parseFixedSchedule(FIXED_SCHEDULE_CSV, state.mixedTeams, state.maleTeams);
     state.matchesA = csvData.matchesA;
     state.matchesB = csvData.matchesB;
-    scheduleSource = 'Lịch Cố Định (FIXED_SCHEDULE_CSV)'; // NEW: Update source
     renderMatches();
     tinhVaCapNhatXepHang();
     renderOverview();
@@ -828,7 +628,7 @@ function taoLichCoDinh() {
         }
     }, 10);
     
-    showModal('Thành công', 'Đã tạo lịch thi đấu **Cố định** dựa trên dữ liệu. Vui lòng kiểm tra lịch tại tab **Vòng Bảng**.');
+    showModal('Thành công', 'Đã tạo lịch thi đấu **Cố định** dựa trên dữ liệu mới. Vui lòng kiểm tra lịch tại tab **Vòng Bảng**.');
 }
 
 // --- Vòng Bảng: Tạo Lịch Tối Ưu (Giữ nguyên) ---
@@ -839,8 +639,7 @@ function taoLichThiDauCungGio(){
 
   state.matchesA = distributeMatchesSameTime(state.mixedTeams, ['Sân 2','Sân 3'], start, duration);
   state.matchesB = distributeMatchesSameTime(state.maleTeams, ['Sân 7','Sân 8'], start, duration);
-  
-  scheduleSource = 'Lịch Tự động (Được tạo lại)'; // NEW: Update source
+
   renderMatches();
   tinhVaCapNhatXepHang();
   renderOverview();
@@ -930,22 +729,6 @@ function autoFillScores() {
 
 // --- Vòng Bảng: Hiển thị và Cập nhật Tỉ số (Giữ nguyên) ---
 function renderMatches(){
-  // NEW: Display the source status
-  const statusDiv = document.getElementById('scheduleSourceStatus');
-  if (statusDiv) {
-      statusDiv.innerHTML = `<strong>Nguồn lịch:</strong> ${scheduleSource}`;
-      statusDiv.classList.remove('alert-light', 'alert-warning', 'alert-success', 'alert-info');
-      if (scheduleSource.includes('Lịch Cố Định')) {
-          statusDiv.classList.add('alert-warning');
-      } else if (scheduleSource.includes('GitHub (CSV + State.json)')) {
-          statusDiv.classList.add('alert-success');
-      } else if (scheduleSource.includes('GitHub (CalendarRound.csv)')) {
-          statusDiv.classList.add('alert-info');
-      } else {
-          statusDiv.classList.add('alert-light');
-      }
-  }
-
   document.getElementById('tableMatchesA').innerHTML = renderMatchesTable(state.matchesA,'A');
   document.getElementById('tableMatchesB').innerHTML = renderMatchesTable(state.matchesB,'B');
 }
@@ -1108,42 +891,63 @@ function renderBangXepHang(bang,list){
   targetElement.innerHTML = html;
 }
 
-// --- Import/Export Lịch thi đấu (Giữ nguyên) ---
+// --- Import/Export Lịch thi đấu ---
 
 /**
- * Phân tích cú pháp file CSV đơn giản để tạo/cập nhật lịch.
+ * Xử lý sự kiện khi file CSV được chọn.
+ */
+function handleFileSelect(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const csvContent = e.target.result;
+            parseImportedSchedule(csvContent);
+            event.target.value = null; // Reset input file
+        } catch (error) {
+            showModal('Lỗi Import', `Không thể đọc file: ${error.message}. Vui lòng kiểm tra định dạng CSV.`);
+        }
+    };
+    reader.readAsText(file, 'UTF-8');
+}
+
+/**
+ * Phân tích cú pháp file CSV đơn giản (xuất từ chức năng Export) để cập nhật lịch.
  * Định dạng mong muốn: Bảng,Giờ,Sân,Đội A,Đội B,Tỉ số A,Tỉ số B
  */
-function parseScheduleCSV(csvContent) {
+function parseImportedSchedule(csvContent) {
     const rows = csvContent.trim().split('\n');
     if (rows.length < 2) {
-        throw new Error('File CSV không chứa dữ liệu trận đấu.');
+        return showModal('Lỗi Dữ liệu', 'File CSV không chứa dữ liệu trận đấu.');
     }
 
     const newMatchesA = [];
     const newMatchesB = [];
     const header = rows[0].split(',').map(h => h.trim());
     
-    // Kiểm tra Header đơn giản (có thể bỏ qua nếu file tự động load đã chuẩn)
+    // Kiểm tra Header
     const expectedHeader = ['Bảng', 'Giờ', 'Sân', 'Đội A', 'Đội B', 'Tỉ số A', 'Tỉ số B'];
     if (header.slice(0, 5).join(',') !== expectedHeader.slice(0, 5).join(',')) {
-        console.warn(`Định dạng Header CSV có thể không đúng. Cần: ${expectedHeader.join(',')}`);
+        return showModal('Lỗi Định dạng', `Định dạng Header không đúng. Cần: ${expectedHeader.join(',')}`);
     }
 
     // Xử lý từng dòng dữ liệu
     rows.slice(1).forEach((row, rowIndex) => {
+        // Sử dụng regex để xử lý các dấu phẩy bên trong dấu ngoặc kép (nếu có, mặc dù không khuyến khích cho tên đội)
+        // Hiện tại, ta dùng split đơn giản.
         const columns = row.split(',').map(c => c.trim());
 
         if (columns.length >= 7) {
             const [bang, time, court, teamA, teamB, scoreAStr, scoreBStr] = columns;
 
             // Kiểm tra tính hợp lệ của đội và bảng
-            const teamAExists = state.mixedTeams.includes(teamA) || state.maleTeams.includes(teamA);
-            const teamBExists = state.mixedTeams.includes(teamB) || state.maleTeams.includes(teamB);
-            const isValidA = teamAExists && teamBExists && bang === 'A';
-            const isValidB = teamAExists && teamBExists && bang === 'B';
+            const isValidA = state.mixedTeams.includes(teamA) && state.mixedTeams.includes(teamB) && bang === 'A';
+            const isValidB = state.maleTeams.includes(teamA) && state.maleTeams.includes(teamB) && bang === 'B';
 
             if (!isValidA && !isValidB) {
+                // Có thể bỏ qua dòng này hoặc báo lỗi
                 console.warn(`Bỏ qua dòng ${rowIndex + 2}: Đội/Bảng không hợp lệ (${teamA} vs ${teamB}, Bảng ${bang})`);
                 return;
             }
@@ -1165,44 +969,20 @@ function parseScheduleCSV(csvContent) {
             }
         }
     });
-    
-    return { matchesA: newMatchesA, matchesB: newMatchesB };
+
+    if (newMatchesA.length === 0 && newMatchesB.length === 0) {
+        return showModal('Lỗi Import', 'Không tìm thấy trận đấu hợp lệ nào trong file.');
+    }
+
+    state.matchesA = newMatchesA;
+    state.matchesB = newMatchesB;
+
+    renderMatches();
+    tinhVaCapNhatXepHang();
+    renderOverview();
+    stateChanged = true;
+    showModal('Thành công', `Đã import thành công ${newMatchesA.length} trận Bảng A và ${newMatchesB.length} trận Bảng B.`);
 }
-
-/**
- * Xử lý sự kiện khi file CSV được chọn.
- */
-function handleFileSelect(event) {
-    const file = event.target.files[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = function(e) {
-        try {
-            const csvContent = e.target.result;
-            const { matchesA, matchesB } = parseScheduleCSV(csvContent);
-            
-            // Cập nhật state
-            state.matchesA = matchesA;
-            state.matchesB = matchesB;
-            
-            scheduleSource = 'Lịch Import (CSV)'; // NEW: Update source
-
-            renderMatches();
-            tinhVaCapNhatXepHang();
-            renderOverview();
-            stateChanged = true;
-            
-            showModal('Thành công', `Đã import thành công ${matchesA.length} trận Bảng A và ${matchesB.length} trận Bảng B.`);
-            event.target.value = null; // Reset input file
-            switchTab('matches'); // Chuyển tab sau khi import
-        } catch (error) {
-            showModal('Lỗi Import', `Không thể đọc file: ${error.message}. Vui lòng kiểm tra định dạng CSV.`);
-        }
-    };
-    reader.readAsText(file, 'UTF-8');
-}
-
 
 /**
  * Xuất lịch thi đấu hiện tại (bao gồm tỉ số) ra file CSV.
@@ -1238,6 +1018,33 @@ function exportSchedule() {
     document.body.removeChild(link);
 
     showModal('Xuất file thành công', 'File **lich\_thi\_dau\_tkd.csv** đã được tải xuống.');
+}
+
+/**
+ * Xuất toàn bộ dữ liệu (state) của giải đấu ra file JSON.
+ */
+function exportStateToJson() {
+    // Loại bỏ config chứa token nhạy cảm trước khi xuất.
+    const stateToExport = { ...state };
+    // Clone state.config để đảm bảo không bị lỗi trong trường hợp config là tham chiếu sâu
+    stateToExport.config = { ...state.config }; 
+    delete stateToExport.config.token; // Xóa token nhạy cảm
+    
+    const jsonString = JSON.stringify(stateToExport, null, 2); // Định dạng JSON đẹp
+
+    // Tạo Blob và link tải xuống
+    const blob = new Blob([jsonString], { type: 'application/json;charset=utf-8;' });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    
+    link.setAttribute("href", url);
+    link.setAttribute("download", `dataTKD_${new Date().toISOString().slice(0,10)}.json`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    showModal('Xuất dữ liệu thành công', `File **dataTKD_${new Date().toISOString().slice(0,10)}.json** chứa toàn bộ trạng thái giải đấu đã được tải xuống.`);
 }
 
 
