@@ -36,10 +36,28 @@
         .header-title {
             background-color: var(--primary-color);
             color: white;
-            padding: 1rem 0;
+            padding: 1rem; /* Đặt padding tổng thể */
             border-radius: 12px;
             margin-bottom: 25px;
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+            display: flex; /* Sử dụng Flexbox */
+            align-items: center;
+            justify-content: space-between;
+        }
+        .header-text-container {
+            flex-grow: 1; /* Cho phép phần chữ mở rộng và chiếm không gian */
+            text-align: center; /* Căn giữa chữ */
+            margin-right: 60px; /* Bù lại khoảng trống cho logo để căn chữ chính xác hơn */
+        }
+        .logo-img {
+            width: 50px; /* Kích thước logo vừa vặn */
+            height: 50px;
+            object-fit: contain;
+            background: white; /* Nền trắng cho logo */
+            border-radius: 8px;
+            padding: 5px;
+            flex-shrink: 0; /* Đảm bảo logo không bị co lại */
+            margin-right: 15px;
         }
 
         /* Thẻ kết quả chung cuộc (Champion/Runner-up/Third) */
@@ -166,18 +184,37 @@
         /* Responsive */
         @media (max-width: 768px) {
             .container-main { padding: 20px; }
-            .header-title { font-size: 1.5rem; }
-            .btn-refresh { width: 50px; height: 50px; bottom: 15px; right: 15px; }
+            .header-title { 
+                flex-direction: column;
+                padding: 1rem 0.5rem;
+            }
+            .header-text-container {
+                margin-top: 10px;
+                margin-right: 0;
+            }
+            .logo-img {
+                margin-right: 0;
+            }
             h4.mt-3 { font-size: 1.25rem; }
+            .btn-refresh { width: 50px; height: 50px; bottom: 15px; right: 15px; }
         }
     </style>
 </head>
 <body>
 
     <div class="container-main">
-        <div class="header-title text-center shadow-lg">
-            <h1 class="mb-0 text-3xl font-bold">TKD Championship 2025 Pickleball 🎾</h1>
-            <p class="text-sm font-light mt-1 opacity-80">Hệ thống cập nhật kết quả tự động từ dữ liệu GitHub</p>
+        <!-- Kết hợp Logo và Tiêu đề -->
+        <div class="header-title shadow-lg">
+            <!-- Logo (thay thế URL ảnh dưới đây bằng logo thực tế của bạn) -->
+            <img src="https://placehold.co/50x50/ffffff/0d6efd?text=LOGO" alt="Logo Giải Đấu" class="logo-img shadow-sm">
+            
+            <div class="header-text-container">
+                <h1 class="mb-0 text-3xl font-bold">TKD Championship 2025 Pickleball </h1>
+                <p class="text-sm font-light mt-1 opacity-80">Hệ thống cập nhật kết quả tự động từ dữ liệu GitHub</p>
+            </div>
+            
+            <!-- Thêm một khoảng trống không nhìn thấy để căn giữa tiêu đề chính xác hơn -->
+            <div style="width: 50px; height: 50px;"></div>
         </div>
 
         <!-- Kết quả chung cuộc nổi bật -->
