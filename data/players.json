@@ -416,8 +416,8 @@
   "semifinals": [
     {
       "id": "SF1",
-      "teamA": "Giang/Long",
-      "teamB": "Ánh/Toàn",
+      "teamA": "Nhất Bảng A",
+      "teamB": "Nhì Bảng A",
       "scoreA": null,
       "scoreB": null,
       "time": "16:30",
@@ -427,8 +427,8 @@
     },
     {
       "id": "SF2",
-      "teamA": "Hiển/P.Hùng",
-      "teamB": "Hạnh/Tiến",
+      "teamA": "Nhất bảng B",
+      "teamB": "Nhì Bảng B",
       "scoreA": null,
       "scoreB": null,
       "time": "16:30",
