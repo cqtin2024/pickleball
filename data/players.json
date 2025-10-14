@@ -421,7 +421,7 @@
       "scoreA": null,
       "scoreB": null,
       "time": "16:30",
-      "court": "Sân 1",
+      "court": "Sân 33",
       "winner": null,
       "loser": null
     },
@@ -432,7 +432,7 @@
       "scoreA": null,
       "scoreB": null,
       "time": "16:30",
-      "court": "Sân 2",
+      "court": "Sân 3",
       "winner": null,
       "loser": null
     }
@@ -444,7 +444,7 @@
     "scoreA": null,
     "scoreB": null,
     "time": "17:00",
-    "court": "Sân 1",
+    "court": "Sân 3",
     "winner": null,
     "runnerUp": null,
     "loser": null
