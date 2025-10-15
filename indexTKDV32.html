@@ -283,10 +283,10 @@ let state = {
     { name: 'Sân 4', startTime: '14:00', maxDurationMinutes: 180, isMixed: false } // Bảng B (Male)
   ],
   
-  // LOGIC BÁN KẾT: SF1: Nhất A vs Nhất B, SF2: Nhì B vs Nhì A
+  // LOGIC BÁN KẾT: SF1: Nhất A vs Nhì A, SF2: Nhất B vs Nhì B <--- ĐÃ SỬA
   semifinals: [
-    { id: 'SF1', teamA: 'Nhất A', teamB: 'Nhất B', scoreA: null, scoreB: null, time: '16:30', court: 'Sân 1', winner: null, loser: null },
-    { id: 'SF2', teamA: 'Nhì B', teamB: 'Nhì A', scoreA: null, scoreB: null, time: '16:30', court: 'Sân 2', winner: null, loser: null }
+    { id: 'SF1', teamA: 'Nhất A', teamB: 'Nhì A', scoreA: null, scoreB: null, time: '16:30', court: 'Sân 1', winner: null, loser: null },
+    { id: 'SF2', teamA: 'Nhất B', teamB: 'Nhì B', scoreA: null, scoreB: null, time: '16:30', court: 'Sân 2', winner: null, loser: null }
   ],
   final: { id: 'F', teamA: 'Thắng SF1', teamB: 'Thắng SF2', scoreA: null, scoreB: null, time: '17:00', court: 'Sân 1', winner: null, runnerUp: null },
   config: {}
@@ -446,8 +446,8 @@ async function loadFromGitHub() {
             // Xử lý logic tải cho semifinals và final (đảm bảo không ghi đè lịch tự động)
             const loadedSemifinals = loadedState.semifinals;
             if (loadedSemifinals && loadedSemifinals.length === 2 && 
-                (loadedSemifinals[0].teamA !== 'Nhất A' || loadedSemifinals[0].teamB !== 'Nhất B' ||
-                 loadedSemifinals[1].teamA !== 'Nhì B' || loadedSemifinals[1].teamB !== 'Nhì A')
+                (loadedSemifinals[0].teamA !== 'Nhất A' || loadedSemifinals[0].teamB !== 'Nhì A' || // <--- ĐÃ SỬA
+                 loadedSemifinals[1].teamA !== 'Nhất B' || loadedSemifinals[1].teamB !== 'Nhì B') // <--- ĐÃ SỬA
             ) {
                 // Nếu đã có đội thực tế được gán, giữ nguyên (đã tính từ data vòng bảng)
                 state.semifinals = loadedSemifinals;
@@ -1209,10 +1209,10 @@ function clearAllSchedules() {
     if (confirm("Bạn có chắc chắn muốn XÓA TOÀN BỘ LỊCH THI ĐẤU (Vòng Bảng và Chung Kết)? Thao tác này KHÔNG thể hoàn tác.")) {
         state.matchesA = [];
         state.matchesB = [];
-        // Reset semifinals và final về trạng thái rỗng/mặc định
+        // Reset semifinals và final về trạng thái rỗng/mặc định <--- ĐÃ SỬA
         state.semifinals = [
-            { id: 'SF1', teamA: 'Nhất A', teamB: 'Nhất B', scoreA: null, scoreB: null, time: '16:30', court: 'Sân 1', winner: null, loser: null },
-            { id: 'SF2', teamA: 'Nhì B', teamB: 'Nhì A', scoreA: null, scoreB: null, time: '16:30', court: 'Sân 2', winner: null, loser: null }
+            { id: 'SF1', teamA: 'Nhất A', teamB: 'Nhì A', scoreA: null, scoreB: null, time: '16:30', court: 'Sân 1', winner: null, loser: null },
+            { id: 'SF2', teamA: 'Nhất B', teamB: 'Nhì B', scoreA: null, scoreB: null, time: '16:30', court: 'Sân 2', winner: null, loser: null }
         ];
         state.final = { id: 'F', teamA: 'Thắng SF1', teamB: 'Thắng SF2', scoreA: null, scoreB: null, time: '17:00', court: 'Sân 1', winner: null, runnerUp: null };
 
@@ -1648,9 +1648,9 @@ function scheduleFinalsAuto() {
     
     // Nếu chưa hoàn thành, giữ nguyên lịch bán kết/chung kết với teamA/teamB là placeholder
     if (!allMatchesCompleted || state.tableA.length < 2 || state.tableB.length < 2) {
-        // Reset về trạng thái chờ
-        state.semifinals[0].teamA = 'Nhất A'; state.semifinals[0].teamB = 'Nhất B';
-        state.semifinals[1].teamA = 'Nhì B'; state.semifinals[1].teamB = 'Nhì A';
+        // Reset về trạng thái chờ (SF1: Nhất A vs Nhì A, SF2: Nhất B vs Nhì B) <--- ĐÃ SỬA
+        state.semifinals[0].teamA = 'Nhất A'; state.semifinals[0].teamB = 'Nhì A';
+        state.semifinals[1].teamA = 'Nhất B'; state.semifinals[1].teamB = 'Nhì B';
         state.semifinals[0].scoreA = null; state.semifinals[0].scoreB = null; state.semifinals[0].winner = null;
         state.semifinals[1].scoreA = null; state.semifinals[1].scoreB = null; state.semifinals[1].winner = null;
         state.final.teamA = 'Thắng SF1'; state.final.teamB = 'Thắng SF2';
@@ -1671,20 +1671,20 @@ function scheduleFinalsAuto() {
 
     let isSfUpdated = false;
 
-    // SF1: Nhất A vs Nhất B
-    if (sf1.teamA !== winnerA || sf1.teamB !== winnerB) {
+    // SF1: Nhất A vs Nhì A <--- ĐÃ SỬA
+    if (sf1.teamA !== winnerA || sf1.teamB !== runnerUpA) {
         sf1.teamA = winnerA;
-        sf1.teamB = winnerB;
+        sf1.teamB = runnerUpA;
         sf1.scoreA = null; // Reset điểm khi đội thay đổi
         sf1.scoreB = null;
         sf1.winner = null;
         isSfUpdated = true;
     }
 
-    // SF2: Nhì B vs Nhì A
-    if (sf2.teamA !== runnerUpB || sf2.teamB !== runnerUpA) {
-        sf2.teamA = runnerUpB;
-        sf2.teamB = runnerUpA;
+    // SF2: Nhất B vs Nhì B <--- ĐÃ SỬA
+    if (sf2.teamA !== winnerB || sf2.teamB !== runnerUpB) {
+        sf2.teamA = winnerB;
+        sf2.teamB = runnerUpB;
         sf2.scoreA = null; // Reset điểm khi đội thay đổi
         sf2.scoreB = null;
         sf2.winner = null;
