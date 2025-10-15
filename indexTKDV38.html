@@ -228,8 +228,6 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script> 
 
 <script>
-// Hằng số FIXED_SCHEDULE_CSV đã bị loại bỏ
-
 // Biến state lưu trữ dữ liệu chính của ứng dụng.
 let state = { 
   mixedTeams: [], // Sẽ được tải từ players.json
@@ -386,7 +384,7 @@ async function loadFromGitHub() {
     if (!cfg.owner || !cfg.repo || !cfg.token) return;
 
     // 1. Load Teams (danh sách đội)
-    await loadPlayersFromGitHub(cfg); 
+    const teamsLoaded = await loadPlayersFromGitHub(cfg); 
 
     // 2. Load App State (state.json)
     try {
@@ -428,7 +426,8 @@ async function loadFromGitHub() {
             state.final = loadedState.final || state.final;
             
             // Cập nhật giao diện
-            renderMatches(); 
+            // Đã sửa lỗi: renderMatches -> renderMatchesView
+            renderMatchesView(); 
             tinhVaCapNhatXepHang();
             renderFinals();
             renderFinalResults();
@@ -443,6 +442,7 @@ async function loadFromGitHub() {
         startAutoSave();
 
     } catch (error) {
+        // Lỗi này giờ sẽ không còn nếu không có lỗi khác
         updateStatus('configStatus', 'danger', `Lỗi tải trạng thái giải đấu: ${error.message}. Vui lòng kiểm tra lại Token/Repo.`);
         console.error("Lỗi khi tải trạng thái giải đấu từ GitHub:", error);
     }
@@ -811,8 +811,6 @@ function parseCSVToMatches(csv, isMixedGroup) {
     }
     return matchData;
 }
-
-// Hàm Tạo Lịch Cố Định đã bị xóa: taoLichCoDinh()
 
 function taoLichThiDauCungGio() {
     // Hàm này cần logic phức tạp hơn, để trống cho phiên bản hiện tại
