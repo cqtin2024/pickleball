@@ -1417,15 +1417,16 @@ function taoLichCoDinh() {
     
     // Logic parse CSV
     const rows = FIXED_SCHEDULE_CSV.trim().split('\n').slice(1); // Bỏ header
-    const headers = ['start_time', 'end_time', 'round', 'Sân 1', 'Sân 2', 'Sân 3', 'Sân 7'];
+    const headers = ['start_time', 'end_time', 'round', 'Sân 1', 'Sân 2', 'Sân 3', 'Sân 7', 'Thời lượng dự kiến']; // Đã sửa headers để khớp với FIXED_SCHEDULE_CSV
     
     const allTeams = [...state.mixedTeams, ...state.maleTeams];
 
     rows.forEach(row => {
-        const values = row.split(',').map(v => v.trim());
-        const time = values[0];
+        // Cần đảm bảo row.split(',') hoạt động với các giá trị trống
+        const values = row.split(',').map(v => v.trim()); 
+        const time = values[0]; // Giờ bắt đầu
         
-        // Cột Sân bắt đầu từ index 3
+        // Cột Sân bắt đầu từ index 3 (Sân 1) đến index 6 (Sân 7)
         for (let i = 3; i < 7; i++) {
             const matchStr = values[i];
             const courtName = headers[i];
@@ -1435,10 +1436,23 @@ function taoLichCoDinh() {
                 
                 // Xác định bảng A hay B (dựa trên đội có trong mixedTeams hay maleTeams)
                 let bang = null;
-                if (state.mixedTeams.includes(teamA) || state.mixedTeams.includes(teamB)) {
+                if (state.mixedTeams.includes(teamA) && state.mixedTeams.includes(teamB)) {
                     bang = 'A';
-                } else if (state.maleTeams.includes(teamA) || state.maleTeams.includes(teamB)) {
+                } else if (state.maleTeams.includes(teamA) && state.maleTeams.includes(teamB)) {
                     bang = 'B';
+                } else if (state.mixedTeams.includes(teamA) || state.mixedTeams.includes(teamB) || state.maleTeams.includes(teamA) || state.maleTeams.includes(teamB)) {
+                    // Nếu một trong hai đội được tìm thấy (logic V34 cho phép kiểm tra một chiều)
+                    // Tuy nhiên, để đảm bảo tính nhất quán (A: Mixed vs B: Male), tôi sẽ dùng logic an toàn hơn:
+                    if (state.mixedTeams.includes(teamA) && state.mixedTeams.includes(teamB)) {
+                        bang = 'A';
+                    } else if (state.maleTeams.includes(teamA) && state.maleTeams.includes(teamB)) {
+                        bang = 'B';
+                    } else {
+                        // Nếu cặp đấu là chéo bảng (Mixed vs Male), logic này sẽ bỏ qua hoặc cần điều chỉnh
+                        // Giả định cặp đấu chỉ cùng bảng A hoặc B.
+                        console.warn(`Đội ${teamA} vs ${teamB} có thể là chéo bảng hoặc không thuộc danh sách. Bỏ qua.`);
+                        continue;
+                    }
                 }
                 
                 if (bang) {
@@ -1460,7 +1474,7 @@ function taoLichCoDinh() {
                         state.matchesB.push(newMatch);
                     }
                 } else {
-                    console.warn(`Đội ${teamA}/${teamB} không tìm thấy trong danh sách đội A hoặc B. Bỏ qua trận đấu.`);
+                    console.warn(`Đội ${teamA}/${teamB} không tìm thấy trong danh sách đội A hoặc B, hoặc cặp đấu không cùng bảng. Bỏ qua trận đấu.`);
                 }
             }
         }
@@ -1714,7 +1728,7 @@ function updateFinalScore(dataSet, index, team, scoreStr) {
     }
     
     // Không cho phép nhập điểm nếu chưa có đội thực tế
-    if (!match || match.teamA === 'Nhất A' || match.teamA === 'Thắng SF1') return; 
+    if (!match || match.teamA === 'Nhất A' || match.teamA === 'Thắng SF1' || match.teamA === 'Nhất B') return; 
 
     if (score < 0 || score > 15) return;
 
