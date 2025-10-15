@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bảng Điểm Trực Tuyến - Vuốt Ngang Mobile</title>
+    <!-- Tải Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    <style>
+        body { background-color: #f0f4f8; overflow-x: hidden; }
+        
+        /* Container chứa các trang, bắt buộc phải là flex và không giới hạn chiều rộng */
+        #content-carousel {
+            display: flex;
+            width: 300vw; /* 3 sections * 100vw */
+            transition: transform 0.3s ease-in-out;
+        }
+
+        /* Mỗi section chiếm trọn 100% viewport width, xếp hàng ngang */
+        .swipe-section {
+            width: 100vw;
+            flex-shrink: 0;
+            padding: 1rem;
+            min-height: 80vh; /* Chiều cao tối thiểu để dễ vuốt */
+        }
+        
+        /* Cố định tiêu đề bảng */
+        table thead th {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        /* Thêm hiệu ứng cho các tab active */
+        .tab-indicator {
+            transition: background-color 0.3s;
+        }
+        .tab-indicator.active {
+            background-color: #0c4a6e;
+            box-shadow: 0 0 0 2px #bfdbfe;
+        }
+    </style>
+</head>
+<body class="font-sans">
+
+    <div class="fixed top-0 left-0 right-0 z-20 bg-white shadow-md p-4">
+        <h1 class="text-xl font-extrabold text-blue-800 text-center">Bảng Điểm Pickleball Live</h1>
+        
+        <!-- Tab Indicators -->
+        <div id="tab-controls" class="flex justify-around mt-3 mb-2 max-w-lg mx-auto">
+            <button id="tab-A" onclick="goToSection(0)" class="tab-indicator active px-4 py-2 text-sm font-semibold rounded-full bg-blue-100 text-blue-800">Bảng A</button>
+            <button id="tab-B" onclick="goToSection(1)" class="tab-indicator px-4 py-2 text-sm font-semibold rounded-full bg-blue-100 text-blue-800">Bảng B</button>
+            <button id="tab-P" onclick="goToSection(2)" class="tab-indicator px-4 py-2 text-sm font-semibold rounded-full bg-blue-100 text-blue-800">Chung Kết</button>
+        </div>
+        
+        <div id="statusMessage" class="mt-1 text-center text-sm font-medium text-gray-600">Đang tải dữ liệu...</div>
+        <p id="lastUpdate" class="text-xs text-gray-500 text-center"></p>
+    </div>
+
+    <!-- MAIN SWIPE CONTAINER -->
+    <div id="main-content-wrapper" class="pt-[140px] md:pt-[120px]">
+        <div id="content-carousel">
+            
+            <!-- SECTION 1: Bảng A -->
+            <div id="section-A" class="swipe-section">
+                <section class="bg-white p-4 rounded-xl shadow-lg mb-6">
+                    <h2 class="text-xl font-bold mb-3 text-indigo-700">Bảng Xếp Hạng A</h2>
+                    <div id="standingsA"></div>
+                </section>
+                <section class="bg-white p-4 rounded-xl shadow-lg">
+                    <h2 class="text-xl font-bold mb-3 text-indigo-700">Lịch Thi Đấu Bảng A</h2>
+                    <div id="matchesA"></div>
+                </section>
+            </div>
+
+            <!-- SECTION 2: Bảng B -->
+            <div id="section-B" class="swipe-section">
+                <section class="bg-white p-4 rounded-xl shadow-lg mb-6">
+                    <h2 class="text-xl font-bold mb-3 text-indigo-700">Bảng Xếp Hạng B</h2>
+                    <div id="standingsB"></div>
+                </section>
+                <section class="bg-white p-4 rounded-xl shadow-lg">
+                    <h2 class="text-xl font-bold mb-3 text-indigo-700">Lịch Thi Đấu Bảng B</h2>
+                    <div id="matchesB"></div>
+                </section>
+            </div>
+
+            <!-- SECTION 3: Chung Kết -->
+            <div id="section-Playoff" class="swipe-section">
+                <section class="bg-white p-4 rounded-xl shadow-lg mb-6">
+                    <h2 class="text-xl font-bold text-center mb-3 border-b pb-2 text-red-700">Kết Quả Chung Cuộc</h2>
+                    <div id="podiumResults" class="flex justify-center items-start">
+                        <p class="text-center text-gray-500">Đang chờ dữ liệu...</p>
+                    </div>
+                </section>
+                <section class="bg-white p-4 rounded-xl shadow-lg mb-6">
+                    <h2 class="text-xl font-bold mb-3 text-blue-700">Trận Chung Kết</h2>
+                    <div id="finalMatch"></div>
+                </section>
+                <section class="bg-white p-4 rounded-xl shadow-lg">
+                    <h2 class="text-xl font-bold mb-3 text-blue-700">Vòng Bán Kết</h2>
+                    <div id="semifinalsMatches"></div>
+                </section>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // --- CẤU HÌNH VÀ BIẾN TOÀN CỤC ---
+        const RAW_DATA_URL = 'https://raw.githubusercontent.com/cqtin2024/pickleball/main/data/state.json';
+        const UPDATE_INTERVAL = 10000; // 10 giây
+
+        let lastUpdateTime = '';
+        let currentSectionIndex = 0; // 0: A, 1: B, 2: P
+
+        // Biến cho Swipe
+        const carousel = document.getElementById('content-carousel');
+        const sections = ['A', 'B', 'P'];
+        let startX = 0;
+        let deltaX = 0;
+        let isSwiping = false;
+        const SWIPE_THRESHOLD = 50; // Khoảng cách vuốt tối thiểu để chuyển trang (pixels)
+
+        // --- CÁC HÀM XỬ LÝ VUỐT NGANG (SWIPE) ---
+
+        function handleTouchStart(e) {
+            startX = e.touches[0].clientX;
+            isSwiping = true;
+            carousel.style.transition = 'none'; // Tắt transition khi bắt đầu vuốt
+        }
+
+        function handleTouchMove(e) {
+            if (!isSwiping) return;
+            deltaX = e.touches[0].clientX - startX;
+            // Áp dụng transform để di chuyển nội dung theo ngón tay
+            carousel.style.transform = `translateX(calc(${currentSectionIndex * -100}vw + ${deltaX}px))`;
+        }
+
+        function handleTouchEnd() {
+            if (!isSwiping) return;
+            isSwiping = false;
+            
+            let newIndex = currentSectionIndex;
+
+            // Vuốt sang trái (deltaX âm)
+            if (deltaX < -SWIPE_THRESHOLD && currentSectionIndex < sections.length - 1) {
+                newIndex++;
+            } 
+            // Vuốt sang phải (deltaX dương)
+            else if (deltaX > SWIPE_THRESHOLD && currentSectionIndex > 0) {
+                newIndex--;
+            }
+            
+            // Đặt lại biến deltaX và chuyển đến section mới
+            deltaX = 0;
+            goToSection(newIndex);
+        }
+
+        /**
+         * Chuyển đến section mong muốn (dùng cho cả nút bấm và kết thúc vuốt).
+         * @param {number} index - Chỉ số của section (0, 1, 2).
+         */
+        function goToSection(index) {
+            currentSectionIndex = index;
+            
+            // Kích hoạt transition trở lại
+            carousel.style.transition = 'transform 0.3s ease-in-out';
+            
+            // Áp dụng transform để hiển thị section mới
+            carousel.style.transform = `translateX(${currentSectionIndex * -100}vw)`;
+            
+            // Cập nhật indicators
+            document.querySelectorAll('.tab-indicator').forEach((btn, i) => {
+                if (i === currentSectionIndex) {
+                    btn.classList.add('active');
+                    btn.classList.remove('bg-blue-100');
+                    btn.classList.add('bg-blue-600', 'text-white');
+                } else {
+                    btn.classList.remove('active', 'bg-blue-600', 'text-white');
+                    btn.classList.add('bg-blue-100');
+                }
+            });
+        }
+        
+        // --- CÁC HÀM TẢI VÀ RENDER DỮ LIỆU ---
+
+        async function fetchData() {
+            const response = await fetch(RAW_DATA_URL);
+            if (!response.ok) {
+                throw new Error(`Lỗi HTTP! Status: ${response.status}`);
+            }
+            return await response.json();
+        }
+
+        function updateLastUpdateTime() {
+            lastUpdateTime = new Date().toLocaleTimeString('vi-VN');
+            const timeElement = document.getElementById('lastUpdate');
+            if (timeElement) {
+                timeElement.textContent = `Cập nhật lần cuối: ${lastUpdateTime}`;
+            }
+        }
+        
+        /**
+         * Render bảng xếp hạng.
+         */
+        function renderStandingsTable(standings, containerId) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+            
+            const sortedStandings = [...standings].sort((a, b) => b.points - a.points || b.diff - a.diff);
+
+            let html = `
+                <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200 text-sm">
+                    <thead class="bg-indigo-600 text-white">
+                        <tr>
+                            <th class="px-3 py-2 text-center">Hạng</th>
+                            <th class="px-4 py-2 text-left">Đội</th>
+                            <th class="px-3 py-2 text-center">T/B</th>
+                            <th class="px-3 py-2 text-center">Diff</th>
+                            <th class="px-3 py-2 text-center">Điểm</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+            `;
+
+            sortedStandings.forEach((s, index) => {
+                const rankClass = index < 2 ? 'font-bold text-lg text-green-600' : 'text-gray-900';
+                html += `
+                    <tr class="hover:bg-blue-50">
+                        <td class="px-3 py-2 whitespace-nowrap text-center ${rankClass}">${index + 1}</td>
+                        <td class="px-4 py-2 whitespace-nowrap font-medium text-gray-900">${s.team}</td>
+                        <td class="px-3 py-2 whitespace-nowrap text-center">${s.wins}/${s.losses}</td>
+                        <td class="px-3 py-2 whitespace-nowrap text-center ${s.diff >= 0 ? 'text-green-600' : 'text-red-600'}">${s.diff}</td>
+                        <td class="px-3 py-2 whitespace-nowrap text-center font-bold">${s.points}</td>
+                    </tr>
+                `;
+            });
+            
+            html += `</tbody></table></div>`;
+            container.innerHTML = html;
+        }
+
+        /**
+         * Render một tập hợp các trận đấu vào bảng HTML.
+         */
+        function renderMatchTable(matches, containerId, isFinalStage = false) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+
+            if (!matches || (Array.isArray(matches) && matches.length === 0)) {
+                container.innerHTML = `<div class="p-3 text-center bg-gray-100 rounded-lg text-gray-600">Chưa có trận đấu nào được sắp xếp.</div>`;
+                return;
+            }
+            
+            const matchesArray = Array.isArray(matches) ? matches : [matches].filter(m => m);
+
+            let html = `
+                <div class="overflow-x-auto rounded-lg shadow-md">
+                    <table class="min-w-full divide-y divide-gray-200 bg-white text-sm">
+                        <thead class="bg-blue-600 text-white">
+                            <tr>
+                                <th class="px-3 py-2 text-center">Giờ</th>
+                                <th class="px-3 py-2 text-center">Sân</th>
+                                <th class="px-4 py-2 text-left">Đội A</th>
+                                <th class="px-4 py-2 text-left">Đội B</th>
+                                <th class="px-3 py-2 text-center">Tỉ số</th>
+                                ${isFinalStage ? `<th class="px-3 py-2 text-center">K.Quả</th>` : ''}
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-200">
+            `;
+
+            matchesArray.forEach(match => {
+                const scoreA = match.scoreA !== null ? match.scoreA : '-';
+                const scoreB = match.scoreB !== null ? match.scoreB : '-';
+                const isPlayed = match.scoreA !== null && match.scoreB !== null;
+                const rowClass = isPlayed ? 'bg-green-50' : 'bg-white';
+                
+                let resultText = 'Đang đấu';
+                let resultClass = 'text-gray-500';
+
+                if (match.winner) {
+                    resultText = match.winner.includes('Thắng') ? 'Chờ Đội' : 'Kết thúc';
+                    resultClass = 'font-bold text-green-700';
+                } else if (isPlayed) {
+                     resultText = 'Đã đấu';
+                     resultClass = 'text-blue-500';
+                }
+
+                const winnerClassA = isPlayed && match.winner === match.teamA ? 'font-bold text-green-700' : 'text-gray-900';
+                const winnerClassB = isPlayed && match.winner === match.teamB ? 'font-bold text-green-700' : 'text-gray-900';
+
+                html += `
+                    <tr class="${rowClass} hover:bg-gray-100">
+                        <td class="px-3 py-2 text-center">${match.time || 'N/A'}</td>
+                        <td class="px-3 py-2 text-center font-bold text-blue-600">${match.court || 'N/A'}</td>
+                        <td class="px-4 py-2 ${winnerClassA}">${match.teamA || 'Chờ Đội'}</td>
+                        <td class="px-4 py-2 ${winnerClassB}">${match.teamB || 'Chờ Đội'}</td>
+                        <td class="px-3 py-2 text-center font-bold text-base">${scoreA} - ${scoreB}</td>
+                        ${isFinalStage ? `<td class="px-3 py-2 text-center ${resultClass}">${resultText}</td>` : ''}
+                    </tr>
+                `;
+            });
+
+            html += `</tbody></table></div>`;
+            container.innerHTML = html;
+        }
+
+        /**
+         * Render khu vực bục vinh quang (Podium)
+         */
+        function renderPodium(final, semifinals) {
+            const container = document.getElementById('podiumResults');
+            if (!container) return;
+
+            let html = '';
+
+            const champion = final?.winner;
+            const runnerUp = final?.loser;
+            let thirdPlaceTeams = [];
+
+            const sf1Loser = semifinals[0]?.loser;
+            const sf2Loser = semifinals[1]?.loser;
+
+            if (sf1Loser) thirdPlaceTeams.push(sf1Loser);
+            if (sf2Loser) thirdPlaceTeams.push(sf2Loser);
+
+            const hasResults = champion || runnerUp || thirdPlaceTeams.length > 0;
+
+            if (!hasResults) {
+                container.innerHTML = `<p class="text-center text-gray-500 mt-2">Kết quả chung cuộc đang được cập nhật...</p>`;
+                return;
+            }
+            
+            html = `<div class="flex flex-col items-center space-y-4 w-full">`;
+
+            // Champion
+            if (champion) {
+                html += `
+                    <div class="bg-yellow-500 text-white p-4 rounded-xl shadow-2xl w-full max-w-sm text-center">
+                        <span class="text-3xl">🥇</span>
+                        <p class="text-xl font-extrabold mt-1">Vô Địch</p>
+                        <p class="text-2xl font-black">${champion}</p>
+                    </div>
+                `;
+            }
+
+            // Runner Up
+            if (runnerUp) {
+                html += `
+                    <div class="bg-gray-400 text-white p-3 rounded-xl shadow-xl w-full max-w-xs text-center">
+                        <span class="text-2xl">🥈</span>
+                        <p class="text-lg font-bold mt-1">Á Quân</p>
+                        <p class="text-xl font-extrabold">${runnerUp}</p>
+                    </div>
+                `;
+            }
+
+            // Third Place (đồng hạng 3)
+            if (thirdPlaceTeams.length > 0) {
+                const thirdPlaceHtml = thirdPlaceTeams.map(team =>
+                    `<span class="inline-block bg-amber-800 text-white px-3 py-1 rounded-full text-sm font-semibold m-1">${team}</span>`
+                ).join('');
+
+                html += `
+                    <div class="bg-amber-800 text-white p-3 rounded-xl shadow-lg w-full max-w-sm text-center">
+                        <span class="text-xl">🥉</span>
+                        <p class="text-md font-bold mt-1">Hạng Ba (Đồng hạng)</p>
+                        <div class="mt-2 flex flex-wrap justify-center">${thirdPlaceHtml}</div>
+                    </div>
+                `;
+            }
+            
+            html += `</div>`;
+            container.innerHTML = html;
+        }
+
+        /**
+         * Hàm chính để tải và cập nhật dữ liệu.
+         */
+        async function fetchAndUpdateData() {
+            const statusElement = document.getElementById('statusMessage');
+            statusElement.textContent = 'Đang tải dữ liệu...';
+            statusElement.classList.remove('text-red-600', 'text-green-600');
+            statusElement.classList.add('text-gray-600');
+
+            try {
+                const data = await fetchData();
+                
+                // --- Render Bảng A ---
+                renderStandingsTable(data.standingsA || [], 'standingsA');
+                renderMatchTable(data.matchesA || [], 'matchesA');
+
+                // --- Render Bảng B ---
+                renderStandingsTable(data.standingsB || [], 'standingsB');
+                renderMatchTable(data.matchesB || [], 'matchesB');
+
+                // --- Render Chung Kết ---
+                renderMatchTable(data.semifinals || [], 'semifinalsMatches', true);
+                renderMatchTable(data.final || {}, 'finalMatch', true);
+                renderPodium(data.final || {}, data.semifinals || []);
+
+                updateLastUpdateTime();
+                
+                statusElement.textContent = 'Đã cập nhật dữ liệu trực tiếp.';
+                statusElement.classList.remove('text-gray-600', 'text-red-600');
+                statusElement.classList.add('text-green-600');
+
+            } catch (error) {
+                statusElement.textContent = `Lỗi tải dữ liệu. Thử lại trong 10 giây.`;
+                statusElement.classList.remove('text-gray-600', 'text-green-600');
+                statusElement.classList.add('text-red-600');
+            }
+        }
+
+        // --- KHỞI TẠO VÀ LẮNG NGHE SỰ KIỆN ---
+
+        window.onload = () => {
+            // Thêm listeners cho Swipe
+            carousel.addEventListener('touchstart', handleTouchStart);
+            carousel.addEventListener('touchmove', handleTouchMove);
+            carousel.addEventListener('touchend', handleTouchEnd);
+            
+            // Đảm bảo tab đầu tiên là active khi load
+            goToSection(0); 
+
+            // Bắt đầu tải dữ liệu
+            fetchAndUpdateData(); 
+            setInterval(fetchAndUpdateData, UPDATE_INTERVAL);
+        };
+
+        // Đặt hàm goToSection vào window scope để có thể gọi từ HTML onclick
+        window.goToSection = goToSection;
+    </script>
+</body>
+</html>
