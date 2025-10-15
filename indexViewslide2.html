@@ -3,157 +3,104 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>TKD PICKLEBALL CHAMPIONSHIP 2025 - Kết quả</title>
+  <title>TKD PICKLEBALL CHAMPIONSHIP 2025</title>
+  <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: linear-gradient(180deg, #f0f8ff, #e0f7fa);
-      color: #333;
-      margin: 0;
-      padding: 0;
-    }
-
-    header {
-      background: #0288d1;
-      color: white;
-      text-align: center;
-      padding: 1rem;
-      font-size: 1.4rem;
-      font-weight: bold;
-    }
-
-    .tab-container {
-      display: flex;
-      overflow-x: auto;
-      background: #b3e5fc;
-      border-bottom: 2px solid #0288d1;
-      scrollbar-width: none;
-    }
-
-    .tab-container::-webkit-scrollbar {
-      display: none;
-    }
-
-    .tab {
-      flex: 0 0 auto;
-      padding: 1rem 1.5rem;
-      cursor: pointer;
-      border-right: 1px solid #81d4fa;
-      font-weight: 600;
-      color: #01579b;
-      transition: background 0.3s;
-    }
-
-    .tab.active {
-      background: #0288d1;
-      color: white;
-    }
-
-    .content {
-      display: none;
-      padding: 1.5rem;
-      animation: fadeIn 0.3s ease-in-out;
-    }
-
-    .content.active {
-      display: block;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      background: white;
-      border-radius: 10px;
-      overflow: hidden;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    }
-
-    th, td {
-      border: 1px solid #ccc;
-      padding: 10px;
-      text-align: center;
-    }
-
-    th {
-      background: #0288d1;
-      color: white;
-    }
-
-    tr:nth-child(even) {
-      background: #f1f8e9;
-    }
-
-    @keyframes fadeIn {
-      from { opacity: 0; }
-      to { opacity: 1; }
-    }
+    body { background-color: #f0f4f8; overflow-x: hidden; }
+    #content-carousel { display: flex; width: 300vw; transition: transform 0.3s ease-in-out; }
+    .swipe-section { width: 100vw; flex-shrink: 0; padding: 1rem; min-height: calc(100vh - 160px); overflow-y: auto; }
   </style>
 </head>
-<body>
-  <header>
-    🏆 TKD PICKLEBALL CHAMPIONSHIP 2025<br>
-    Ngày 18/10/2025
+<body class="font-sans">
+  <!-- PHẦN TIÊU ĐỀ CỐ ĐỊNH -->
+  <header class="fixed top-0 left-0 right-0 z-30 bg-white shadow-md p-4">
+    <h1 class="text-xl font-extrabold text-blue-800 text-center">🏆 TKD PICKLEBALL CHAMPIONSHIP 2025</h1>
+    <p class="text-center text-gray-600 text-sm">Ngày 18/10/2025</p>
+
+    <div id="tab-controls" class="flex justify-around mt-3 mb-2 max-w-lg mx-auto">
+      <button onclick="goToSection(0)" class="tab-btn active px-4 py-2 text-sm font-semibold rounded-full bg-blue-600 text-white">Vòng Bảng</button>
+      <button onclick="goToSection(1)" class="tab-btn px-4 py-2 text-sm font-semibold rounded-full bg-blue-100 text-blue-800">Bán Kết</button>
+      <button onclick="goToSection(2)" class="tab-btn px-4 py-2 text-sm font-semibold rounded-full bg-blue-100 text-blue-800">Chung Kết</button>
+    </div>
+
+    <div id="statusMessage" class="text-center text-sm font-medium text-gray-600">Đang tải dữ liệu...</div>
   </header>
 
-  <div class="tab-container" id="tabs"></div>
-  <div id="content"></div>
+  <!-- PHẦN NỘI DUNG CHÍNH (VUỐT NGANG) -->
+  <main id="main-content-wrapper" class="pt-[180px] md:pt-[150px] overflow-hidden">
+    <div id="content-carousel">
+      <section class="swipe-section" id="rounds"></section>
+      <section class="swipe-section" id="semifinals"></section>
+      <section class="swipe-section" id="finals"></section>
+    </div>
+  </main>
 
   <script>
-    const dataUrl = 'https://raw.githubusercontent.com/cqtin2024/pickleball/main/data/state.json';
+    const DATA_URL = 'https://raw.githubusercontent.com/cqtin2024/pickleball/main/data/state.json';
+    const carousel = document.getElementById('content-carousel');
+    let currentIndex = 0;
+    let startX = 0, deltaX = 0, isSwiping = false;
 
-    async function loadData() {
-      try {
-        const response = await fetch(dataUrl);
-        const data = await response.json();
-        renderTabs(data);
-      } catch (error) {
-        document.getElementById('content').innerHTML = '<p style="color:red;text-align:center">Không thể tải dữ liệu.</p>';
+    function goToSection(index) {
+      currentIndex = index;
+      carousel.style.transform = `translateX(${index * -100}vw)`;
+      document.querySelectorAll('.tab-btn').forEach((btn, i) => {
+        btn.classList.toggle('bg-blue-600', i === index);
+        btn.classList.toggle('text-white', i === index);
+        btn.classList.toggle('bg-blue-100', i !== index);
+        btn.classList.toggle('text-blue-800', i !== index);
+      });
+    }
+
+    function handleTouchStart(e) { startX = e.touches[0].clientX; isSwiping = true; carousel.style.transition = 'none'; }
+    function handleTouchMove(e) { if (!isSwiping) return; deltaX = e.touches[0].clientX - startX; carousel.style.transform = `translateX(calc(${currentIndex * -100}vw + ${deltaX}px))`; }
+    function handleTouchEnd() {
+      if (!isSwiping) return;
+      isSwiping = false;
+      if (deltaX < -50 && currentIndex < 2) currentIndex++;
+      else if (deltaX > 50 && currentIndex > 0) currentIndex--;
+      goToSection(currentIndex);
+      carousel.style.transition = 'transform 0.3s ease-in-out';
+      deltaX = 0;
+    }
+
+    carousel.addEventListener('touchstart', handleTouchStart);
+    carousel.addEventListener('touchmove', handleTouchMove);
+    carousel.addEventListener('touchend', handleTouchEnd);
+
+    async function fetchData() {
+      const res = await fetch(DATA_URL);
+      const data = await res.json();
+      document.getElementById('statusMessage').textContent = 'Đã tải dữ liệu thành công';
+      renderData(data);
+    }
+
+    function renderData(data) {
+      renderTable(data.rounds || data.matches || [], 'rounds', 'Vòng Bảng');
+      renderTable(data.semifinals || [], 'semifinals', 'Bán Kết');
+      renderTable(data.final || data.finals || [], 'finals', 'Chung Kết');
+    }
+
+    function renderTable(list, containerId, title) {
+      const container = document.getElementById(containerId);
+      if (!list || list.length === 0) {
+        container.innerHTML = `<div class='text-center text-gray-500 mt-10'>Không có dữ liệu ${title}</div>`;
+        return;
       }
+
+      let html = `<div class='bg-white p-4 rounded-xl shadow-lg'><h2 class='text-xl font-bold text-blue-700 mb-3 text-center'>${title}</h2>`;
+      html += `<div class='overflow-x-auto'><table class='min-w-full divide-y divide-gray-200 text-sm'><thead class='bg-blue-600 text-white sticky top-0'><tr>`;
+      const keys = Object.keys(list[0]);
+      keys.forEach(k => html += `<th class='px-3 py-2'>${k}</th>`);
+      html += `</tr></thead><tbody class='bg-white divide-y divide-gray-100'>`;
+      list.forEach(item => {
+        html += `<tr class='hover:bg-blue-50'>${keys.map(k => `<td class='px-3 py-2 text-center'>${item[k] ?? ''}</td>`).join('')}</tr>`;
+      });
+      html += '</tbody></table></div></div>';
+      container.innerHTML = html;
     }
 
-    function renderTabs(data) {
-      const tabsContainer = document.getElementById('tabs');
-      const contentContainer = document.getElementById('content');
-      const rounds = Object.keys(data);
-
-      rounds.forEach((round, index) => {
-        const tab = document.createElement('div');
-        tab.className = 'tab' + (index === 0 ? ' active' : '');
-        tab.innerText = round;
-        tab.onclick = () => switchTab(index);
-        tabsContainer.appendChild(tab);
-
-        const section = document.createElement('div');
-        section.className = 'content' + (index === 0 ? ' active' : '');
-        section.innerHTML = createTableHTML(data[round]);
-        contentContainer.appendChild(section);
-      });
-    }
-
-    function switchTab(index) {
-      document.querySelectorAll('.tab').forEach((t, i) => {
-        t.classList.toggle('active', i === index);
-      });
-      document.querySelectorAll('.content').forEach((c, i) => {
-        c.classList.toggle('active', i === index);
-      });
-    }
-
-    function createTableHTML(roundData) {
-      if (!roundData || roundData.length === 0) return '<p>Không có dữ liệu</p>';
-
-      const keys = Object.keys(roundData[0]);
-      let html = '<table><thead><tr>';
-      keys.forEach(k => html += `<th>${k}</th>`);
-      html += '</tr></thead><tbody>';
-      roundData.forEach(row => {
-        html += '<tr>' + keys.map(k => `<td>${row[k]}</td>`).join('') + '</tr>';
-      });
-      html += '</tbody></table>';
-      return html;
-    }
-
-    loadData();
+    fetchData();
   </script>
 </body>
 </html>
