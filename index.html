@@ -82,6 +82,18 @@
             transform: scale(1.05); /* Nổi bật hơn */
         }
         
+        /* CSS cho hình ảnh Vô địch */
+        .champion-image {
+            max-width: 100%;
+            max-height: 150px; /* Giới hạn chiều cao */
+            width: auto;
+            border-radius: 8px;
+            margin-top: 10px;
+            border: 3px solid #f97316; /* Màu cam nổi bật */
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            object-fit: cover; /* Đảm bảo ảnh hiển thị đẹp */
+        }
+
         /* Định dạng riêng cho thẻ Á Quân */
         #runnerUp-card {
             background-color: #e9ecef; /* Xám nhạt */
@@ -197,6 +209,9 @@
             }
             h4.mt-3 { font-size: 1.25rem; }
             .btn-refresh { width: 50px; height: 50px; bottom: 15px; right: 15px; }
+            .champion-image {
+                max-height: 100px;
+            }
         }
     </style>
 </head>
@@ -225,7 +240,7 @@
             <div class="col-lg-4 col-md-6 mb-3">
                 <div id="champion-card" class="result-card shadow-lg">
                     <div class="text-xl font-semibold mb-1">🥇 Vô địch:</div>
-                    <!-- Khung chờ ban đầu -->
+                    <!-- Khung kết quả Vô địch, sẽ chứa cả tên đội và ảnh -->
                     <div id="champion" class="text-2xl font-extrabold text-success">
                         <span class="skeleton-loader w-3/4 h-8 block mx-auto"></span>
                     </div>
@@ -313,7 +328,7 @@
         <!-- Nút Refresh -->
         <button class="btn btn-primary btn-refresh" onclick="capNhatToanBoDuLieuTuXa()" title="Cập nhật kết quả từ GitHub">
             <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="currentColor" class="bi bi-arrow-clockwise" viewBox="0 0 16 16">
-                <path fill-rule="evenodd" d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 5 0 1 1 8 2z"/>
+                <path fill-rule="evenodd" d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2z"/>
                 <path d="M8 4.466V.54a.5.5 0 0 1 .83-.375l2.67 2.479a.5.5 0 0 1 0 .752l-2.67 2.479a.5.5 0 0 1-.83-.375z"/>
             </svg>
         </button>
@@ -331,7 +346,7 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Dữ liệu ban đầu (chỉ còn cấu trúc khung, không còn lịch đấu cụ thể)
+        // Dữ liệu ban đầu (chỉ còn cấu trúc khung)
         const LOCAL_STATE_JSON = JSON.parse(`{
             "mixedTeams": [],
             "maleTeams": [],
@@ -343,14 +358,15 @@
                 { "id": "SF2", "teamA": "Chưa xác định", "teamB": "Chưa xác định", "scoreA": null, "scoreB": null, "time": "16:30", "court": "Sân 2", "winner": null, "loser": null }
             ],
             "final": {
-                "id": "FIN", "teamA": "Thắng SF1", "teamB": "Thắng SF2", "scoreA": null, "scoreB": null, "time": "17:00", "court": "Sân 1", "winner": null, "loser": null
+                "id": "FIN", "teamA": "Thắng SF1", "teamB": "Thắng SF2", "scoreA": null, "scoreB": null, "time": "17:00", "court": "Sân 1", "winner": null, "loser": null,
+                "championImageUrl": null 
             }
         }`);
         
         // URL tải lịch đấu và tỉ số (Dữ liệu chính)
         const REMOTE_STATE_URL = 'https://raw.githubusercontent.com/cqtin2024/pickleball/main/data/state.json';
         
-        // URL tải danh sách đội ban đầu (Dữ liệu phụ)
+        // URL tải danh sách đội ban đầu (Dữ liệu phụ) - Tạm thời sử dụng chính state.json nếu players.json không tồn tại
         const PLAYER_DATA_URL = 'https://raw.githubusercontent.com/cqtin2024/pickleball/main/data/players.json';
 
         const MAX_RETRIES = 5;
@@ -366,18 +382,13 @@
             indicator.style.display = show ? 'flex' : 'none';
         }
 
-        // Tạo ID duy nhất cho trận đấu vòng bảng để hợp nhất dữ liệu (không dùng trong phiên bản này nhưng giữ lại)
-        function generateMatchId(match) {
-            const teams = [match.teamA, match.teamB].sort();
-            return `${match.bang}-${teams[0]}-${teams[1]}`;
-        }
-        
         // Cập nhật kết quả thắng/thua cho trận đấu vòng loại (SF, FIN)
         function kiemTraKetQuaKnockout(match) {
-            if (match.scoreA !== null && match.scoreB !== null) {
-                const scoreA = parseInt(match.scoreA);
-                const scoreB = parseInt(match.scoreB);
-                
+            // Kiểm tra và chuyển đổi điểm số sang số nguyên
+            const scoreA = match.scoreA !== null ? parseInt(match.scoreA) : null;
+            const scoreB = match.scoreB !== null ? parseInt(match.scoreB) : null;
+            
+            if (scoreA !== null && scoreB !== null) {
                 if (scoreA > scoreB) {
                     match.winner = match.teamA;
                     match.loser = match.teamB;
@@ -385,6 +396,7 @@
                     match.winner = match.teamB;
                     match.loser = match.teamA;
                 } else {
+                    // Trường hợp hòa (rất hiếm trong knockout)
                     match.winner = null;
                     match.loser = null;
                 }
@@ -394,11 +406,14 @@
             }
         }
 
-        // Tính toán lại Bảng xếp hạng
+        /**
+         * Tính toán lại Bảng xếp hạng Vòng Bảng.
+         * Logic: 3 điểm cho thắng, 0 điểm cho thua. Ưu tiên: Điểm > Hiệu số > Điểm thắng.
+         */
         function tinhBangXepHang() {
             const newStandings = {};
             
-            // Khởi tạo bảng xếp hạng mới từ danh sách đội đã tải
+            // Khởi tạo bảng xếp hạng mới từ danh sách đội (state.standings đã được load)
             state.standings.forEach(s => {
                 newStandings[s.team] = { ...s, wins: 0, losses: 0, pointsW: 0, pointsL: 0, diff: 0, points: 0 };
             });
@@ -412,32 +427,27 @@
                     const sA = parseInt(scoreA);
                     const sB = parseInt(scoreB);
                     
-                    // Chỉ xử lý nếu cả hai đội tồn tại trong bảng xếp hạng (đã được khởi tạo từ players.json)
                     if (newStandings[teamA] && newStandings[teamB]) {
                         if (sA > sB) {
                             newStandings[teamA].wins++;
                             newStandings[teamB].losses++;
+                            newStandings[teamA].points += 3; // 3 điểm cho thắng
                             match.winner = teamA;
                             match.loser = teamB;
                         } else if (sB > sA) {
                             newStandings[teamB].wins++;
                             newStandings[teamA].losses++;
+                            newStandings[teamB].points += 3; // 3 điểm cho thắng
                             match.winner = teamB;
                             match.loser = teamA;
                         } else {
-                            // Hòa (giả định 1 điểm cho mỗi đội nếu luật cho phép)
-                            newStandings[teamA].points += 1;
-                            newStandings[teamB].points += 1;
+                            // Hòa (Nếu luật cho phép 1 điểm cho hòa, nhưng thường không có trong Pickleball)
+                            // Hiện tại không thêm điểm nếu hòa, chỉ cập nhật điểm ghi
                             match.winner = null;
                             match.loser = null;
                         }
-                        
-                        if (sA !== sB) {
-                            // 3 điểm cho thắng, 0 điểm cho thua
-                            if (sA > sB) newStandings[teamA].points += 3;
-                            if (sB > sA) newStandings[teamB].points += 3;
-                        }
 
+                        // Cập nhật điểm ghi và điểm bị ghi
                         newStandings[teamA].pointsW += sA;
                         newStandings[teamA].pointsL += sB;
                         newStandings[teamB].pointsW += sB;
@@ -457,45 +467,56 @@
             
             // Sắp xếp
             state.standings.sort((a, b) => {
-                if (b.bang === a.bang) {
-                    if (b.points !== a.points) return b.points - a.points; // Điểm
-                    if (b.diff !== a.diff) return b.diff - a.diff;         // Hiệu số
-                    return b.pointsW - a.pointsW;                         // Điểm thắng
+                // Sắp xếp riêng cho từng bảng (A sau đó B)
+                if (a.bang !== b.bang) {
+                    return a.bang.localeCompare(b.bang);
                 }
-                return 0; // Giữ nguyên thứ tự nếu khác bảng
+                
+                // Tiêu chí sắp xếp trong cùng một bảng
+                if (b.points !== a.points) return b.points - a.points; // 1. Điểm
+                if (b.diff !== a.diff) return b.diff - a.diff;         // 2. Hiệu số (Point Difference)
+                return b.pointsW - a.pointsW;                         // 3. Điểm thắng (Points For)
             });
         }
         
-        // Cập nhật các trận đấu Bán kết và Chung kết dựa trên Bảng xếp hạng
+        /**
+         * Cập nhật đội vào các trận Knockout (SF, FIN) và xác định người thắng/thua cho các trận đã có tỉ số.
+         * QUAN TRỌNG: CHỈ cập nhật teamA/teamB nếu trận đấu CHƯA CÓ tỉ số.
+         */
         function capNhatTranhChungKet() {
             // Lấy 2 đội dẫn đầu mỗi bảng (giả sử bảng xếp hạng đã được sắp xếp)
             const topA = state.standings.filter(s => s.bang === 'A').slice(0, 2).map(s => s.team);
             const topB = state.standings.filter(s => s.bang === 'B').slice(0, 2).map(s => s.team);
             
-            // Lấy các trận bán kết hiện tại (sẽ bị ghi đè nếu state.json cung cấp đầy đủ)
             const sf1 = state.semifinals[0];
             const sf2 = state.semifinals[1];
 
-            // Cập nhật các trận bán kết (giả định thể thức 1A vs 2B, 1B vs 2A)
-            if (topA.length >= 2 && topB.length >= 2) {
+            // 1. Cập nhật các trận bán kết CHỈ KHI CHƯA CÓ TỈ SỐ
+            if (sf1.scoreA === null && sf1.scoreB === null && topA.length >= 2 && topB.length >= 2) {
                 // SF1: 1A vs 2B
                 sf1.teamA = topA[0] || 'Chưa xác định A1';
                 sf1.teamB = topB[1] || 'Chưa xác định B2';
-                
+            }
+
+            if (sf2.scoreA === null && sf2.scoreB === null && topA.length >= 2 && topB.length >= 2) {
                 // SF2: 1B vs 2A
                 sf2.teamA = topB[0] || 'Chưa xác định B1';
                 sf2.teamB = topA[1] || 'Chưa xác định A2';
             }
 
-            // Cập nhật trận chung kết
+            // 2. Kiểm tra kết quả vòng loại để xác định người thắng/thua
+            state.semifinals.forEach(kiemTraKetQuaKnockout);
+
             const sf1Winner = sf1.winner;
             const sf2Winner = sf2.winner;
-            
-            state.final.teamA = sf1Winner || 'Thắng SF1';
-            state.final.teamB = sf2Winner || 'Thắng SF2';
 
-            // Kiểm tra kết quả vòng loại (chỉ cập nhật tên đội nếu đã có kết quả)
-            state.semifinals.forEach(kiemTraKetQuaKnockout);
+            // 3. Cập nhật trận chung kết CHỈ KHI CHƯA CÓ TỈ SỐ
+            if (state.final.scoreA === null && state.final.scoreB === null) {
+                state.final.teamA = sf1Winner || 'Thắng SF1';
+                state.final.teamB = sf2Winner || 'Thắng SF2';
+            }
+            
+            // 4. Tính toán kết quả trận chung kết
             kiemTraKetQuaKnockout(state.final);
         }
 
@@ -504,20 +525,30 @@
             console.log("Đang tải danh sách đội từ players.json...");
             toggleLoading(true);
             try {
-                const response = await fetch(PLAYER_DATA_URL);
-                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-                const playerData = await response.json();
+                // Thử tải players.json
+                let response = await fetch(PLAYER_DATA_URL);
+                let playerData;
+                
+                if (response.ok) {
+                    playerData = await response.json();
+                } else {
+                    // Nếu không có players.json, thử tải state.json để lấy danh sách đội ban đầu
+                    console.warn("Không tìm thấy players.json. Thử tải state.json...");
+                    response = await fetch(REMOTE_STATE_URL);
+                    if (!response.ok) throw new Error("Không thể tải players.json hoặc state.json.");
+                    playerData = await response.json();
+                }
                 
                 // Cập nhật đội vào state
-                state.mixedTeams = playerData.mixedTeams || [];
-                state.maleTeams = playerData.maleTeams || [];
+                const mixedTeams = playerData.mixedTeams || [];
+                const maleTeams = playerData.maleTeams || [];
                 
                 // Khởi tạo Standings rỗng
                 const newStandings = [];
-                state.mixedTeams.forEach(team => {
+                mixedTeams.forEach(team => {
                     newStandings.push({ team, wins: 0, losses: 0, pointsW: 0, pointsL: 0, bang: "A", diff: 0, points: 0 });
                 });
-                state.maleTeams.forEach(team => {
+                maleTeams.forEach(team => {
                     newStandings.push({ team, wins: 0, losses: 0, pointsW: 0, pointsL: 0, bang: "B", diff: 0, points: 0 });
                 });
                 state.standings = newStandings;
@@ -525,9 +556,8 @@
                 console.log("Khởi tạo danh sách đội và bảng xếp hạng thành công.");
                 toggleLoading(false);
             } catch (error) {
-                console.error("Lỗi khi tải hoặc xử lý players.json:", error.message);
+                console.error("Lỗi khi tải hoặc xử lý players/state.json:", error.message);
                 toggleLoading(false);
-                // Hiển thị thông báo trong giao diện nếu có lỗi nghiêm trọng
                 const defaultContent = `<p class="text-center text-red-500 p-5 font-bold">LỖI TẢI DỮ LIỆU ĐỘI: Không thể tải danh sách đội. Đang sử dụng dữ liệu mặc định.</p>`;
                 document.getElementById('groupMatchesA').innerHTML = defaultContent;
                 document.getElementById('groupMatchesB').innerHTML = defaultContent;
@@ -563,7 +593,15 @@
                     </thead>
                     <tbody>`;
                 
-                filteredStandings.forEach((s, index) => {
+                // Sắp xếp lại lần nữa để đảm bảo thứ tự
+                const sortedFilteredStandings = [...filteredStandings].sort((a, b) => {
+                    if (b.points !== a.points) return b.points - a.points; 
+                    if (b.diff !== a.diff) return b.diff - a.diff;         
+                    return b.pointsW - a.pointsW;                         
+                });
+
+
+                sortedFilteredStandings.forEach((s, index) => {
                     const rank = index + 1;
                     const rowClass = rank <= 2 ? 'top-2' : ''; // Đội vào vòng trong
                     const badgeClass = rank === 1 ? 'badge-position-1' : (rank === 2 ? 'badge-position-2' : 'bg-secondary');
@@ -751,7 +789,7 @@
             document.getElementById('finalMatch').innerHTML = fHtml;
         }
         
-        // Render Kết quả chung cuộc
+        // Render Kết quả chung cuộc - Hiển thị ảnh đội vô địch
         function renderFinalResults() {
             const final = state.final;
             
@@ -768,11 +806,23 @@
 
             // Khung chờ (Skeleton Loader HTML)
             const loadingHtml = `<span class="skeleton-loader w-3/4 h-8 block mx-auto"></span>`;
+            
+            // Tên đội vô địch (Champion Name HTML)
+            const championNameHtml = final.winner 
+                ? `<span class="text-orange-600">${final.winner}</span>` 
+                : loadingHtml;
+                
+            // Hình ảnh đội vô địch (Champion Image HTML)
+            let championImageHtml = '';
+            if (final.winner && final.championImageUrl) {
+                championImageHtml = `<img src="${final.championImageUrl}" alt="Ảnh Đội Vô Địch ${final.winner}" class="champion-image" onerror="this.onerror=null;this.src='https://placehold.co/150x100/f87171/ffffff?text=CHAMPION';">`;
+            } else if (final.winner) {
+                 // Nếu có tên đội nhưng không có ảnh, hiển thị placeholder nhỏ
+                championImageHtml = `<img src="https://placehold.co/150x100/f87171/ffffff?text=CHAMPION" alt="Placeholder" class="champion-image">`;
+            }
 
             // Vô địch
-            document.getElementById('champion').innerHTML = final.winner 
-                ? `<span class="text-warning-800">${final.winner}</span>` 
-                : loadingHtml;
+            document.getElementById('champion').innerHTML = `${championNameHtml} ${championImageHtml}`;
 
             // Á quân
             document.getElementById('runnerUp').innerHTML = final.loser 
@@ -780,7 +830,7 @@
                 : loadingHtml;
                 
             // Hạng ba (Đồng hạng 3)
-            document.getElementById('thirdPlace').innerHTML = thirdPlaceTeams.length === 2
+            document.getElementById('thirdPlace').innerHTML = thirdPlaceTeams.length >= 1
                 ? `<span class="text-info-700">${thirdPlaceTeams.join(' & ')}</span>`
                 : loadingHtml;
         }
@@ -802,7 +852,8 @@
             
             // Nếu remoteState.final tồn tại, sử dụng nó. Nếu không, giữ nguyên mặc định.
             if (remoteState.final && remoteState.final.id) {
-                state.final = remoteState.final;
+                // Hợp nhất dữ liệu final, đảm bảo không ghi đè nếu remote thiếu trường
+                state.final = { ...state.final, ...remoteState.final };
             }
 
             // Bắt buộc chạy lại các hàm tính toán:
@@ -865,7 +916,7 @@
             console.log("Khởi tạo ứng dụng...");
             state = JSON.parse(JSON.stringify(LOCAL_STATE_JSON)); // Sao chép sâu cấu trúc cơ bản
 
-            // 1. Tải danh sách đội và khởi tạo bảng xếp hạng (từ players.json)
+            // 1. Tải danh sách đội và khởi tạo bảng xếp hạng (từ players.json hoặc state.json)
             await initializeStateFromPlayers();
 
             // 2. Tải lịch đấu và kết quả (từ state.json) và render
