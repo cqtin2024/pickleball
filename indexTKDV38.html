@@ -362,7 +362,7 @@ async function fetchFileSha(cfg, fileName = cfg.file) {
             }
             return { sha: null, content: null };
         } else {
-            throw new Error(`Lỗi khi lấy SHA: ${response.statusText}`);
+            throw new Error(`Lỗi khi lấy SHA: ${response.status} - ${response.statusText}`);
         }
     } catch (error) {
         console.error(`Lỗi Fetch SHA (${fileName}):`, error);
@@ -413,11 +413,11 @@ async function loadFromGitHub() {
     if (!cfg.owner || !cfg.repo || !cfg.token) return;
 
     // 1. Load Teams (danh sách đội)
-    await loadPlayersFromGitHub(cfg); 
+    const teamsLoaded = await loadPlayersFromGitHub(cfg); 
 
     // 2. Load App State (state.json)
     try {
-        updateStatus('configStatus', 'info', 'Đang tải trạng thái giải đấu từ GitHub (state.json)...');
+        updateStatus('configStatus', 'info', teamsLoaded ? 'Đang tải trạng thái giải đấu từ GitHub (state.json)...' : 'Đang tải trạng thái giải đấu (state.json)...');
         // fetchFileSha sẽ tự động cập nhật currentSha
         const result = await fetchFileSha(cfg, cfg.file); 
         
@@ -724,8 +724,9 @@ async function checkConnection() {
     }
 
     try {
-        updateStatus('configStatus', 'info', 'Đang kiểm tra kết nối...');
+        updateStatus('configStatus', 'info', 'Đang kiểm tra kết nối và quyền truy cập kho lưu trữ...');
         
+        // 1. Kiểm tra kho lưu trữ có tồn tại và có quyền truy cập không
         const repoCheckUrl = `https://api.github.com/repos/${cfg.owner}/${cfg.repo}`;
         const repoResponse = await fetch(repoCheckUrl, {
             headers: {
@@ -734,11 +735,15 @@ async function checkConnection() {
             }
         });
 
-        if (!repoResponse.ok) {
-            throw new Error(`Lỗi truy cập kho lưu trữ. Mã: ${repoResponse.status}. (Kiểm tra Token/Repo/Owner)`);
+        if (repoResponse.status === 404) {
+            throw new Error(`Không tìm thấy kho lưu trữ: ${cfg.owner}/${cfg.repo}.`);
+        } else if (!repoResponse.ok) {
+            throw new Error(`Lỗi truy cập kho lưu trữ (Mã: ${repoResponse.status}). (Kiểm tra Token/Quyền truy cập)`);
         }
         
         updateStatus('configStatus', 'success', 'Kết nối GitHub thành công! Đang tải dữ liệu...');
+        
+        // 2. Chuyển sang quy trình tải dữ liệu (sẽ tự động xử lý players.json và state.json)
         await loadFromGitHub();
 
     } catch (error) {
@@ -1738,4 +1743,457 @@ function calculateRanking(teams, matches) {
         setsWon: 0, // Tổng sets thắng
         setsLost: 0, // Tổng sets thua
         setDifference: 0, // Hiệu số set
-        // totalPoints
+        // totalPointsScored và totalPointsConceded sẽ chứa tổng điểm thực tế (chứ không phải set)
+        // do không có dữ liệu điểm chi tiết, ta dùng setsWon/setsLost làm điểm proxy.
+        totalPointsScored: 0, // Tổng điểm ghi được (tạm dùng setsWon)
+        totalPointsConceded: 0, // Tổng điểm thua (tạm dùng setsLost)
+        pointDifference: 0, // Hiệu số tổng điểm
+        matchesPlayed: 0
+    }));
+
+    matches.forEach(match => {
+        if (match.scoreA !== null && match.scoreB !== null && match.winner !== null) {
+            const isMatchValid = match.scoreA !== match.scoreB;
+            
+            stats.forEach(rank => {
+                const teamAisRank = rank.team === match.teamA;
+                const teamBisRank = rank.team === match.teamB;
+
+                if (teamAisRank || teamBisRank) {
+                    rank.matchesPlayed++;
+                }
+
+                // Cập nhật Sets Won/Lost (Set Scores)
+                if (teamAisRank) {
+                    rank.setsWon += match.scoreA;
+                    rank.setsLost += match.scoreB;
+                } else if (teamBisRank) {
+                    rank.setsWon += match.scoreB;
+                    rank.setsLost += match.scoreA;
+                }
+                
+                // Cập nhật Total Points Scored/Conceded (Tạm dùng setsWon/setsLost làm proxy)
+                 if (teamAisRank) {
+                    rank.totalPointsScored += match.scoreA;
+                    rank.totalPointsConceded += match.scoreB;
+                } else if (teamBisRank) {
+                    rank.totalPointsScored += match.scoreB;
+                    rank.totalPointsConceded += match.scoreA;
+                }
+
+                // Cập nhật Points (Win=1)
+                if (match.winner === rank.team) {
+                    rank.won++;
+                    rank.points += 1;
+                } else if (match.loser === rank.team) {
+                    rank.lost++;
+                }
+            });
+        }
+    });
+    
+    // Tính hiệu số set và điểm
+    stats.forEach(rank => {
+        rank.setDifference = rank.setsWon - rank.setsLost;
+        rank.pointDifference = rank.totalPointsScored - rank.totalPointsConceded;
+    });
+
+    // 2. Sắp xếp theo quy tắc mới:
+    stats.sort((a, b) => {
+        // 1. Điểm số (Win 1, Loss 0)
+        if (b.points !== a.points) return b.points - a.points;
+
+        // --- Tie Breaker Logic (Khi điểm bằng nhau) ---
+        
+        // --- Tìm các đội đang bằng điểm (Cần H2H cho 2 đội) ---
+        // Lọc ra các đội có cùng điểm với đội A/B để xác định có bao nhiêu đội đang hòa.
+        const tiedTeams = stats.filter(t => t.points === a.points && teams.includes(t.team));
+
+        // 2.a. Nếu chỉ 2 đội bằng điểm: Xét đối đầu trực tiếp (H2H)
+        if (tiedTeams.length === 2) {
+            const h2hMatch = matches.find(m => 
+                (m.teamA === a.team && m.teamB === b.team) || 
+                (m.teamA === b.team && m.teamB === a.team)
+            );
+            
+            if (h2hMatch && h2hMatch.winner) {
+                if (h2hMatch.winner === a.team) return -1; // A thắng H2H, A xếp trên
+                if (h2hMatch.winner === b.team) return 1;  // B thắng H2H, B xếp trên
+            }
+        } 
+        
+        // 2.b. Nếu nhiều hơn 2 đội cùng điểm hoặc H2H không phân định: Hiệu số Set
+        if (b.setDifference !== a.setDifference) return b.setDifference - a.setDifference;
+
+        // 2.c. Tổng điểm ghi được (Sets Won)
+        if (b.totalPointsScored !== a.totalPointsScored) return b.totalPointsScored - a.totalPointsScored;
+        
+        // 2.d. Hiệu số tổng điểm (Point Difference)
+        return b.pointDifference - a.pointDifference; 
+    });
+
+    return stats;
+}
+
+function tinhVaCapNhatXepHang() {
+    state.tableA = calculateRanking(state.mixedTeams, state.matchesA);
+    state.tableB = calculateRanking(state.maleTeams, state.matchesB);
+    renderRankingTables();
+}
+
+function renderRankingTables() {
+    const container = document.getElementById('rankingTables');
+    if (!container) return; // Đảm bảo phần tử tồn tại
+
+    let htmlA = renderSingleRankingTable(state.tableA, 'A (Nam - Nữ)');
+    let htmlB = renderSingleRankingTable(state.tableB, 'B (Nam)');
+
+    container.innerHTML = htmlA + htmlB;
+}
+
+function renderSingleRankingTable(ranking, title) {
+    if (ranking.length === 0) {
+         return `<div><h6>Bảng ${title}</h6><div class="alert alert-info">Chưa có đội tham gia hoặc dữ liệu</div></div>`;
+    }
+    
+    let html = `
+        <div class="table-responsive">
+        <h6>Bảng ${title}</h6>
+        <table class="table table-sm table-bordered table-striped small align-middle">
+            <thead>
+                <tr class="table-primary">
+                    <th>#</th>
+                    <th>Đội</th>
+                    <th title="Số trận thắng">Thắng</th>
+                    <th title="Số trận thua">Thua</th>
+                    <th title="Tổng số sets thắng">Set Th.</th>
+                    <th title="Tổng số sets thua">Set Th.</th>
+                    <th title="Hiệu số sets (Set Thắng - Set Thua)">HS Set</th>
+                    <th title="Điểm số (Thắng 1)">Điểm</th>
+                </tr>
+            </thead>
+            <tbody>
+    `;
+    
+    ranking.forEach((rank, index) => {
+        const rankClass = index < 2 ? 'table-success fw-bold' : ''; // Top 2 vào bán kết
+        html += `
+            <tr class="${rankClass}">
+                <td>${index + 1}</td>
+                <td class="text-start">${rank.team}</td>
+                <td>${rank.won}</td>
+                <td>${rank.lost}</td>
+                <td>${rank.setsWon}</td>
+                <td>${rank.setsLost}</td>
+                <td>${rank.setDifference > 0 ? '+' : ''}${rank.setDifference}</td>
+                <td>${rank.points}</td>
+            </tr>
+        `;
+    });
+    
+    html += `</tbody></table></div>`;
+    return html;
+}
+
+/**
+ * Hàm cập nhật đội vào Bán kết/Chung kết dựa trên bảng xếp hạng.
+ */
+function updateFinalsTeams() {
+    const teamA1 = state.tableA.length > 0 ? state.tableA[0].team : 'Nhất A';
+    const teamA2 = state.tableA.length > 1 ? state.tableA[1].team : 'Nhì A';
+    const teamB1 = state.tableB.length > 0 ? state.tableB[0].team : 'Nhất B';
+    const teamB2 = state.tableB.length > 1 ? state.tableB[1].team : 'Nhì B';
+
+    // ĐIỀU CHỈNH: SF1: Nhất A vs Nhì A, SF2: Nhất B vs Nhì B (Cùng bảng)
+    if (state.semifinals[0].teamA === 'Nhất A' || !state.semifinals[0].winner) {
+        state.semifinals[0].teamA = teamA1; // Nhất A
+        state.semifinals[0].teamB = teamA2; // Nhì A
+    }
+    
+    if (state.semifinals[1].teamA === 'Nhất B' || !state.semifinals[1].winner) {
+        state.semifinals[1].teamA = teamB1; // Nhất B
+        state.semifinals[1].teamB = teamB2; // Nhì B
+    }
+    
+    // Cập nhật đội vào Chung kết (nếu bán kết đã hoàn thành)
+    const winnerSF1 = state.semifinals[0].winner;
+    const winnerSF2 = state.semifinals[1].winner;
+    
+    if (state.final.teamA === 'Thắng SF1' || !state.final.winner) {
+        state.final.teamA = winnerSF1 || 'Thắng SF1';
+        state.final.teamB = winnerSF2 || 'Thắng SF2';
+    }
+}
+
+
+// --- Vòng Chung Kết: Render & Logic ---
+
+function scheduleFinalsAuto() {
+    // Luôn gọi hàm tính xếp hạng trước
+    tinhVaCapNhatXepHang();
+    updateFinalsTeams();
+    renderFinals();
+    stateChanged = true;
+    saveToGitHub();
+    showModal('Lịch Vòng Chung kết', 'Đã cập nhật đội vào Vòng Bán kết dựa trên bảng xếp hạng hiện tại. Vui lòng kiểm tra tab Vòng Chung Kết.');
+}
+
+function renderFinals() {
+    updateFinalsTeams();
+    
+    // 1. Render Bán kết
+    const sfContainer = document.getElementById('semifinalMatches');
+    let sfHTML = '';
+    
+    state.semifinals.forEach((match, index) => {
+        const teamA = match.teamA || `Đội A (SF${index + 1})`;
+        const teamB = match.teamB || `Đội B (SF${index + 1})`;
+        const isCompleted = match.winner !== null;
+
+        let classA = match.winner === match.teamA ? 'winner' : (match.loser === match.teamA ? 'loser' : '');
+        let classB = match.winner === match.teamB ? 'winner' : (match.loser === match.teamB ? 'loser' : '');
+
+        sfHTML += `
+            <h6 class="mt-3">Bán kết ${index + 1} (SF${index + 1}) - ${match.time}, ${match.court}</h6>
+            <div class="row align-items-center border p-2 mb-3 rounded shadow-sm">
+                <div class="col-5 text-end ${classA} fw-bold">${teamA}</div>
+                <div class="col-1 match-score-cell">
+                    <input type="number" min="0" max="15" value="${match.scoreA !== null ? match.scoreA : ''}" 
+                           onchange="handleFinalScoreInput('semifinals', ${index}, 'A', this)"
+                           class="form-control form-control-sm text-center">
+                </div>
+                <div class="col-1 match-score-cell">
+                    <input type="number" min="0" max="15" value="${match.scoreB !== null ? match.scoreB : ''}" 
+                           onchange="handleFinalScoreInput('semifinals', ${index}, 'B', this)"
+                           class="form-control form-control-sm text-center">
+                </div>
+                <div class="col-5 ${classB} fw-bold">${teamB}</div>
+            </div>
+        `;
+    });
+    sfContainer.innerHTML = sfHTML;
+
+    // 2. Render Chung kết
+    const finalMatch = state.final;
+    const finalContainer = document.getElementById('finalMatch');
+    const teamFinalA = finalMatch.teamA || `Thắng SF1`;
+    const teamFinalB = finalMatch.teamB || `Thắng SF2`;
+    
+    let classFinalA = finalMatch.winner === finalMatch.teamA ? 'winner' : (finalMatch.runnerUp === finalMatch.teamA ? 'loser' : '');
+    let classFinalB = finalMatch.winner === finalMatch.teamB ? 'winner' : (finalMatch.runnerUp === finalMatch.teamB ? 'loser' : '');
+
+    let finalHTML = `
+        <h6 class="mt-3">Chung kết (F) - ${finalMatch.time}, ${finalMatch.court}</h6>
+        <div class="row align-items-center border p-2 mb-3 rounded shadow-lg bg-light">
+            <div class="col-5 text-end ${classFinalA} fw-bold fs-5">${teamFinalA}</div>
+            <div class="col-1 match-score-cell">
+                <input type="number" min="0" max="15" value="${finalMatch.scoreA !== null ? finalMatch.scoreA : ''}" 
+                       onchange="handleFinalScoreInput('final', 0, 'A', this)"
+                       class="form-control form-control-sm text-center fs-5">
+            </div>
+            <div class="col-1 match-score-cell">
+                <input type="number" min="0" max="15" value="${finalMatch.scoreB !== null ? finalMatch.scoreB : ''}" 
+                       onchange="handleFinalScoreInput('final', 0, 'B', this)"
+                       class="form-control form-control-sm text-center fs-5">
+            </div>
+            <div class="col-5 ${classFinalB} fw-bold fs-5">${teamFinalB}</div>
+        </div>
+        <p class="mt-3 text-success fw-bold">Vô địch: ${finalMatch.winner || 'Đang chờ kết quả...'}</p>
+        <p class="text-danger fw-bold">Á quân: ${finalMatch.runnerUp || 'Đang chờ kết quả...'}</p>
+    `;
+
+    finalContainer.innerHTML = finalHTML;
+    renderFinalResults(); // Cập nhật tab kết quả chung cuộc
+}
+
+/**
+ * Xử lý nhập điểm cho Bán kết/Chung kết.
+ * ĐÃ ĐIỀU CHỈNH: Thắng 15 điểm, thua 0-14 điểm
+ */
+function handleFinalScoreInput(type, index, team, inputElement) {
+    const score = parseInt(inputElement.value);
+    const match = type === 'final' ? state.final : state.semifinals[index];
+    
+    // Chỉ chấp nhận điểm từ 0 đến 15
+    if (isNaN(score) || score < 0 || score > 15) {
+        if (team === 'A') match.scoreA = null;
+        if (team === 'B') match.scoreB = null;
+        inputElement.value = '';
+    } else {
+        if (team === 'A') match.scoreA = score;
+        if (team === 'B') match.scoreB = score;
+    }
+
+    // Cập nhật Winner/Loser (không cho hòa ở CK/BK)
+    if (match.scoreA !== null && match.scoreB !== null) {
+        const scoreA = match.scoreA;
+        const scoreB = match.scoreB;
+        
+        // VÒNG CHUNG KẾT: Thắng 15 điểm, thua 0-14 điểm (Logic mới)
+        if (scoreA === 15 && scoreB >= 0 && scoreB <= 14) {
+            match.winner = match.teamA;
+            match.loser = match.teamB;
+        } else if (scoreB === 15 && scoreA >= 0 && scoreA <= 14) {
+            match.winner = match.teamB;
+            match.loser = match.teamA;
+        } else {
+            // Trường hợp điểm không hợp lệ (e.g., 16-14, 15-15, 14-13)
+            match.winner = null;
+            match.loser = null;
+        }
+    } else {
+        match.winner = null;
+        match.loser = null;
+    }
+    
+    // Nếu là bán kết, phải cập nhật chung kết
+    if (type === 'semifinals') {
+        updateFinalsTeams();
+    }
+    
+    // Nếu là chung kết, cập nhật Vô địch/Á quân
+    if (type === 'final') {
+        state.final.runnerUp = state.final.loser;
+    }
+
+    // Lưu trạng thái và render lại
+    stateChanged = true;
+    renderFinals(); 
+    renderFinalResults();
+    renderOverview();
+}
+
+
+function renderFinalResults() {
+    const finalMatch = state.final;
+    const sf1 = state.semifinals[0];
+    const sf2 = state.semifinals[1];
+
+    let champion = finalMatch.winner || 'Đang chờ kết quả...';
+    let runnerUp = finalMatch.runnerUp || 'Đang chờ kết quả...';
+
+    // Xác định đội hạng ba (Hai đội thua bán kết đồng hạng)
+    let thirdPlaceTeams = [];
+    if (sf1.loser && sf1.loser !== 'Nhất A' && sf1.loser !== 'Nhì A') {
+        thirdPlaceTeams.push(sf1.loser);
+    }
+    if (sf2.loser && sf2.loser !== 'Nhất B' && sf2.loser !== 'Nhì B') {
+        thirdPlaceTeams.push(sf2.loser);
+    }
+    
+    const thirdPlace = thirdPlaceTeams.length > 0 ? thirdPlaceTeams.join(' & ') : 'Đang chờ kết quả...';
+
+    document.getElementById('champion').innerHTML = `<strong>Vô địch:</strong> <span class="text-success">${champion}</span>`;
+    document.getElementById('runnerUp').innerHTML = `<strong>Á quân:</strong> <span class="text-danger">${runnerUp}</span>`;
+    document.getElementById('thirdPlace').innerHTML = `<strong>Hạng Ba Đồng Hạng:</strong> <span class="text-info">${thirdPlace}</span>`;
+}
+
+
+// --- Công Cụ: Xóa Lịch & Tự động điền điểm ---
+
+function clearAllSchedules() {
+    if (!confirm("Bạn có chắc chắn muốn XÓA TOÀN BỘ lịch thi đấu và kết quả vòng bảng/chung kết? Hành động này không thể hoàn tác.")) {
+        return;
+    }
+    
+    state.matchesA = [];
+    state.matchesB = [];
+    
+    // Reset vòng chung kết (Cấu trúc mới: Nhất A vs Nhì A, Nhất B vs Nhì B)
+    state.semifinals = [
+        { id: 'SF1', teamA: 'Nhất A', teamB: 'Nhì A', scoreA: null, scoreB: null, time: '16:30', court: 'Sân 1', winner: null, loser: null },
+        { id: 'SF2', teamA: 'Nhất B', teamB: 'Nhì B', scoreA: null, scoreB: null, time: '16:30', court: 'Sân 2', winner: null, loser: null }
+    ];
+    state.final = { id: 'F', teamA: 'Thắng SF1', teamB: 'Thắng SF2', scoreA: null, scoreB: null, time: '17:00', court: 'Sân 1', winner: null, runnerUp: null };
+
+    // Tinh toán lại các bảng phụ thuộc
+    tinhVaCapNhatXepHang();
+    renderFinals();
+    renderMatchesView();
+    renderOverview();
+    
+    stateChanged = true;
+    saveToGitHub();
+    showModal('Xóa Lịch', 'Đã xóa toàn bộ lịch thi đấu và kết quả vòng bảng/chung kết.');
+}
+
+
+function autoFillScores() {
+    if (!confirm("Bạn có chắc chắn muốn TỰ ĐỘNG ĐIỀN ĐIỂM cho TẤT CẢ các trận chưa chơi?")) {
+        return;
+    }
+    
+    // Điền điểm cho Vòng Bảng (11-X)
+    state.matchesA.forEach(match => {
+        if (match.scoreA === null && match.scoreB === null) {
+            if (Math.random() < 0.5) {
+                match.scoreA = 11;
+                match.scoreB = Math.floor(Math.random() * 11); // Điểm thua từ 0-10
+            } else {
+                match.scoreB = 11;
+                match.scoreA = Math.floor(Math.random() * 11);
+            }
+            updateMatchWinner(match);
+        }
+    });
+
+    state.matchesB.forEach(match => {
+        if (match.scoreA === null && match.scoreB === null) {
+            if (Math.random() < 0.5) {
+                match.scoreA = 11;
+                match.scoreB = Math.floor(Math.random() * 11);
+            } else {
+                match.scoreB = 11;
+                match.scoreA = Math.floor(Math.random() * 11);
+            }
+            updateMatchWinner(match);
+        }
+    });
+
+    // Cập nhật Vòng Chung kết nếu đã điền điểm xong Vòng Bảng
+    tinhVaCapNhatXepHang();
+    updateFinalsTeams();
+    
+    // Điền điểm cho Bán kết/Chung kết (15-X)
+    [...state.semifinals, state.final].forEach(match => {
+        if (match.scoreA === null && match.scoreB === null) {
+             // Kiểm tra nếu cặp đấu đã được gán đội thực tế
+            const isAssigned = match.teamA !== 'Nhất A' && match.teamA !== 'Thắng SF1' && match.teamA !== 'Nhất B';
+            
+            if (isAssigned) {
+                 if (Math.random() < 0.5) {
+                    match.scoreA = 15;
+                    match.scoreB = Math.floor(Math.random() * 15); // Điểm thua từ 0-14
+                } else {
+                    match.scoreB = 15;
+                    match.scoreA = Math.floor(Math.random() * 15);
+                }
+                
+                // Cập nhật winner/loser (sử dụng lại logic kiểm tra 15 điểm)
+                if (match.scoreA === 15 && match.scoreB <= 14) {
+                    match.winner = match.teamA;
+                    match.loser = match.teamB;
+                } else if (match.scoreB === 15 && match.scoreA <= 14) {
+                    match.winner = match.teamB;
+                    match.loser = match.teamA;
+                }
+                
+                if (match.id === 'F') {
+                    match.runnerUp = match.loser;
+                }
+            }
+        }
+    });
+
+
+    renderMatchesView();
+    renderFinals();
+    renderOverview();
+    
+    stateChanged = true;
+    saveToGitHub();
+    showModal('Điền kết quả Tự động', 'Đã tự động điền kết quả (11-X cho vòng bảng, 15-X cho chung kết) cho các trận chưa chơi.');
+}
+</script>
+</body>
+</html>
