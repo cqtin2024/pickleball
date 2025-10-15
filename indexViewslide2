@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TKD PICKLEBALL CHAMPIONSHIP 2025 - Kết quả</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(180deg, #f0f8ff, #e0f7fa);
+      color: #333;
+      margin: 0;
+      padding: 0;
+    }
+
+    header {
+      background: #0288d1;
+      color: white;
+      text-align: center;
+      padding: 1rem;
+      font-size: 1.4rem;
+      font-weight: bold;
+    }
+
+    .tab-container {
+      display: flex;
+      overflow-x: auto;
+      background: #b3e5fc;
+      border-bottom: 2px solid #0288d1;
+      scrollbar-width: none;
+    }
+
+    .tab-container::-webkit-scrollbar {
+      display: none;
+    }
+
+    .tab {
+      flex: 0 0 auto;
+      padding: 1rem 1.5rem;
+      cursor: pointer;
+      border-right: 1px solid #81d4fa;
+      font-weight: 600;
+      color: #01579b;
+      transition: background 0.3s;
+    }
+
+    .tab.active {
+      background: #0288d1;
+      color: white;
+    }
+
+    .content {
+      display: none;
+      padding: 1.5rem;
+      animation: fadeIn 0.3s ease-in-out;
+    }
+
+    .content.active {
+      display: block;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    th, td {
+      border: 1px solid #ccc;
+      padding: 10px;
+      text-align: center;
+    }
+
+    th {
+      background: #0288d1;
+      color: white;
+    }
+
+    tr:nth-child(even) {
+      background: #f1f8e9;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    🏆 TKD PICKLEBALL CHAMPIONSHIP 2025<br>
+    Ngày 18/10/2025
+  </header>
+
+  <div class="tab-container" id="tabs"></div>
+  <div id="content"></div>
+
+  <script>
+    const dataUrl = 'https://raw.githubusercontent.com/cqtin2024/pickleball/main/data/state.json';
+
+    async function loadData() {
+      try {
+        const response = await fetch(dataUrl);
+        const data = await response.json();
+        renderTabs(data);
+      } catch (error) {
+        document.getElementById('content').innerHTML = '<p style="color:red;text-align:center">Không thể tải dữ liệu.</p>';
+      }
+    }
+
+    function renderTabs(data) {
+      const tabsContainer = document.getElementById('tabs');
+      const contentContainer = document.getElementById('content');
+      const rounds = Object.keys(data);
+
+      rounds.forEach((round, index) => {
+        const tab = document.createElement('div');
+        tab.className = 'tab' + (index === 0 ? ' active' : '');
+        tab.innerText = round;
+        tab.onclick = () => switchTab(index);
+        tabsContainer.appendChild(tab);
+
+        const section = document.createElement('div');
+        section.className = 'content' + (index === 0 ? ' active' : '');
+        section.innerHTML = createTableHTML(data[round]);
+        contentContainer.appendChild(section);
+      });
+    }
+
+    function switchTab(index) {
+      document.querySelectorAll('.tab').forEach((t, i) => {
+        t.classList.toggle('active', i === index);
+      });
+      document.querySelectorAll('.content').forEach((c, i) => {
+        c.classList.toggle('active', i === index);
+      });
+    }
+
+    function createTableHTML(roundData) {
+      if (!roundData || roundData.length === 0) return '<p>Không có dữ liệu</p>';
+
+      const keys = Object.keys(roundData[0]);
+      let html = '<table><thead><tr>';
+      keys.forEach(k => html += `<th>${k}</th>`);
+      html += '</tr></thead><tbody>';
+      roundData.forEach(row => {
+        html += '<tr>' + keys.map(k => `<td>${row[k]}</td>`).join('') + '</tr>';
+      });
+      html += '</tbody></table>';
+      return html;
+    }
+
+    loadData();
+  </script>
+</body>
+</html>
