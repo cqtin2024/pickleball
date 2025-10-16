@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>TKD Championship 2025 — Quản lý giải Pickleball V22 GitHub (AutoSave 30s & Nhất/Nhì Bán kết)</title>
+  <title>TKD Championship 2025 — Quản lý giải Pickleball V23 GitHub (Cập nhật Ranking đầy đủ & Save Ranking)</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
   <style>
     body { background:#f7f9fc; font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial; color:#222; padding:18px; }
@@ -46,7 +46,7 @@
       <img class="logo" src="data/logoTKD.png" alt="Logo TKD">
       <div>
         <h3 class="mb-0">TKD Championship 2025</h3>
-        <div>Ngày thi đấu: 18/10/2025 (**V22**)</div>
+        <div>Ngày thi đấu: 18/10/2025 (**V23**)</div>
       </div>
     </div>
     <div>
@@ -288,8 +288,8 @@ let state = {
   maleTeams: [],  // Sẽ được tải từ players.json
   matchesA: [], 
   matchesB: [],
-  tableA: [], // Bảng xếp hạng A
-  tableB: [], // Bảng xếp hạng B
+  tableA: [], // Bảng xếp hạng A (NEW: Sẽ được lưu và tải)
+  tableB: [], // Bảng xếp hạng B (NEW: Sẽ được lưu và tải)
   
   // NEW: Court Configuration (ĐÃ CẬP NHẬT SÂN 1 -> SÂN 8)
   courts: [
@@ -460,6 +460,10 @@ async function loadFromGitHub() {
             state.matchesA = loadedState.matchesA || [];
             state.matchesB = loadedState.matchesB || [];
             
+            // NEW: Tải bảng xếp hạng nếu có (dù sau đó sẽ tính lại)
+            state.tableA = loadedState.tableA || []; 
+            state.tableB = loadedState.tableB || [];
+            
             // Tải cấu hình sân (NEW) - nếu không có, giữ nguyên mặc định
             if (loadedState.courts) {
                 state.courts = loadedState.courts;
@@ -483,9 +487,10 @@ async function loadFromGitHub() {
             } else if (loadedSemifinals && loadedSemifinals.length === 2) {
                 // Nếu là trạng thái rỗng, vẫn load (nhưng đảm bảo court và time là mới)
                  state.semifinals = loadedSemifinals.map((sf, index) => {
-                    const defaultTime = index === 0 ? '16:40' : '17:05';
+                    const defaultTime = index === 0 ? '16:40'; // SF1
                     if (sf.teamA === 'Nhất A' || sf.teamA === 'Nhất B') {
-                        return { ...sf, court: 'Sân 3', time: defaultTime };
+                        // Cập nhật lại thời gian và sân theo V22/V23 nếu là trạng thái default
+                        return { ...sf, court: 'Sân 3', time: defaultTime }; 
                     }
                     return sf;
                 });
@@ -511,6 +516,13 @@ async function loadFromGitHub() {
             updateStatus('configStatus', 'success', `Tải trạng thái giải đấu thành công từ: ${cfg.owner}/${cfg.repo}/${cfg.folder}/${cfg.file}`);
             document.getElementById('lastSaved').textContent = `Lần tải: ${new Date().toLocaleTimeString('vi-VN')}`;
         } else {
+            // Sau khi tải teams, cần tính lại ranking ngay lập tức để fill đội chưa đấu
+            tinhVaCapNhatXepHang(); 
+            renderMatchesView(); 
+            renderFinals();
+            renderFinalResults();
+            renderOverview();
+            
             updateStatus('configStatus', 'warning', 'File trạng thái (state.json) chưa tồn tại. Vui lòng nhấn Lưu hoặc Tự động lưu để tạo file.');
         }
 
@@ -529,6 +541,9 @@ async function loadFromGitHub() {
 async function saveToGitHub(force = false) {
     // Bỏ qua nếu không có thay đổi và không ép buộc lưu
     if (!stateChanged && !force) return;
+    
+    // Tính lại bảng xếp hạng trước khi lưu (đảm bảo dữ liệu ranking là mới nhất)
+    tinhVaCapNhatXepHang();
 
     const cfg = state.config;
     if (!cfg.owner || !cfg.repo || !cfg.token) {
@@ -547,7 +562,7 @@ async function saveToGitHub(force = false) {
 
     const apiUrl = `https://api.github.com/repos/${cfg.owner}/${cfg.repo}/contents/${cfg.folder}/${cfg.file}`;
     
-    // Chỉ lưu các trường cần thiết, loại bỏ config và table (vì chúng được tính lại)
+    // Chỉ lưu các trường cần thiết, bao gồm cả bảng xếp hạng (tableA, tableB)
     const stateToSave = {
         mixedTeams: state.mixedTeams,
         maleTeams: state.maleTeams,
@@ -555,7 +570,10 @@ async function saveToGitHub(force = false) {
         matchesB: state.matchesB,
         courts: state.courts,
         semifinals: state.semifinals,
-        final: state.final
+        final: state.final,
+        // NEW: Lưu bảng xếp hạng (đã được tính toán ngay trước khi gọi hàm này)
+        tableA: state.tableA,
+        tableB: state.tableB 
     };
     const content = b64EncodeUnicode(JSON.stringify(stateToSave));
     
@@ -669,7 +687,10 @@ function updatePreferredCourtType() {
  * Xuất toàn bộ dữ liệu (state) hiện tại ra file JSON
  */
 function exportDataToJson() {
-    // Chỉ lưu các trường cần thiết, loại bỏ config và table (vì chúng được tính lại)
+    // Tính lại bảng xếp hạng trước khi xuất (đảm bảo dữ liệu ranking là mới nhất)
+    tinhVaCapNhatXepHang();
+
+    // Chỉ lưu các trường cần thiết, bao gồm cả tableA/tableB
     const stateToSave = {
         mixedTeams: state.mixedTeams,
         maleTeams: state.maleTeams,
@@ -677,7 +698,9 @@ function exportDataToJson() {
         matchesB: state.matchesB,
         courts: state.courts,
         semifinals: state.semifinals,
-        final: state.final
+        final: state.final,
+        tableA: state.tableA, // NEW: Bảng xếp hạng
+        tableB: state.tableB // NEW: Bảng xếp hạng
     };
     const jsonString = JSON.stringify(stateToSave, null, 2);
 
@@ -937,8 +960,9 @@ window.onload = function() {
     } else {
         // Tải cấu hình sân mặc định nếu không có kết nối GitHub
         renderConfig();
-        renderMatchesView();
+        // Cần chạy tinhVaCapNhatXepHang để có ranking tạm thời cho Overview
         tinhVaCapNhatXepHang();
+        renderMatchesView();
         renderFinals();
         renderFinalResults();
         renderOverview();
@@ -1021,10 +1045,14 @@ function renderOverview() {
     });
     courtSummaryHTML += `</ul>`;
 
+    // Lấy danh sách đội thô từ state.mixedTeams/maleTeams
+    const rawMixedTeams = state.mixedTeams; 
+    const rawMaleTeams = state.maleTeams;
+
     // Tổng quan
     let html = `
-        ${renderTeamList(state.mixedTeams, 'Danh sách Đội Bảng A (Nam - Nữ)')}
-        ${renderTeamList(state.maleTeams, 'Danh sách Đội Bảng B (Nam)')}
+        ${renderTeamList(rawMixedTeams, 'Danh sách Đội Bảng A (Nam - Nữ)')}
+        ${renderTeamList(rawMaleTeams, 'Danh sách Đội Bảng B (Nam)')}
         
         <div class="card mb-4 shadow-sm">
             <div class="card-header bg-primary text-white">
@@ -1081,6 +1109,7 @@ function renderSimpleRanking(table) {
     if (table.length === 0) return `<p class="small text-muted p-2">Chưa đủ dữ liệu vòng bảng để xếp hạng.</p>`;
     
     let html = `<ol class="list-group list-group-flush small">`;
+    // Chỉ hiển thị 4 đội đầu tiên (nếu có)
     table.slice(0, 4).forEach((team, index) => {
         const rank = index + 1;
         const rankClass = rank === 1 ? 'bg-warning' : (rank === 2 ? 'bg-info' : 'bg-secondary');
@@ -1318,7 +1347,7 @@ function tinhVaCapNhatXepHang() {
  * @returns {Array<Object>} Bảng xếp hạng đã sắp xếp
  */
 function tinhXepHang(teams, matches) {
-    // 1. Khởi tạo bảng thống kê
+    // 1. Khởi tạo bảng thống kê (bao gồm tất cả các đội, kể cả chưa đấu)
     const stats = {};
     teams.forEach(team => {
         stats[team] = {
@@ -1365,74 +1394,77 @@ function tinhXepHang(teams, matches) {
         stat.PD = stat.PF - stat.PA;
     });
 
-    // 4. Chuyển thành mảng và lọc các đội chưa đấu
-    let table = Object.values(stats).filter(stat => stat.matchesPlayed > 0);
+    // 4. Chuyển thành mảng (bao gồm cả đội chưa đấu)
+    let table = Object.values(stats);
     
-    // 5. Sắp xếp sơ bộ (W > Hiệu số)
+    // 5. Sắp xếp sơ bộ (W > Hiệu số > Tổng điểm)
     table.sort((a, b) => {
-        if (b.W !== a.W) return b.W - a.W;      // 1. Thắng nhiều hơn
-        if (b.PD !== a.PD) return b.PD - a.PD;  // 2. Hiệu số cao hơn
-        if (b.PF !== a.PF) return b.PF - a.PF;  // 3. Tổng điểm thắng cao hơn
+        // Ưu tiên 1: Đội đã thi đấu sẽ xếp trên đội chưa thi đấu
+        if (b.matchesPlayed !== a.matchesPlayed) {
+            // Đội đã đấu (matchesPlayed > 0) sẽ xếp trên đội chưa đấu (matchesPlayed = 0)
+            if (a.matchesPlayed === 0) return 1;
+            if (b.matchesPlayed === 0) return -1;
+        }
+        
+        // Ưu tiên 2: Thắng nhiều hơn
+        if (b.W !== a.W) return b.W - a.W;      
+        
+        // Ưu tiên 3: Hiệu số cao hơn
+        if (b.PD !== a.PD) return b.PD - a.PD;  
+        
+        // Ưu tiên 4: Tổng điểm thắng cao hơn
+        if (b.PF !== a.PF) return b.PF - a.PF;  
+        
+        // Ưu tiên 5 (Chỉ dùng khi chưa đấu): Sắp xếp theo thứ tự danh sách đội ban đầu
+        if (a.matchesPlayed === 0 && b.matchesPlayed === 0) {
+            const teamIndexA = teams.indexOf(a.team);
+            const teamIndexB = teams.indexOf(b.team);
+            return teamIndexA - teamIndexB;
+        }
+
         return 0;
     });
     
-    // 6. Xử lý tie-breaker bằng đối đầu (chỉ cho W bằng nhau)
+    // 6. Xử lý tie-breaker bằng đối đầu (chỉ cho các đội đã đấu và có W, PD, PF bằng nhau)
     
-    // Tìm các nhóm bị tie (cùng W)
     let finalTable = [];
     let i = 0;
     while (i < table.length) {
         let j = i;
-        while (j < table.length && table[j].W === table[i].W) {
+        
+        // Tìm nhóm bị tie: cùng W, PD, PF (và đều đã thi đấu)
+        while (j < table.length && 
+               table[j].W === table[i].W && 
+               table[j].PD === table[i].PD && 
+               table[j].PF === table[i].PF &&
+               table[j].matchesPlayed > 0) 
+        {
             j++;
         }
         
         const tiedGroup = table.slice(i, j);
         
         if (tiedGroup.length > 1) {
-            // Chỉ áp dụng tie-breaker đối đầu nếu W, PD, PF BẰNG NHAU (tức là chỉ có W bằng nhau thôi)
-            // Thay đổi logic: chỉ cần W bằng nhau, sau đó mới xét đến các tiêu chí phụ
+            // Áp dụng tie-breaker đối đầu cho nhóm có W, PD, PF bằng nhau và đã thi đấu
+            const headToHeadTable = tinhDiemDoiDau(tiedGroup, matches);
             
-            // Tìm các nhóm bị tie (cùng W)
-            let subGroups = [];
-            let k = i;
-            while (k < j) {
-                let l = k;
-                while (l < j && table[l].W === table[k].W && table[l].PD === table[k].PD && table[l].PF === table[k].PF) {
-                    l++;
-                }
-                subGroups.push(table.slice(k, l));
-                k = l;
-            }
-
-            subGroups.forEach(subGroup => {
-                if (subGroup.length > 1) {
-                    // Áp dụng tie-breaker đối đầu cho nhóm có W, PD, PF bằng nhau
-                    const headToHeadTable = tinhDiemDoiDau(subGroup, matches);
-                    
-                    // Sắp xếp lại nhóm con theo luật đối đầu (W > Hiệu số > Tổng điểm thắng)
-                    headToHeadTable.sort((a, b) => {
-                        if (b.W_H2H !== a.W_H2H) return b.W_H2H - a.W_H2H;
-                        if (b.PD_H2H !== a.PD_H2H) return b.PD_H2H - a.PD_H2H;
-                        if (b.PF_H2H !== a.PF_H2H) return b.PF_H2H - a.PF_H2H;
-                        return 0; // Nếu vẫn hòa, giữ nguyên thứ tự ban đầu (hoặc bằng bốc thăm)
-                    });
-                    
-                    // Gán lại các trường H2H và gộp vào finalTable
-                    headToHeadTable.forEach(h2hStat => {
-                        const originalStat = subGroup.find(s => s.team === h2hStat.team);
-                        finalTable.push(originalStat);
-                    });
-
-                } else {
-                    // Nhóm chỉ có 1 đội hoặc đã được sắp xếp
-                    finalTable.push(subGroup[0]);
-                }
+            // Sắp xếp lại nhóm con theo luật đối đầu (W > Hiệu số > Tổng điểm thắng)
+            headToHeadTable.sort((a, b) => {
+                if (b.W_H2H !== a.W_H2H) return b.W_H2H - a.W_H2H;
+                if (b.PD_H2H !== a.PD_H2H) return b.PD_H2H - a.PD_H2H;
+                if (b.PF_H2H !== a.PF_H2H) return b.PF_H2H - a.PF_H2H;
+                return 0; // Nếu vẫn hòa, giữ nguyên thứ tự ban đầu
             });
             
+            // Gộp kết quả đối đầu vào finalTable
+            headToHeadTable.forEach(h2hStat => {
+                const originalStat = tiedGroup.find(s => s.team === h2hStat.team);
+                finalTable.push(originalStat);
+            });
+
         } else {
-            // Nhóm chỉ có 1 đội (không cần xử lý tie)
-            finalTable.push(tiedGroup[0]);
+            // Nhóm chỉ có 1 đội hoặc các đội chưa đấu
+            tiedGroup.forEach(stat => finalTable.push(stat));
         }
         
         i = j;
@@ -1502,6 +1534,7 @@ function tinhDiemDoiDau(teamsStat, matches) {
 function scheduleFinalsAuto() {
     tinhVaCapNhatXepHang(); // Đảm bảo bảng xếp hạng là mới nhất
 
+    // Lọc ra các đội đã thi đấu (MatchesPlayed > 0)
     const tableA = state.tableA.filter(t => t.matchesPlayed > 0);
     const tableB = state.tableB.filter(t => t.matchesPlayed > 0);
 
@@ -1702,7 +1735,7 @@ function renderFinalMatchTable(matches, group) {
         const matchRowClass = match.winner ? 'table-light' : '';
         
         // Kiểm tra xem có phải là trận chờ kết quả hay không
-        const isWaiting = match.teamA === 'Thắng SF1' || match.teamA === 'Thắng SF2' || match.teamA === 'Nhất A';
+        const isWaiting = match.teamA === 'Thắng SF1' || match.teamA === 'Thắng SF2' || match.teamA === 'Nhất A' || match.teamA === 'Nhất B';
 
         finalHtml += `
             <tr class="${matchRowClass}">
@@ -1787,7 +1820,7 @@ function getThirdPlaceTeams() {
  * Render bảng xếp hạng đầy đủ
  */
 function renderFullRankingTable(table) {
-    if (table.length === 0) return `<div class="alert alert-info small">Chưa đủ dữ liệu vòng bảng để xếp hạng.</div>`;
+    if (table.length === 0) return `<div class="alert alert-info small">Chưa có danh sách đội để xếp hạng.</div>`;
 
     let html = `
         <div class="table-responsive">
@@ -1799,20 +1832,27 @@ function renderFullRankingTable(table) {
                     <th>W-L</th>
                     <th>PF-PA</th>
                     <th>Hiệu số</th>
+                    <th>Đã đấu</th>
                 </tr>
             </thead>
             <tbody>
     `;
 
     table.forEach((team, index) => {
-        const rankClass = index === 0 ? 'table-warning' : (index === 1 ? 'table-info' : '');
+        // Chỉ highlight nếu đội đã đấu
+        const rankClass = team.matchesPlayed > 0 ? (index === 0 ? 'table-warning' : (index === 1 ? 'table-info' : '')) : 'table-secondary text-muted';
+        const winLossText = team.matchesPlayed > 0 ? `${team.W}-${team.L}` : '-';
+        const pfPaText = team.matchesPlayed > 0 ? `${team.PF}-${team.PA}` : '-';
+        const pdText = team.matchesPlayed > 0 ? `${team.PD > 0 ? '+' : ''}${team.PD}` : '-';
+
         html += `
             <tr class="${rankClass}">
                 <td>${index + 1}</td>
                 <td class="text-truncate"><strong>${team.team}</strong></td>
-                <td>${team.W}-${team.L}</td>
-                <td>${team.PF}-${team.PA}</td>
-                <td>${team.PD > 0 ? '+' : ''}${team.PD}</td>
+                <td>${winLossText}</td>
+                <td>${pfPaText}</td>
+                <td>${pdText}</td>
+                <td>${team.matchesPlayed}</td>
             </tr>
         `;
     });
@@ -2317,6 +2357,9 @@ function clearAllSchedules() {
         ];
         state.final = { id: 'F', teamA: 'Thắng SF1', teamB: 'Thắng SF2', scoreA: null, scoreB: null, time: FINAL_TIME, court: FINAL_COURT, winner: null, runnerUp: null };
 
+        // Cần gọi tinhVaCapNhatXepHang để các đội chưa đấu được điền vào ranking tạm thời
+        tinhVaCapNhatXepHang();
+        
         renderMatchesView();
         renderFinals();
         renderFinalResults();
