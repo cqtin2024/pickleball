@@ -9,13 +9,8 @@
     body { background-color: #f0f4f8; overflow-x: hidden; scroll-behavior: smooth; }
     #content-carousel { display: flex; width: 300vw; transition: transform 0.35s cubic-bezier(0.25, 1, 0.5, 1); }
     .swipe-section { 
-      width: 100vw; 
-      flex-shrink: 0; 
-      padding: 1rem; 
-      min-height: calc(100vh - 160px); 
-      overflow-y: auto; 
-      scroll-behavior: smooth; 
-      -webkit-overflow-scrolling: touch; 
+      width: 100vw; flex-shrink: 0; padding: 1rem; min-height: calc(100vh - 160px); 
+      overflow-y: auto; scroll-behavior: smooth; -webkit-overflow-scrolling: touch; 
     }
     #refresh-btn { position: fixed; bottom: 20px; right: 20px; z-index: 50; background-color: #0284c7; color: white; font-weight: bold; padding: 14px; border-radius: 50%; box-shadow: 0 4px 8px rgba(0,0,0,0.3); transition: transform 0.2s; }
     #refresh-btn:hover { transform: scale(1.1); background-color: #0369a1; }
@@ -27,7 +22,7 @@
     @keyframes pulse2 { from { box-shadow: 0 0 10px #0ea5e9; } to { box-shadow: 0 0 25px #0ea5e9; } }
     .tab-btn.active-knockout { background: linear-gradient(to right, #22c55e, #16a34a); color: #fff !important; box-shadow: 0 0 10px rgba(34,197,94,0.7); }
     .tab-btn.active-pick { background: linear-gradient(to right, #f59e0b, #d97706); color: white !important; box-shadow: 0 0 10px rgba(245,158,11,0.6); }
-    header img { transform: scale(1.5); transition: transform 0.3s; } /* logo gấp 1.5 lần */
+    header img { transform: scale(1.5); transition: transform 0.3s; }
   </style>
 </head>
 <body class="font-sans">
@@ -60,11 +55,11 @@
       ? './data/state.json'
       : 'https://raw.githubusercontent.com/cqtin2024/pickleball/main/data/state.json';
     const REFRESH_INTERVAL = 30000;
+
     const carousel = document.getElementById('content-carousel');
     let currentIndex = 0;
     let startX = 0, deltaX = 0, isSwiping = false;
 
-    // ==== TAB & CAROUSEL ====
     function goToSection(index) {
       const prevIndex = currentIndex;
       currentIndex = Math.max(0, Math.min(2, index));
@@ -72,7 +67,6 @@
       carousel.style.transform = `translateX(${currentIndex * -100}vw)`;
       updateTabs();
       if (prevIndex !== currentIndex) {
-        // Scroll lên đầu chỉ khi chuyển tab
         document.querySelectorAll('.swipe-section')[currentIndex].scrollTop = 0;
       }
     }
@@ -88,7 +82,6 @@
       });
     }
 
-    // ==== SWIPE HANDLERS ====
     carousel.addEventListener('touchstart', e => {
       startX = e.touches[0].clientX;
       deltaX = 0;
@@ -111,17 +104,19 @@
       else goToSection(currentIndex);
     });
 
-    // ==== FETCH & REFRESH ====
     async function fetchData() {
       const msg = document.getElementById('statusMessage');
       msg.textContent = 'Đang tải dữ liệu...';
       try {
         const res = await fetch(BASE_URL, { cache: 'no-store' });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
+        console.log('Dữ liệu tải về:', data);
         msg.textContent = 'Đã tải dữ liệu (' + new Date().toLocaleTimeString('vi-VN') + ')';
         renderData(data);
       } catch (err) {
         msg.textContent = '⚠️ Lỗi tải dữ liệu: ' + err.message;
+        console.error('Lỗi fetchData:', err);
       }
     }
 
@@ -134,7 +129,6 @@
     setInterval(fetchData, REFRESH_INTERVAL);
     fetchData();
 
-    // ==== RENDER DATA ====
     function renderData(data) {
       renderRounds(data);
       renderKnockout(data.semifinals, data.final);
@@ -197,4 +191,18 @@
 
     function renderPlayers(data) {
       const c = document.getElementById('players');
-      c.in
+      c.innerHTML = `<h2 class='text-2xl font-bold text-yellow-700 mb-3 text-center'>Pick thủ</h2>`;
+      c.innerHTML += renderTeamsList(data.mixedTeams, 'Bảng A - Mixed');
+      c.innerHTML += renderTeamsList(data.maleTeams, 'Bảng B - Nam');
+    }
+
+    function renderTeamsList(teams, title) {
+      if (!teams || teams.length === 0) return '';
+      let html = `<div class='bg-white p-4 mt-4 rounded-xl shadow'><h3 class='text-lg font-semibold text-blue-800 mb-2 text-center'>${title}</h3><ul class='grid grid-cols-2 md:grid-cols-3 gap-2 text-center'>`;
+      teams.forEach(t => html += `<li class='bg-yellow-50 rounded-md py-2 font-medium'>${t}</li>`);
+      html += '</ul></div>';
+      return html;
+    }
+  </script>
+</body>
+</html>
