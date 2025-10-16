@@ -22,8 +22,11 @@
       "time": "14:00",
       "court": "Sân7",
       "bang": "A",
-      "scoreA": null,
-      "scoreB": null
+      "scoreA": 8,
+      "scoreB": 11,
+      "winner": "Linh/M.Hùng",
+      "loser": "Huyền/Luân",
+      "originalIndex": 0
     },
     {
       "teamA": "Giang/Long",
@@ -31,8 +34,11 @@
       "time": "14:00",
       "court": "Sân 2",
       "bang": "A",
-      "scoreA": null,
-      "scoreB": null
+      "scoreA": 9,
+      "scoreB": 11,
+      "winner": "Hường/Đạt",
+      "loser": "Giang/Long",
+      "originalIndex": 1
     },
     {
       "teamA": "Hậu/Dũng",
@@ -40,8 +46,11 @@
       "time": "14:00",
       "court": "Sân 3",
       "bang": "A",
-      "scoreA": null,
-      "scoreB": null
+      "scoreA": 7,
+      "scoreB": 11,
+      "winner": "Hạnh/Tiến",
+      "loser": "Hậu/Dũng",
+      "originalIndex": 2
     },
     {
       "teamA": "Giang/Long",
@@ -49,8 +58,11 @@
       "time": "14:15",
       "court": "Sân7",
       "bang": "A",
-      "scoreA": null,
-      "scoreB": null
+      "scoreA": 5,
+      "scoreB": 11,
+      "winner": "Huyền/Luân",
+      "loser": "Giang/Long",
+      "originalIndex": 3
     },
     {
       "teamA": "Hậu/Dũng",
@@ -58,8 +70,11 @@
       "time": "14:15",
       "court": "Sân 3",
       "bang": "A",
-      "scoreA": null,
-      "scoreB": null
+      "scoreA": 11,
+      "scoreB": 7,
+      "winner": "Hậu/Dũng",
+      "loser": "Hường/Đạt",
+      "originalIndex": 4
     },
     {
       "teamA": "Hạnh/Tiến",
@@ -67,8 +82,11 @@
       "time": "14:30",
       "court": "Sân 3",
       "bang": "A",
-      "scoreA": null,
-      "scoreB": null
+      "scoreA": 11,
+      "scoreB": 6,
+      "winner": "Hạnh/Tiến",
+      "loser": "Linh/M.Hùng",
+      "originalIndex": 5
     },
     {
       "teamA": "Hậu/Dũng",
@@ -76,8 +94,11 @@
       "time": "14:45",
       "court": "Sân7",
       "bang": "A",
-      "scoreA": null,
-      "scoreB": null
+      "scoreA": 8,
+      "scoreB": 11,
+      "winner": "Linh/M.Hùng",
+      "loser": "Hậu/Dũng",
+      "originalIndex": 6
     },
     {
       "teamA": "Huyền/Luân",
@@ -85,8 +106,11 @@
       "time": "14:45",
       "court": "Sân 2",
       "bang": "A",
-      "scoreA": null,
-      "scoreB": null
+      "scoreA": 7,
+      "scoreB": 11,
+      "winner": "Hường/Đạt",
+      "loser": "Huyền/Luân",
+      "originalIndex": 7
     },
     {
       "teamA": "Hạnh/Tiến",
@@ -94,8 +118,11 @@
       "time": "14:45",
       "court": "Sân 3",
       "bang": "A",
-      "scoreA": null,
-      "scoreB": null
+      "scoreA": 11,
+      "scoreB": 9,
+      "winner": "Hạnh/Tiến",
+      "loser": "Giang/Long",
+      "originalIndex": 8
     },
     {
       "teamA": "Giang/Long",
@@ -103,8 +130,11 @@
       "time": "15:15",
       "court": "Sân 3",
       "bang": "A",
-      "scoreA": null,
-      "scoreB": null
+      "scoreA": 11,
+      "scoreB": 8,
+      "winner": "Giang/Long",
+      "loser": "Linh/M.Hùng",
+      "originalIndex": 9
     },
     {
       "teamA": "Hạnh/Tiến",
@@ -112,8 +142,11 @@
       "time": "15:30",
       "court": "Sân 2",
       "bang": "A",
-      "scoreA": null,
-      "scoreB": null
+      "scoreA": 11,
+      "scoreB": 9,
+      "winner": "Hạnh/Tiến",
+      "loser": "Hường/Đạt",
+      "originalIndex": 10
     },
     {
       "teamA": "Hậu/Dũng",
@@ -121,8 +154,11 @@
       "time": "15:30",
       "court": "Sân 3",
       "bang": "A",
-      "scoreA": null,
-      "scoreB": null
+      "scoreA": 7,
+      "scoreB": 11,
+      "winner": "Huyền/Luân",
+      "loser": "Hậu/Dũng",
+      "originalIndex": 11
     },
     {
       "teamA": "Hậu/Dũng",
@@ -130,8 +166,11 @@
       "time": "16:00",
       "court": "Sân 3",
       "bang": "A",
-      "scoreA": null,
-      "scoreB": null
+      "scoreA": 7,
+      "scoreB": 11,
+      "winner": "Giang/Long",
+      "loser": "Hậu/Dũng",
+      "originalIndex": 12
     },
     {
       "teamA": "Hạnh/Tiến",
@@ -139,8 +178,11 @@
       "time": "16:15",
       "court": "Sân 2",
       "bang": "A",
-      "scoreA": null,
-      "scoreB": null
+      "scoreA": 11,
+      "scoreB": 7,
+      "winner": "Hạnh/Tiến",
+      "loser": "Huyền/Luân",
+      "originalIndex": 13
     },
     {
       "teamA": "Linh/M.Hùng",
@@ -148,8 +190,11 @@
       "time": "16:15",
       "court": "Sân 3",
       "bang": "A",
-      "scoreA": null,
-      "scoreB": null
+      "scoreA": 11,
+      "scoreB": 5,
+      "winner": "Linh/M.Hùng",
+      "loser": "Hường/Đạt",
+      "originalIndex": 14
     }
   ],
   "matchesB": [
@@ -159,8 +204,11 @@
       "time": "14:00",
       "court": "Sân 1",
       "bang": "B",
-      "scoreA": null,
-      "scoreB": null
+      "scoreA": 11,
+      "scoreB": 9,
+      "winner": "Triều/Minh",
+      "loser": "Hiển/P.Hùng",
+      "originalIndex": 15
     },
     {
       "teamA": "Tiệp/Thủy",
@@ -168,8 +216,11 @@
       "time": "14:15",
       "court": "Sân 1",
       "bang": "B",
-      "scoreA": null,
-      "scoreB": null
+      "scoreA": 9,
+      "scoreB": 11,
+      "winner": "Phương/Thanh",
+      "loser": "Tiệp/Thủy",
+      "originalIndex": 16
     },
     {
       "teamA": "Tín/Khiêm",
@@ -177,8 +228,11 @@
       "time": "14:15",
       "court": "Sân 2",
       "bang": "B",
-      "scoreA": null,
-      "scoreB": null
+      "scoreA": 9,
+      "scoreB": 11,
+      "winner": "Ánh/Toàn",
+      "loser": "Tín/Khiêm",
+      "originalIndex": 17
     },
     {
       "teamA": "Phương/Thanh",
@@ -186,8 +240,11 @@
       "time": "14:30",
       "court": "Sân7",
       "bang": "B",
-      "scoreA": null,
-      "scoreB": null
+      "scoreA": 6,
+      "scoreB": 11,
+      "winner": "Ánh/Toàn",
+      "loser": "Phương/Thanh",
+      "originalIndex": 18
     },
     {
       "teamA": "Triều/Minh",
@@ -195,8 +252,11 @@
       "time": "14:30",
       "court": "Sân 1",
       "bang": "B",
-      "scoreA": null,
-      "scoreB": null
+      "scoreA": 8,
+      "scoreB": 11,
+      "winner": "Tín/Khiêm",
+      "loser": "Triều/Minh",
+      "originalIndex": 19
     },
     {
       "teamA": "Tiệp/Thủy",
@@ -204,8 +264,11 @@
       "time": "14:30",
       "court": "Sân 2",
       "bang": "B",
-      "scoreA": null,
-      "scoreB": null
+      "scoreA": 9,
+      "scoreB": 11,
+      "winner": "Hiển/P.Hùng",
+      "loser": "Tiệp/Thủy",
+      "originalIndex": 20
     },
     {
       "teamA": "Tiệp/Thủy",
@@ -213,8 +276,11 @@
       "time": "15:00",
       "court": "Sân 2",
       "bang": "B",
-      "scoreA": null,
-      "scoreB": null
+      "scoreA": 11,
+      "scoreB": 7,
+      "winner": "Tiệp/Thủy",
+      "loser": "Ánh/Toàn",
+      "originalIndex": 21
     },
     {
       "teamA": "Tín/Khiêm",
@@ -222,8 +288,11 @@
       "time": "15:00",
       "court": "Sân 3",
       "bang": "B",
-      "scoreA": null,
-      "scoreB": null
+      "scoreA": 11,
+      "scoreB": 5,
+      "winner": "Tín/Khiêm",
+      "loser": "Hiển/P.Hùng",
+      "originalIndex": 22
     },
     {
       "teamA": "Phương/Thanh",
@@ -231,8 +300,11 @@
       "time": "15:15",
       "court": "Sân 2",
       "bang": "B",
-      "scoreA": null,
-      "scoreB": null
+      "scoreA": 9,
+      "scoreB": 11,
+      "winner": "Triều/Minh",
+      "loser": "Phương/Thanh",
+      "originalIndex": 23
     },
     {
       "teamA": "Tiệp/Thủy",
@@ -240,8 +312,11 @@
       "time": "15:45",
       "court": "Sân 2",
       "bang": "B",
-      "scoreA": null,
-      "scoreB": null
+      "scoreA": 8,
+      "scoreB": 11,
+      "winner": "Tín/Khiêm",
+      "loser": "Tiệp/Thủy",
+      "originalIndex": 24
     },
     {
       "teamA": "Phương/Thanh",
@@ -249,8 +324,11 @@
       "time": "15:45",
       "court": "Sân 3",
       "bang": "B",
-      "scoreA": null,
-      "scoreB": null
+      "scoreA": 9,
+      "scoreB": 11,
+      "winner": "Hiển/P.Hùng",
+      "loser": "Phương/Thanh",
+      "originalIndex": 25
     },
     {
       "teamA": "Triều/Minh",
@@ -258,8 +336,11 @@
       "time": "16:00",
       "court": "Sân 2",
       "bang": "B",
-      "scoreA": null,
-      "scoreB": null
+      "scoreA": 11,
+      "scoreB": 6,
+      "winner": "Triều/Minh",
+      "loser": "Ánh/Toàn",
+      "originalIndex": 26
     },
     {
       "teamA": "Tiệp/Thủy",
@@ -267,8 +348,11 @@
       "time": "16:30",
       "court": "Sân 2",
       "bang": "B",
-      "scoreA": null,
-      "scoreB": null
+      "scoreA": 11,
+      "scoreB": 5,
+      "winner": "Tiệp/Thủy",
+      "loser": "Triều/Minh",
+      "originalIndex": 27
     },
     {
       "teamA": "Ánh/Toàn",
@@ -276,8 +360,11 @@
       "time": "16:30",
       "court": "Sân 3",
       "bang": "B",
-      "scoreA": null,
-      "scoreB": null
+      "scoreA": 7,
+      "scoreB": 11,
+      "winner": "Hiển/P.Hùng",
+      "loser": "Ánh/Toàn",
+      "originalIndex": 28
     },
     {
       "teamA": "Phương/Thanh",
@@ -285,175 +372,73 @@
       "time": "16:45",
       "court": "Sân 2",
       "bang": "B",
-      "scoreA": null,
-      "scoreB": null
+      "scoreA": 7,
+      "scoreB": 11,
+      "winner": "Tín/Khiêm",
+      "loser": "Phương/Thanh",
+      "originalIndex": 29
     }
   ],
-  "tableA": [
+  "courts": [
     {
-      "team": "Giang/Long",
-      "wins": 0,
-      "losses": 0,
-      "pointsW": 0,
-      "pointsL": 0,
-      "bang": "A",
-      "diff": 0,
-      "points": 0
+      "name": "Sân 1",
+      "startTime": "14:00",
+      "maxDurationMinutes": 60,
+      "isMixed": true
     },
     {
-      "team": "Hạnh/Tiến",
-      "wins": 0,
-      "losses": 0,
-      "pointsW": 0,
-      "pointsL": 0,
-      "bang": "A",
-      "diff": 0,
-      "points": 0
+      "name": "Sân 2",
+      "startTime": "14:00",
+      "maxDurationMinutes": 180,
+      "isMixed": true
     },
     {
-      "team": "Hậu/Dũng",
-      "wins": 0,
-      "losses": 0,
-      "pointsW": 0,
-      "pointsL": 0,
-      "bang": "A",
-      "diff": 0,
-      "points": 0
+      "name": "Sân 3",
+      "startTime": "14:00",
+      "maxDurationMinutes": 210,
+      "isMixed": false
     },
     {
-      "team": "Hường/Đạt",
-      "wins": 0,
-      "losses": 0,
-      "pointsW": 0,
-      "pointsL": 0,
-      "bang": "A",
-      "diff": 0,
-      "points": 0
-    },
-    {
-      "team": "Huyền/Luân",
-      "wins": 0,
-      "losses": 0,
-      "pointsW": 0,
-      "pointsL": 0,
-      "bang": "A",
-      "diff": 0,
-      "points": 0
-    },
-    {
-      "team": "Linh/M.Hùng",
-      "wins": 0,
-      "losses": 0,
-      "pointsW": 0,
-      "pointsL": 0,
-      "bang": "A",
-      "diff": 0,
-      "points": 0
-    }
-  ],
-  "tableB": [
-    {
-      "team": "Ánh/Toàn",
-      "wins": 0,
-      "losses": 0,
-      "pointsW": 0,
-      "pointsL": 0,
-      "bang": "B",
-      "diff": 0,
-      "points": 0
-    },
-    {
-      "team": "Hiển/P.Hùng",
-      "wins": 0,
-      "losses": 0,
-      "pointsW": 0,
-      "pointsL": 0,
-      "bang": "B",
-      "diff": 0,
-      "points": 0
-    },
-    {
-      "team": "Phương/Thanh",
-      "wins": 0,
-      "losses": 0,
-      "pointsW": 0,
-      "pointsL": 0,
-      "bang": "B",
-      "diff": 0,
-      "points": 0
-    },
-    {
-      "team": "Tiệp/Thủy",
-      "wins": 0,
-      "losses": 0,
-      "pointsW": 0,
-      "pointsL": 0,
-      "bang": "B",
-      "diff": 0,
-      "points": 0
-    },
-    {
-      "team": "Tín/Khiêm",
-      "wins": 0,
-      "losses": 0,
-      "pointsW": 0,
-      "pointsL": 0,
-      "bang": "B",
-      "diff": 0,
-      "points": 0
-    },
-    {
-      "team": "Triều/Minh",
-      "wins": 0,
-      "losses": 0,
-      "pointsW": 0,
-      "pointsL": 0,
-      "bang": "B",
-      "diff": 0,
-      "points": 0
+      "name": "Sân 7",
+      "startTime": "14:00",
+      "maxDurationMinutes": 60,
+      "isMixed": false
     }
   ],
   "semifinals": [
     {
       "id": "SF1",
-      "teamA": "Nhất Bảng A",
-      "teamB": "Nhì Bảng A",
-      "scoreA": null,
-      "scoreB": null,
-      "time": "16:30",
-      "court": "Sân 33",
-      "winner": null,
-      "loser": null
+      "teamA": "Hạnh/Tiến",
+      "teamB": "Linh/M.Hùng",
+      "scoreA": 11,
+      "scoreB": 15,
+      "time": "16:40",
+      "court": "Sân 3",
+      "winner": "Linh/M.Hùng",
+      "loser": "Hạnh/Tiến"
     },
     {
       "id": "SF2",
-      "teamA": "Nhất bảng B",
-      "teamB": "Nhì Bảng B",
-      "scoreA": null,
-      "scoreB": null,
-      "time": "16:30",
+      "teamA": "Tín/Khiêm",
+      "teamB": "Hiển/P.Hùng",
+      "scoreA": 14,
+      "scoreB": 15,
+      "time": "17:05",
       "court": "Sân 3",
-      "winner": null,
-      "loser": null
+      "winner": "Hiển/P.Hùng",
+      "loser": "Tín/Khiêm"
     }
   ],
   "final": {
     "id": "F",
-    "teamA": "Thắng SF1",
-    "teamB": "Thắng SF2",
-    "scoreA": null,
-    "scoreB": null,
-    "time": "17:00",
+    "teamA": "Linh/M.Hùng",
+    "teamB": "Hiển/P.Hùng",
+    "scoreA": 15,
+    "scoreB": 10,
+    "time": "17:30",
     "court": "Sân 3",
-    "winner": null,
-    "runnerUp": null,
+    "winner": "Linh/M.Hùng",
+    "runnerUp": "Hiển/P.Hùng",
     "loser": null
-  },
-  "config": {
-    "owner": "cqtin2024",
-    "repo": "pickleball",
-    "folder": "data",
-    "file": "state.json",
-    "token": ""
   }
 }
