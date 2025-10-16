@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>TKD Championship 2025 — Quản lý giải Pickleball V15 GitHub (W-H2H Ranking)</title>
+  <title>TKD Championship 2025 — Quản lý giải Pickleball V17 GitHub (W-H2H Ranking)</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
   <style>
     body { background:#f7f9fc; font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial; color:#222; padding:18px; }
@@ -46,7 +46,7 @@
       <img class="logo" src="data/logoTKD.png" alt="Logo TKD">
       <div>
         <h3 class="mb-0">TKD Championship 2025</h3>
-        <div>Ngày thi đấu: 18/10/2025 (V15)</div>
+        <div>Ngày thi đấu: 18/10/2025 (**V17**)</div>
       </div>
     </div>
     <div>
@@ -118,7 +118,7 @@
       <h5 class="mb-3">Công cụ Lập & Điền Lịch Thi đấu</h5>
       <div class="d-flex gap-2 mb-4 flex-wrap">
         <button class="btn btn-sm btn-primary" onclick="taoLichThiDauCungGio()">Tạo lịch thi đấu Tối ưu (Tự động)</button>
-        <button class="btn btn-sm btn-secondary" onclick="taoLichCoDinh()">Tải lịch Mẫu (CalendarTKD36)</button>
+        <button class="btn btn-sm btn-secondary" onclick="taoLichCoDinh()">Tải lịch Mẫu (**CalendarTKD36**)</button>
         <button class="btn btn-sm btn-success" onclick="autoFillScores()">Điền kết quả Tự động (11 - X)</button>
         <button class="btn btn-sm btn-danger" onclick="clearAllSchedules()">Xóa Toàn bộ Lịch</button>
       </div>
@@ -395,7 +395,7 @@ async function fetchFileSha(cfg, fileName = cfg.file) {
 }
 
 /**
- * NEW: Tải danh sách đội từ players.json
+ * Tải danh sách đội từ players.json
  */
 async function loadPlayersFromGitHub(cfg) {
     // players.json phải nằm cùng thư mục với state.json
@@ -450,8 +450,6 @@ async function loadFromGitHub() {
             const loadedState = JSON.parse(jsonString);
 
             // Ghi đè các giá trị khác ngoài teams (teams đã được load từ players.json)
-            // Cần phân tích và tái tạo matchesA/B từ mảng matches duy nhất nếu cấu trúc thay đổi
-            // Giả định: state.matchesA và state.matchesB vẫn được lưu riêng biệt
             state.matchesA = loadedState.matchesA || [];
             state.matchesB = loadedState.matchesB || [];
             
@@ -1027,10 +1025,11 @@ function generateAllMatches(teams, groupName) {
                 id: `${groupName}${String(matchIdCounter++).padStart(2, '0')}`,
                 teamA: teams[i],
                 teamB: teams[j],
-                scoreA: null,
-                scoreB: null,
                 time: null,
                 court: null,
+                bang: groupName, // <--- Đã thêm trường 'bang' theo yêu cầu
+                scoreA: null,
+                scoreB: null,
                 winner: null,
                 loser: null
             });
@@ -1154,7 +1153,7 @@ function taoLichThiDauCungGio() {
 }
 
 /**
- * NEW: Tải lịch thi đấu cố định từ chuỗi CSV (FIXED_SCHEDULE_CSV)
+ * Tải lịch thi đấu cố định từ chuỗi CSV (FIXED_SCHEDULE_CSV)
  */
 function taoLichCoDinh() {
     if (state.mixedTeams.length < 2 && state.maleTeams.length < 2) {
@@ -1173,7 +1172,8 @@ function taoLichCoDinh() {
         renderMatchesView();
         stateChanged = true;
         saveToGitHub();
-        showModal('Thành công', `Đã tải lịch thi đấu Mẫu (${importedMatches.length} trận) và cập nhật thành công.`);
+        // Cập nhật thông báo để người dùng biết lịch nào đã được tải
+        showModal('Thành công', `Đã tải lịch thi đấu Mẫu **CalendarTKD36.csv** (${importedMatches.length} trận) và cập nhật thành công.`);
     } else {
         showModal('Cảnh báo', 'Lịch mẫu rỗng hoặc không hợp lệ.');
     }
@@ -1210,7 +1210,7 @@ function handleFileSelect(event) {
 }
 
 /**
- * NEW: Hàm import lịch thi đấu từ nội dung CSV (CalendarTKD36 format)
+ * Hàm import lịch thi đấu từ nội dung CSV (CalendarTKD36 format)
  * @param {string} csvContent - Nội dung file CSV
  * @returns {Array<object>} - Danh sách trận đấu đã được phân tích
  */
@@ -1268,7 +1268,7 @@ function importScheduleFromCSV(csvContent) {
             teamB: teamB,
             time: values[2],
             court: values[3],
-            bang: group,
+            bang: group, // Đã có trường 'bang' khi import từ CSV
             scoreA: scoreA,
             scoreB: scoreB,
             winner: null,
@@ -1314,7 +1314,7 @@ function exportSchedule() {
             match.teamB,
             match.time || '',
             match.court || '',
-            match.id.startsWith('A') ? 'A' : 'B', // Dùng ID để xác định Bảng
+            match.bang || (match.id.startsWith('A') ? 'A' : 'B'), // Đảm bảo trường 'bang' có giá trị
             match.scoreA !== null ? match.scoreA : '',
             match.scoreB !== null ? match.scoreB : ''
         ];
