@@ -7,7 +7,7 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     body { background-color: #f0f4f8; overflow-x: hidden; }
-    #content-carousel { display: flex; width: 300vw; transition: transform 0.3s ease-in-out; }
+    #content-carousel { display: flex; width: 300vw; transition: transform 0.35s cubic-bezier(0.25, 1, 0.5, 1); }
     .swipe-section { width: 100vw; flex-shrink: 0; padding: 1rem; min-height: calc(100vh - 160px); overflow-y: auto; }
     #refresh-btn { position: fixed; bottom: 20px; right: 20px; z-index: 50; background-color: #0284c7; color: white; font-weight: bold; padding: 14px; border-radius: 50%; box-shadow: 0 4px 8px rgba(0,0,0,0.3); transition: transform 0.2s; }
     #refresh-btn:hover { transform: scale(1.1); background-color: #0369a1; }
@@ -41,17 +41,60 @@
 
     const carousel = document.getElementById('content-carousel');
     let currentIndex = 0;
+    let startX = 0, deltaX = 0, isSwiping = false, velocity = 0, lastX = 0, lastTime = 0;
 
     function goToSection(index) {
-      currentIndex = index;
-      carousel.style.transform = `translateX(${index * -100}vw)`;
+      currentIndex = Math.max(0, Math.min(2, index));
+      carousel.style.transition = 'transform 0.35s cubic-bezier(0.25, 1, 0.5, 1)';
+      carousel.style.transform = `translateX(${currentIndex * -100}vw)`;
+      updateTabs();
+    }
+
+    function updateTabs() {
       document.querySelectorAll('.tab-btn').forEach((btn, i) => {
-        btn.classList.toggle('bg-blue-600', i === index);
-        btn.classList.toggle('text-white', i === index);
-        btn.classList.toggle('bg-blue-100', i !== index);
-        btn.classList.toggle('text-blue-800', i !== index);
+        btn.classList.toggle('bg-blue-600', i === currentIndex);
+        btn.classList.toggle('text-white', i === currentIndex);
+        btn.classList.toggle('bg-blue-100', i !== currentIndex);
+        btn.classList.toggle('text-blue-800', i !== currentIndex);
       });
     }
+
+    function handleTouchStart(e) {
+      startX = e.touches ? e.touches[0].clientX : e.clientX;
+      isSwiping = true;
+      velocity = 0;
+      lastX = startX;
+      lastTime = Date.now();
+      carousel.style.transition = 'none';
+    }
+
+    function handleTouchMove(e) {
+      if (!isSwiping) return;
+      const x = e.touches ? e.touches[0].clientX : e.clientX;
+      deltaX = x - startX;
+      const now = Date.now();
+      velocity = (x - lastX) / (now - lastTime);
+      lastX = x; lastTime = now;
+      carousel.style.transform = `translateX(calc(${currentIndex * -100}vw + ${deltaX}px))`;
+    }
+
+    function handleTouchEnd() {
+      if (!isSwiping) return;
+      isSwiping = false;
+      const threshold = 60;
+      if (deltaX < -threshold || velocity < -0.5) currentIndex = Math.min(2, currentIndex + 1);
+      else if (deltaX > threshold || velocity > 0.5) currentIndex = Math.max(0, currentIndex - 1);
+      goToSection(currentIndex);
+      deltaX = 0;
+    }
+
+    carousel.addEventListener('touchstart', handleTouchStart);
+    carousel.addEventListener('touchmove', handleTouchMove);
+    carousel.addEventListener('touchend', handleTouchEnd);
+
+    carousel.addEventListener('mousedown', handleTouchStart);
+    window.addEventListener('mousemove', e => { if (isSwiping) handleTouchMove(e); });
+    window.addEventListener('mouseup', handleTouchEnd);
 
     async function fetchData() {
       const msg = document.getElementById('statusMessage');
@@ -83,10 +126,8 @@
     function renderRounds(data) {
       const container = document.getElementById('rounds');
       container.innerHTML = `<h2 class='text-2xl font-bold text-blue-700 mb-3 text-center'>Vòng Bảng</h2>`;
-
       container.innerHTML += renderTable(data.tableA, 'Bảng A');
       container.innerHTML += renderTable(data.tableB, 'Bảng B');
-
       container.innerHTML += renderMatchList(data.matchesA, 'Kết quả Bảng A');
       container.innerHTML += renderMatchList(data.matchesB, 'Kết quả Bảng B');
     }
