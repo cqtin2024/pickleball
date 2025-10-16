@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>TKD Championship 2025 — Quản lý giải Pickleball V14 GitHub (Court Config)</title>
+  <title>TKD Championship 2025 — Quản lý giải Pickleball V15 GitHub (W-H2H Ranking)</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
   <style>
     body { background:#f7f9fc; font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial; color:#222; padding:18px; }
@@ -46,7 +46,7 @@
       <img class="logo" src="data/logoTKD.png" alt="Logo TKD">
       <div>
         <h3 class="mb-0">TKD Championship 2025</h3>
-        <div>Ngày thi đấu: 18/10/2025</div>
+        <div>Ngày thi đấu: 18/10/2025 (V15)</div>
       </div>
     </div>
     <div>
@@ -102,7 +102,7 @@
     </div>
 
     <div class="tab-pane fade p-3" id="results">
-        <h5 class="mb-3">Bảng xếp hạng Vòng Bảng (Cập nhật liên tục)</h5>
+        <h5 class="mb-3">Bảng xếp hạng Vòng Bảng (Ưu tiên: W > Đối đầu > Hiệu số > Tổng điểm)</h5>
         <div id="rankingTables" class="ranking-container">
             </div>
 
@@ -118,7 +118,7 @@
       <h5 class="mb-3">Công cụ Lập & Điền Lịch Thi đấu</h5>
       <div class="d-flex gap-2 mb-4 flex-wrap">
         <button class="btn btn-sm btn-primary" onclick="taoLichThiDauCungGio()">Tạo lịch thi đấu Tối ưu (Tự động)</button>
-        <button class="btn btn-sm btn-secondary" onclick="taoLichCoDinh()">Tạo lịch Cố định</button>
+        <button class="btn btn-sm btn-secondary" onclick="taoLichCoDinh()">Tải lịch Mẫu (CalendarTKD36)</button>
         <button class="btn btn-sm btn-success" onclick="autoFillScores()">Điền kết quả Tự động (11 - X)</button>
         <button class="btn btn-sm btn-danger" onclick="clearAllSchedules()">Xóa Toàn bộ Lịch</button>
       </div>
@@ -229,44 +229,57 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script> 
 
 <script>
-// Dữ liệu lịch cố định từ file TKDPlayers - Sheet2 (1).csv (ĐÃ CẬP NHẬT)
-const FIXED_SCHEDULE_CSV = `Giờ bắt đầu,Giờ kết thúc,Lượt trận,Sân 1,Sân 2,Sân 3,Sân 7,Thời lượng dự kiến
-2:00,2:15,1,Tiệp/Thủy - Phương/Thanh,Giang/Long - Hường/Đạt,Hậu/Dũng - Hạnh/Tiến,Huyền/Luân - Linh/M.Hùng,0:15
-2:15,2:30,2,Triều/Minh - Hiển/P.Hùng,Tín/Khiêm - Ánh/Toàn,Hậu/Dũng - Hường/Đạt,Giang/Long - Huyền/Luân,0:15
-2:30,2:45,3,Phương/Thanh - Ánh/Toàn,Triều/Minh - Tín/Khiêm,Hạnh/Tiến - Linh/M.Hùng,Triều/Minh - Hiển/P.Hùng,0:15
-2:45,3:00,4,,Hạnh/Tiến - Giang/Long,Huyền/Luân - Hường/Đạt,Hậu/Dũng - Linh/M.Hùng,0:15
-3:00,3:15,5,,Tiệp/Thủy - Ánh/Toàn,Tín/Khiêm - Hiển/M.Hùng,,0:15
-3:15,3:30,6,,Phương/Thanh - Triều/Minh,Giang/Long - Linh/M.Hùng,,0:15
-3:30,3:45,7,,Hạnh/Tiến - Hường/Đạt,Hậu/Dũng - Huyền/Luân,,0:15
-3:45,4:00,8,,Tiệp/Thủy - Tín/Khiêm,Phương/Thanh - Hiển/P.Hùng,,0:15
-4:00,4:15,9,,Triều/Minh - Ánh/Toàn,Tiệp/Thủy - Phương/Thanh,Hạnh/Tiến - Huyền/Luân,0:15
-4:15,4:30,10,,Tín/Khiêm - Phương/Thanh,Giang/Long - Hậu/Dũng,,0:15
-4:30,4:45,11,Hậu/Dũng - Hạnh/Tiến,Giang/Long - Hường/Đạt,Huyền/Luân - Linh/M.Hùng,Hậu/Dũng - Linh/M.Hùng,0:15
-4:45,5:00,12,,,,0:15
-5:00,5:15,13,Hậu/Dũng - Giang/Long,Huyền/Luân - Hạnh/Tiến,Linh/M.Hùng - Hường/Đạt,,0:15
-5:15,5:30,14,Triều/Minh - Tiệp/Thủy,Ánh/Toàn - Hiển/P.Hùng,Phương/Thanh - Tín/Khiêm,,0:15
-5:30,5:45,15,Hậu/Dũng - Huyền/Luân,Giang/Long - Linh/M.Hùng,Hạnh/Tiến - Hường/Đạt,,0:15
-5:45,6:00,16,,,,0:15
-6:00,6:15,17,Huyền/Luân - Giang/Long,Hậu/Dũng - Hường/Đạt,Hạnh/Tiến - Linh/M.Hùng,,0:15
-6:15,6:30,18,Tiệp/Thủy - Hiển/P.Hùng,Phương/Thanh - Ánh/Toàn,Triều/Minh - Tín/Khiêm,,0:15
-6:30,6:45,19,Hậu/Dũng - Hạnh/Tiến,Giang/Long - Hường/Đạt,Huyền/Luân - Linh/M.Hùng,Tiệp/Thủy - Phương/Thanh,0:15
-6:45,7:00,20,Triều/Minh - Hiển/P.Hùng,Tín/Khiêm - Ánh/Toàn,Hậu/Dũng - Hường/Đạt,Giang/Long - Huyền/Luân,0:15
-7:00,7:15,21,Phương/Thanh - Ánh/Toàn,Triều/Minh - Tín/Khiêm,Hạnh/Tiến - Linh/M.Hùng,Tiệp/Thủy - Hiển/P.Hùng,0:15
-7:15,7:30,22,,Hạnh/Tiến - Giang/Long,Huyền/Luân - Hường/Đạt,Hậu/Dũng - Linh/M.Hùng,0:15
-7:30,7:45,23,,Tiệp/Thủy - Ánh/Toàn,Tín/Khiêm - Hiển/P.Hùng,,0:15
-7:45,8:00,24,,Phương/Thanh - Triều/Minh,Giang/Long - Linh/M.Hùng,,0:15
-8:00,8:15,25,,Hạnh/Tiến - Hường/Đạt,Hậu/Dũng - Huyền/Luân,,0:15
-8:15,8:30,26,,Tiệp/Thủy - Tín/Khiêm,Phương/Thanh - Hiển/P.Pùng,,0:15
-8:30,8:45,27,,Triều/Minh - Ánh/Toàn,Tiệp/Thủy - Phương/Thanh,Hạnh/Tiến - Huyền/Luân,0:15
-8:45,9:00,28,,Tín/Khiêm - Phương/Thanh,Giang/Long - Hậu/Dũng,,0:15
-9:00,9:15,29,Hậu/Dũng - Hạnh/Tiến,Giang/Long - Hường/Đạt,Huyền/Luân - Linh/M.Hùng,Hậu/Dũng - Linh/M.Hùng,0:15
-9:15,9:30,30,,,,0:15
-9:30,9:45,31,Hậu/Dũng - Giang/Long,Huyền/Luân - Hạnh/Tiến,Linh/M.Hùng - Hường/Đạt,,0:15
-9:45,10:00,32,Triều/Minh - Tiệp/Thủy,Ánh/Toàn - Hiển/P.Hùng,Phương/Thanh - Tín/Khiêm,,0:15
-10:00,10:15,33,Hậu/Dũng - Huyền/Luân,Giang/Long - Linh/M.Hùng,Hạnh/Tiến - Hường/Đạt,,0:15
-10:15,10:30,34,,,,0:15
-10:30,10:45,35,Huyền/Luân - Giang/Long,Hậu/Dũng - Hường/Đạt,Hạnh/Tiến - Linh/M.Hùng,,0:15
-10:45,11:00,36,Tiệp/Thủy - Hiển/P.Hùng,Phương/Thanh - Ánh/Toàn,Triều/Minh - Tín/Khiêm,,0:15`;
+// Dữ liệu lịch cố định từ file CalendarTKD36.csv (MỚI)
+const FIXED_SCHEDULE_CSV = `teamA,teamB,time,court,bang,scoreA,scoreB
+Triều/Minh,Hiển/P.Hùng,14:00,Sân 1,B,,
+Giang/Long,Hường/Đạt,14:00,Sân 2,A,,
+Hậu/Dũng,Hạnh/Tiến,14:00,Sân 3,A,,
+Huyền/Luân,Linh/M.Hùng,14:00,Sân7,A,,
+Tiệp/Thủy,Phương/Thanh,14:15,Sân 1,B,,
+Tín/Khiêm,Ánh/Toàn,14:15,Sân 2,B,,
+Hậu/Dũng,Hường/Đạt,14:15,Sân 3,A,,
+Giang/Long,Huyền/Luân,14:15,Sân7,A,,
+Triều/Minh,Tín/Khiêm,14:30,Sân 1,B,,
+Tiệp/Thủy,Hiển/P.Hùng,14:30,Sân 2,B,,
+Hạnh/Tiến,Linh/M.Hùng,14:30,Sân 3,A,,
+Phương/Thanh,Ánh/Toàn,14:30,Sân7,B,,
+Huyền/Luân,Hường/Đạt,14:45,Sân 2,A,,
+Hạnh/Tiến,Giang/Long,14:45,Sân 3,A,,
+Hậu/Dũng,Linh/M.Hùng,14:45,Sân7,A,,
+Tiệp/Thủy,Tín/Khiêm,15:00,Sân 1,B,,
+Triều/Minh,Phương/Thanh,15:00,Sân 2,B,,
+Giang/Long,Hậu/Dũng,15:00,Sân 3,A,,
+Hường/Đạt,Linh/M.Hùng,15:00,Sân7,A,,
+Ánh/Toàn,Hiển/P.Hùng,15:15,Sân 1,B,,
+Huyền/Luân,Hậu/Dũng,15:15,Sân 2,A,,
+Linh/M.Hùng,Giang/Long,15:15,Sân 3,A,,
+Hạnh/Tiến,Hường/Đạt,15:15,Sân7,A,,
+Triều/Minh,Ánh/Toàn,15:30,Sân 1,B,,
+Tín/Khiêm,Hiển/P.Hùng,15:30,Sân 2,B,,
+Tiệp/Thủy,Phương/Thanh,15:45,Sân 1,B,,
+Phương/Thanh,Tín/Khiêm,15:45,Sân 2,B,,
+Ánh/Toàn,Tiệp/Thủy,16:00,Sân 1,B,,
+Hiển/P.Hùng,Triều/Minh,16:00,Sân 2,B,,
+Hậu/Dũng,Giang/Long,16:15,Sân 3,A,,
+Huyền/Luân,Hạnh/Tiến,16:15,Sân7,A,,
+Hường/Đạt,Linh/M.Hùng,16:30,Sân 3,A,,
+Hậu/Dũng,Huyền/Luân,16:30,Sân7,A,,
+Giang/Long,Linh/M.Hùng,16:45,Sân 3,A,,
+Hạnh/Tiến,Hường/Đạt,16:45,Sân7,A,,
+Hậu/Dũng,Hạnh/Tiến,17:00,Sân 3,A,,
+Giang/Long,Hường/Đạt,17:00,Sân7,A,,
+Huyền/Luân,Linh/M.Hùng,17:15,Sân 3,A,,
+Hậu/Dũng,Linh/M.Hùng,17:15,Sân7,A,,
+Giang/Long,Huyền/Luân,17:30,Sân 3,A,,
+Hậu/Dũng,Hường/Đạt,17:30,Sân7,A,,
+Hạnh/Tiến,Linh/M.Hùng,17:45,Sân 3,A,,
+Huyền/Luân,Hường/Đạt,17:45,Sân7,A,,
+Hạnh/Tiến,Giang/Long,18:00,Sân 3,A,,
+Hậu/Dũng,Huyền/Luân,18:00,Sân7,A,,
+Linh/M.Hùng,Hường/Đạt,18:15,Sân 3,A,,
+Hạnh/Tiến,Hậu/Dũng,18:15,Sân7,A,,
+Giang/Long,Linh/M.Hùng,18:30,Sân 3,A,,
+Huyền/Luân,Hường/Đạt,18:30,Sân7,A,`;
 
 // Biến state lưu trữ dữ liệu chính của ứng dụng.
 let state = { 
@@ -437,6 +450,8 @@ async function loadFromGitHub() {
             const loadedState = JSON.parse(jsonString);
 
             // Ghi đè các giá trị khác ngoài teams (teams đã được load từ players.json)
+            // Cần phân tích và tái tạo matchesA/B từ mảng matches duy nhất nếu cấu trúc thay đổi
+            // Giả định: state.matchesA và state.matchesB vẫn được lưu riêng biệt
             state.matchesA = loadedState.matchesA || [];
             state.matchesB = loadedState.matchesB || [];
             
@@ -633,7 +648,7 @@ function renderCourtList() {
         <tbody>`;
         
     state.courts.forEach((court, index) => {
-        const type = court.isMixed ? 'Bảng A (Nam-Nữ)' : 'Bảng B (Nam)';
+        const type = court.isMixed ? 'Bảng A (Nam - Nữ)' : 'Bảng B (Nam)';
         const typeClass = court.isMixed ? 'badge bg-primary' : 'badge bg-info';
         
         html += `<tr>
@@ -1139,7 +1154,7 @@ function taoLichThiDauCungGio() {
 }
 
 /**
- * NEW: Tải lịch thi đấu cố định từ chuỗi CSV
+ * NEW: Tải lịch thi đấu cố định từ chuỗi CSV (FIXED_SCHEDULE_CSV)
  */
 function taoLichCoDinh() {
     if (state.mixedTeams.length < 2 && state.maleTeams.length < 2) {
@@ -1147,8 +1162,21 @@ function taoLichCoDinh() {
          return;
     }
     
-    handleCSVData(FIXED_SCHEDULE_CSV);
-    showModal('Thành công', 'Đã tạo lịch thi đấu Cố định (dựa trên file CSV mẫu).');
+    // Sử dụng hàm importScheduleFromCSV mới
+    const importedMatches = importScheduleFromCSV(FIXED_SCHEDULE_CSV);
+    
+    if (importedMatches.length > 0) {
+        // Cập nhật state.matchesA và state.matchesB
+        state.matchesA = importedMatches.filter(m => m.bang === 'A');
+        state.matchesB = importedMatches.filter(m => m.bang === 'B');
+        
+        renderMatchesView();
+        stateChanged = true;
+        saveToGitHub();
+        showModal('Thành công', `Đã tải lịch thi đấu Mẫu (${importedMatches.length} trận) và cập nhật thành công.`);
+    } else {
+        showModal('Cảnh báo', 'Lịch mẫu rỗng hoặc không hợp lệ.');
+    }
 }
 
 /**
@@ -1159,189 +1187,147 @@ function handleFileSelect(event) {
     if (!file) {
         return;
     }
-
+    
     const reader = new FileReader();
     reader.onload = (e) => {
-        handleCSVData(e.target.result);
-        showModal('Thành công', `Đã nhập lịch thi đấu từ file **${file.name}**.`);
+        const fileContent = e.target.result;
+        const importedMatches = importScheduleFromCSV(fileContent);
+
+        if (importedMatches.length > 0) {
+             // Cập nhật state.matchesA và state.matchesB
+            state.matchesA = importedMatches.filter(m => m.bang === 'A');
+            state.matchesB = importedMatches.filter(m => m.bang === 'B');
+            
+            renderMatchesView();
+            stateChanged = true;
+            saveToGitHub();
+            showModal('Thành công', `Đã nhập lịch thi đấu (${importedMatches.length} trận) từ file **${file.name}**.`);
+        } else {
+             showModal('Cảnh báo', 'File CSV rỗng hoặc không hợp lệ. Vui lòng kiểm tra định dạng: teamA,teamB,time,court,bang,scoreA,scoreB');
+        }
     };
     reader.readAsText(file);
 }
 
 /**
- * NEW: Lấy tên đội từ chuỗi "Đội A - Đội B"
+ * NEW: Hàm import lịch thi đấu từ nội dung CSV (CalendarTKD36 format)
+ * @param {string} csvContent - Nội dung file CSV
+ * @returns {Array<object>} - Danh sách trận đấu đã được phân tích
  */
-function parseTeamsFromMatchString(matchStr) {
-    // Loại bỏ khoảng trắng thừa
-    const trimmedStr = matchStr.trim();
-    if (!trimmedStr) return { teamA: null, teamB: null };
+function importScheduleFromCSV(csvContent) {
+    // Tách các dòng
+    const lines = csvContent.split('\n').filter(line => line.trim() !== '');
 
-    // Tìm vị trí của dấu ngăn cách chính giữa (ví dụ: " - " hoặc "-")
-    const separatorIndex = trimmedStr.lastIndexOf(' - ');
-    if (separatorIndex === -1) {
-        // Thử tìm dấu '-' đơn giản
-        const simpleSeparatorIndex = trimmedStr.lastIndexOf('-');
-        if (simpleSeparatorIndex !== -1) {
-            return {
-                teamA: trimmedStr.substring(0, simpleSeparatorIndex).trim(),
-                teamB: trimmedStr.substring(simpleSeparatorIndex + 1).trim()
-            };
-        }
-        return { teamA: trimmedStr, teamB: null }; // Có thể là teamA hoặc teamB bị thiếu
+    if (lines.length <= 1) {
+        return [];
     }
-
-    // Phân tách bằng " - "
-    return {
-        teamA: trimmedStr.substring(0, separatorIndex).trim(),
-        teamB: trimmedStr.substring(separatorIndex + 3).trim()
-    };
-}
-
-/**
- * NEW: Xử lý dữ liệu CSV và cập nhật state.matchesA/B
- */
-function handleCSVData(csvData) {
-    const lines = csvData.trim().split('\n');
-    if (lines.length <= 1) return;
-
-    // Phân tích header để tìm cột Sân
-    const headers = lines[0].split(',').map(h => h.trim());
-    const courtColumns = {};
-    headers.forEach((header, index) => {
-        if (header.startsWith('Sân')) {
-            courtColumns[header] = index;
-        }
-    });
-
-    // Lấy danh sách đội hợp lệ để kiểm tra
-    const allTeams = [...state.mixedTeams, ...state.maleTeams];
-    const teamSetA = new Set(state.mixedTeams);
-    const teamSetB = new Set(state.maleTeams);
     
-    // Xóa lịch cũ trước
-    state.matchesA = [];
-    state.matchesB = [];
+    // Lấy header (giả sử dòng đầu tiên là header)
+    const headers = lines[0].split(',').map(h => h.trim());
+    
+    // Kiểm tra định dạng header cơ bản
+    if (headers[0] !== 'teamA' || headers[4] !== 'bang') {
+        console.error("Lỗi: Định dạng header CSV không khớp (teamA,teamB,time,court,bang,scoreA,scoreB)");
+        return [];
+    }
+    
+    const newMatches = [];
     let matchIdA = 1;
     let matchIdB = 1;
 
+    // Lặp qua từng dòng dữ liệu (bỏ qua header)
     for (let i = 1; i < lines.length; i++) {
         const values = lines[i].split(',').map(v => v.trim());
-        const startTime = values[0];
-        const endTime = values[1];
+        
+        // Kiểm tra số lượng cột hợp lệ (ít nhất 5 cột)
+        if (values.length < 5 || !values[0] || !values[1] || !values[4]) {
+            console.warn(`Bỏ qua dòng ${i+1}: Không đủ dữ liệu hoặc thiếu teamA/teamB/bang.`);
+            continue;
+        }
 
-        // Lặp qua các cột sân
-        Object.entries(courtColumns).forEach(([courtName, colIndex]) => {
-            const matchStr = values[colIndex];
-            if (matchStr) {
-                const { teamA, teamB } = parseTeamsFromMatchString(matchStr);
-                
-                if (teamA && teamB) {
-                    // Kiểm tra xem 2 đội thuộc bảng nào (Giả định trận đấu chỉ diễn ra trong cùng một bảng)
-                    const isTeamA_Mixed = teamSetA.has(teamA);
-                    const isTeamB_Mixed = teamSetA.has(teamB);
-                    const isTeamA_Male = teamSetB.has(teamA);
-                    const isTeamB_Male = teamSetB.has(teamB);
-                    
-                    // Phân loại trận đấu vào Bảng A hay B
-                    let targetMatches;
-                    let matchId;
-                    let groupName;
+        const teamA = values[0];
+        const teamB = values[1];
+        const group = values[4].toUpperCase(); // 'A' hoặc 'B'
+        
+        let matchId = '';
+        if (group === 'A') {
+            matchId = `A${String(matchIdA++).padStart(2, '0')}`;
+        } else if (group === 'B') {
+            matchId = `B${String(matchIdB++).padStart(2, '0')}`;
+        } else {
+             console.warn(`Bỏ qua dòng ${i+1}: Bảng không hợp lệ (${group}).`);
+            continue;
+        }
 
-                    if (isTeamA_Mixed && isTeamB_Mixed) {
-                        targetMatches = state.matchesA;
-                        matchId = `A${String(matchIdA++).padStart(2, '0')}`;
-                        groupName = 'A';
-                    } else if (isTeamA_Male && isTeamB_Male) {
-                        targetMatches = state.matchesB;
-                        matchId = `B${String(matchIdB++).padStart(2, '0')}`;
-                        groupName = 'B';
-                    } else {
-                        // Bỏ qua trận đấu giữa các đội thuộc bảng khác nhau (hoặc đội không tồn tại)
-                        console.warn(`Bỏ qua trận ${teamA} vs ${teamB}: Cặp đấu không hợp lệ hoặc đội không tồn tại.`);
-                        return;
-                    }
-                    
-                    // Thêm trận đấu mới (không có kết quả)
-                    targetMatches.push({
-                        id: matchId,
-                        teamA: teamA,
-                        teamB: teamB,
-                        scoreA: null,
-                        scoreB: null,
-                        time: startTime,
-                        court: courtName,
-                        winner: null,
-                        loser: null
-                    });
-                }
+        const scoreA = values[5] ? parseInt(values[5], 10) : null;
+        const scoreB = values[6] ? parseInt(values[6], 10) : null;
+        
+        const match = {
+            id: matchId, 
+            teamA: teamA,
+            teamB: teamB,
+            time: values[2],
+            court: values[3],
+            bang: group,
+            scoreA: scoreA,
+            scoreB: scoreB,
+            winner: null,
+            loser: null,
+        };
+        
+        // Logic xác định winner/loser nếu đã có điểm
+        if (match.scoreA !== null && match.scoreB !== null) {
+            if (match.scoreA > match.scoreB) {
+                match.winner = match.teamA;
+                match.loser = match.teamB;
+            } else if (match.scoreB > match.scoreA) {
+                match.winner = match.teamB;
+                match.loser = match.teamA;
             }
-        });
+        }
+
+        newMatches.push(match);
     }
 
-    renderMatchesView();
-    stateChanged = true;
-    saveToGitHub();
+    return newMatches;
 }
+
 
 /**
  * Xuất lịch thi đấu hiện tại sang CSV
  */
 function exportSchedule() {
-    // 1. Tạo bản đồ matches theo Court và Time
     const allMatches = [...state.matchesA, ...state.matchesB];
-    const courts = state.courts.map(c => c.name);
-    const scheduleMap = new Map(); // Key: time, Value: { courtName: matchString }
+    
+    // Header format: teamA,teamB,time,court,bang,scoreA,scoreB
+    let csvContent = `teamA,teamB,time,court,bang,scoreA,scoreB\n`;
 
-    // Tạo tập hợp các mốc thời gian
-    const timePoints = new Set();
-    allMatches.forEach(match => {
-        if (match.time) {
-            timePoints.add(match.time);
-        }
-    });
-
-    // Sắp xếp các mốc thời gian
-    const sortedTimes = Array.from(timePoints).sort((a, b) => {
-        const timeA = timeToMinutes(a);
-        const timeB = timeToMinutes(b);
-        return timeA - timeB;
+    allMatches.sort((a, b) => {
+        if (!a.time) return 1;
+        if (!b.time) return -1;
+        return timeToMinutes(a.time) - timeToMinutes(b.time);
     });
 
     allMatches.forEach(match => {
-        if (match.time && match.court) {
-            if (!scheduleMap.has(match.time)) {
-                scheduleMap.set(match.time, {});
-            }
-            const matchEntry = scheduleMap.get(match.time);
-            
-            // Định dạng match string
-            let matchString = `${match.teamA} - ${match.teamB}`;
-            if (match.winner) {
-                // Thêm kết quả nếu đã có
-                const scoreA = match.scoreA !== null ? match.scoreA : '';
-                const scoreB = match.scoreB !== null ? match.scoreB : '';
-                matchString += ` (${scoreA}-${scoreB})`;
-            }
-            
-            matchEntry[match.court] = matchString;
-        }
-    });
-
-    // 2. Tạo nội dung CSV
-    const header = ['Giờ bắt đầu', 'Giờ kết thúc', 'Lượt trận', ...courts].join(',');
-    let csvContent = header + '\n';
-    let matchCounter = 1;
-
-    sortedTimes.forEach((time, index) => {
-        const nextTime = index < sortedTimes.length - 1 ? sortedTimes[index + 1] : ''; // Không tính giờ kết thúc cho trận cuối
-        const row = [time, nextTime, matchCounter++];
-        const matchEntry = scheduleMap.get(time) || {};
+        const row = [
+            match.teamA,
+            match.teamB,
+            match.time || '',
+            match.court || '',
+            match.id.startsWith('A') ? 'A' : 'B', // Dùng ID để xác định Bảng
+            match.scoreA !== null ? match.scoreA : '',
+            match.scoreB !== null ? match.scoreB : ''
+        ];
         
-        courts.forEach(courtName => {
-            row.push(matchEntry[courtName] || '');
+        // Escape dấu phẩy trong tên đội (nếu có) và join bằng dấu phẩy
+        const escapedRow = row.map(cell => {
+            if (typeof cell === 'string' && cell.includes(',')) {
+                return `"${cell}"`; // Bọc trong dấu ngoặc kép
+            }
+            return cell;
         });
-
-        csvContent += row.join(',') + '\n';
+        
+        csvContent += escapedRow.join(',') + '\n';
     });
     
     // 3. Tải file
@@ -1349,14 +1335,15 @@ function exportSchedule() {
     const link = document.createElement("a");
     const url = URL.createObjectURL(blob);
     link.setAttribute("href", url);
-    link.setAttribute("download", "lich_thi_dau_tkd.csv");
+    link.setAttribute("download", "lich_thi_dau_tkd_export.csv");
     link.style.visibility = 'hidden';
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
 
-    showModal('Xuất file CSV', 'Đã tạo và tải file **lich_thi_dau_tkd.csv** thành công.');
+    showModal('Xuất file CSV', 'Đã tạo và tải file **lich_thi_dau_tkd_export.csv** thành công (Định dạng: teamA,teamB,time,court,bang,scoreA,scoreB).');
 }
+
 
 /**
  * Hàm điền điểm ngẫu nhiên cho tất cả các trận chưa đấu.
@@ -1393,7 +1380,7 @@ function autoFillScores() {
     [...state.semifinals, state.final].forEach(match => {
         if (match.scoreA === null && match.scoreB === null) {
              // Kiểm tra nếu cặp đấu đã được gán đội thực tế (không phải Nhất A/Nhì B, v.v.)
-            const isAssigned = match.teamA !== 'Nhất A' && match.teamA !== 'Thắng SF1' && match.teamA !== 'Nhất B';
+            const isAssigned = match.teamA !== 'Nhất A' && match.teamA !== 'Thắng SF1' && match.teamA !== 'Nhất B' && match.teamA !== 'Thắng SF2';
             
             if (isAssigned) {
                  if (Math.random() < 0.5) {
@@ -1619,20 +1606,25 @@ function tinhXepHang(teams, matches, groupName) {
             const winnerStats = stats[match.winner];
             const loserStats = stats[match.loser];
             
-            if (winnerStats && loserStats) {
-                // Xử lý điểm
-                // Lấy điểm của đội thắng và đội thua (không phải scoreA, scoreB)
-                const winnerScore = match.scoreA > match.scoreB ? match.scoreA : match.scoreB;
-                const loserScore = match.scoreA < match.scoreB ? match.scoreA : match.scoreB;
+            // Xử lý điểm của trận đấu
+            let scoreW, scoreL;
+            if (match.teamA === match.winner) {
+                scoreW = match.scoreA;
+                scoreL = match.scoreB;
+            } else {
+                scoreW = match.scoreB;
+                scoreL = match.scoreA;
+            }
 
+            if (winnerStats && loserStats) {
                 winnerStats.W += 1;
-                winnerStats.PF += winnerScore;
-                winnerStats.PA += loserScore;
+                winnerStats.PF += scoreW;
+                winnerStats.PA += scoreL;
                 winnerStats.matchCount += 1;
 
                 loserStats.L += 1;
-                loserStats.PF += loserScore;
-                loserStats.PA += winnerScore;
+                loserStats.PF += scoreL;
+                loserStats.PA += scoreW;
                 loserStats.matchCount += 1;
             }
         }
@@ -1642,29 +1634,17 @@ function tinhXepHang(teams, matches, groupName) {
     let ranking = Object.values(stats);
     
     /**
-     * HÀM SO SÁNH TIÊU CHUẨN MỚI
-     * Ưu tiên: W > Hiệu số (PF-PA) > Tổng điểm ghi (PF) > Đối đầu (H2H) > Random
+     * HÀM SO SÁNH TIÊU CHUẨN MỚI: W > Đối đầu > Hiệu số điểm (PF-PA) > Tổng điểm ghi (PF) > Random
+     * @param {object} a - Đội A
+     * @param {object} b - Đội B
      */
     function compareTeams(a, b) {
         // Ưu tiên 1: Số trận thắng (W)
         if (a.W !== b.W) {
-            return b.W - a.W; // Giảm dần
+            return b.W - a.W; // Giảm dần (Đội nhiều thắng hơn xếp trên)
         }
 
-        // Ưu tiên 2: Hiệu số điểm (PF - PA)
-        const diffA = a.PF - a.PA;
-        const diffB = b.PF - b.PA;
-        if (diffA !== diffB) {
-            return diffB - diffA; // Giảm dần
-        }
-
-        // Ưu tiên 3: Tổng điểm ghi được (PF)
-        if (a.PF !== b.PF) {
-            return b.PF - a.PF; // Giảm dần
-        }
-        
-        // Ưu tiên 4: Đối đầu trực tiếp (H2H) - Chỉ cho 2 đội bằng nhau
-        // Kiểm tra trận đối đầu giữa a và b
+        // Ưu tiên 2: Đối đầu trực tiếp (H2H) 
         const h2hMatch = matches.find(m => 
             (m.teamA === a.team && m.teamB === b.team) || 
             (m.teamB === a.team && m.teamA === b.team)
@@ -1673,33 +1653,42 @@ function tinhXepHang(teams, matches, groupName) {
         if (h2hMatch && h2hMatch.winner) {
             if (h2hMatch.winner === a.team) {
                 return -1; // a thắng b, a xếp trên b
-            } else {
+            } else if (h2hMatch.winner === b.team) {
                 return 1; // b thắng a, b xếp trên a
             }
         }
 
 
+        // Ưu tiên 3: Hiệu số điểm (PF - PA)
+        const diffA = a.PF - a.PA;
+        const diffB = b.PF - b.PA;
+        if (diffA !== diffB) {
+            return b.PF - b.PA - (a.PF - a.PA); // Giảm dần (Hiệu số cao hơn xếp trên)
+        }
+
+        // Ưu tiên 4: Tổng điểm ghi được (PF)
+        if (a.PF !== b.PF) {
+            return b.PF - a.PF; // Giảm dần (Điểm ghi cao hơn xếp trên)
+        }
+        
         // Ưu tiên 5: Bốc thăm (Random) - Nếu tất cả vẫn bằng nhau
         return Math.random() - 0.5; 
     }
 
     // 4. Sắp xếp
-    ranking.sort(compareTeams);
+    ranking.sort((a, b) => compareTeams(a, b));
 
-    // Thêm Rank
+    // Thêm Rank và xử lý Tiebreaker Info
     ranking.forEach((team, index) => {
         team.rank = index + 1;
-        // Thêm trường tiebreakerInfo để hiển thị nếu cần
         team.tiebreakerInfo = ''; 
+        
+        // Chỉ cần so sánh với đội liền kề trước đó
         if (index > 0) {
             const prevTeam = ranking[index - 1];
-            // Kiểm tra xem có bằng nhau theo 3 tiêu chí đầu tiên không (W, PF-PA, PF)
-            const diffA = team.PF - team.PA;
-            const diffB = prevTeam.PF - prevTeam.PA;
             
-            if (team.W === prevTeam.W && diffA === diffB && team.PF === prevTeam.PF) {
-                
-                // Giả định nếu 3 tiêu chí đầu tiên bằng nhau, và thứ hạng liền kề, là tie
+            // Kiểm tra nếu các tiêu chí xếp hạng chính bằng nhau
+            if (compareTeams(team, prevTeam) === 0) {
                 team.tiebreakerInfo = 'Tie';
                 if (!prevTeam.tiebreakerInfo) {
                     prevTeam.tiebreakerInfo = 'Tie';
@@ -1851,7 +1840,7 @@ function renderFinals() {
         const teamA_Class = match.winner === match.teamA ? winnerClass : (match.loser === match.teamA ? loserClass : '');
         const teamB_Class = match.winner === match.teamB ? winnerClass : (match.loser === match.teamB ? loserClass : '');
 
-        const readonly = (match.teamA === 'Thắng SF1' || match.teamB === 'Nhất A') ? 'disabled' : ''; // Không cho nhập điểm nếu chưa gán đội
+        const readonly = (match.teamA === 'Thắng SF1' || match.teamA === 'Nhất A' || match.teamA === 'Nhất B') ? 'disabled' : ''; // Không cho nhập điểm nếu chưa gán đội
 
         let matchHtml = `
             <div class="d-flex align-items-center mb-2 p-2 border rounded shadow-sm">
@@ -2050,7 +2039,9 @@ function renderMatchesByCourt() {
         const courtData = matchesByCourt[courtName];
         const matches = courtData.matches;
         
-        if (matches.length === 0) return; // Bỏ qua sân không có trận
+        // Bỏ qua sân không có trận, trừ khi nó có trong cấu hình sân
+        const isConfiguredCourt = state.courts.some(c => c.name === courtName);
+        if (matches.length === 0 && !isConfiguredCourt) return; 
 
         const groupType = courtData.isMixed ? 'Bảng A (Nam - Nữ)' : 'Bảng B (Nam)';
         
