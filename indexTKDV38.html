@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>TKD Championship 2025 — Quản lý giải Pickleball V21 GitHub (Sân CK là Sân 3 & Sửa Lịch mẫu & Sân 1-8)</title>
+  <title>TKD Championship 2025 — Quản lý giải Pickleball V22 GitHub (AutoSave 30s & Nhất/Nhì Bán kết)</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
   <style>
     body { background:#f7f9fc; font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial; color:#222; padding:18px; }
@@ -46,11 +46,11 @@
       <img class="logo" src="data/logoTKD.png" alt="Logo TKD">
       <div>
         <h3 class="mb-0">TKD Championship 2025</h3>
-        <div>Ngày thi đấu: 18/10/2025 (**V21**)</div>
+        <div>Ngày thi đấu: 18/10/2025 (**V22**)</div>
       </div>
     </div>
     <div>
-      <div id="autoSaveStatus" class="text-end status">Auto-save: <span id="autoState" class="text-danger">Tắt</span></div>
+      <div id="autoSaveStatus" class="text-end status">Auto-save (30s): <span id="autoState" class="text-danger">Tắt</span></div>
       <div id="lastSaved" class="text-end status">Chưa lưu</div>
     </div>
   </div>
@@ -146,10 +146,18 @@
           </select>
           <div class="form-text">Xác định loại sân sẽ được ưu tiên gán trận đấu đầu tiên trong thuật toán tạo lịch.</div>
         </div>
+        <div class="col-md-6">
+            <label class="form-label">Công cụ Xuất/Lưu Dữ liệu</label>
+            <div class="d-flex gap-2">
+                 <button class="btn btn-success" onclick="saveToGitHub(true)">Cập nhật lên GitHub ngay</button>
+                 <button class="btn btn-secondary" onclick="exportDataToJson()">Xuất tất cả ra JSON</button>
+            </div>
+            <div class="form-text">Lưu trạng thái hiện tại (state.json) lên GitHub hoặc tải về máy.</div>
+        </div>
       </div>
       <hr>
       <h5 class="mt-4">💾 Cấu hình Kết nối GitHub</h5>
-      <p class="text-muted">Nhập thông tin kho lưu trữ GitHub để tự động lưu trữ dữ liệu giải đấu.</p>
+      <p class="text-muted">Nhập thông tin kho lưu trữ GitHub để tự động lưu trữ dữ liệu giải đấu (Auto-save: 30s).</p>
       <div class="row g-2 mb-2">
         <div class="col-md-3"><input id="cfgOwner" class="form-control" placeholder="Owner (Ví dụ: user_name)"></div>
         <div class="col-md-3"><input id="cfgRepo" class="form-control" placeholder="Repo (Ví dụ: my-data-repo)"></div>
@@ -470,7 +478,7 @@ async function loadFromGitHub() {
                 (loadedSemifinals[0].teamA !== defaultSF1.teamA || loadedSemifinals[0].teamB !== defaultSF1.teamB ||
                  loadedSemifinals[1].teamA !== defaultSF2.teamA || loadedSemifinals[1].teamB !== defaultSF2.teamB)
             ) {
-                // Nếu đã có đội thực tế được gán, giữ nguyên (đã tính từ data vòng bảng)
+                // Nếu đã có đội thực tế được gán, giữ nguyên 
                 state.semifinals = loadedSemifinals;
             } else if (loadedSemifinals && loadedSemifinals.length === 2) {
                 // Nếu là trạng thái rỗng, vẫn load (nhưng đảm bảo court và time là mới)
@@ -514,9 +522,13 @@ async function loadFromGitHub() {
     }
 }
 
-async function saveToGitHub() {
-    // Bỏ qua nếu không có thay đổi
-    if (!stateChanged) return;
+/**
+ * Lưu trạng thái giải đấu (state.json) lên GitHub.
+ * @param {boolean} force - Bắt buộc lưu ngay cả khi stateChanged là false.
+ */
+async function saveToGitHub(force = false) {
+    // Bỏ qua nếu không có thay đổi và không ép buộc lưu
+    if (!stateChanged && !force) return;
 
     const cfg = state.config;
     if (!cfg.owner || !cfg.repo || !cfg.token) {
@@ -528,6 +540,10 @@ async function saveToGitHub() {
 
     document.getElementById('autoState').className = 'text-info';
     document.getElementById('autoState').textContent = 'Đang lưu...';
+    if (force) {
+         updateStatus('configStatus', 'info', 'Đang cập nhật dữ liệu lên GitHub...');
+    }
+
 
     const apiUrl = `https://api.github.com/repos/${cfg.owner}/${cfg.repo}/contents/${cfg.folder}/${cfg.file}`;
     
@@ -549,7 +565,7 @@ async function saveToGitHub() {
         const sha = result.sha; 
         
         const payload = {
-            message: `[Auto-save] Cập nhật trạng thái giải đấu TKD lúc ${new Date().toLocaleString('vi-VN')}`,
+            message: `${force ? '[Manual-save]' : '[Auto-save]'} Cập nhật trạng thái giải đấu TKD lúc ${new Date().toLocaleString('vi-VN')}`,
             content: content
         };
         
@@ -575,6 +591,9 @@ async function saveToGitHub() {
             document.getElementById('lastSaved').textContent = `Lần lưu: ${new Date().toLocaleTimeString('vi-VN')}`;
             document.getElementById('autoState').className = 'text-success';
             document.getElementById('autoState').textContent = 'Đã Lưu';
+            if (force) {
+                 updateStatus('configStatus', 'success', `Cập nhật dữ liệu lên GitHub thành công lúc ${new Date().toLocaleTimeString('vi-VN')}.`);
+            }
         } else {
             // Trường hợp lỗi 409 Conflict (SHA cũ)
             if (response.status === 409) {
@@ -585,7 +604,10 @@ async function saveToGitHub() {
                 await fetchFileSha(cfg, cfg.file); 
                 
                 document.getElementById('autoState').className = 'text-warning';
-                document.getElementById('autoState').textContent = 'Conflict. Sẽ thử lưu lại sau 1 phút.';
+                document.getElementById('autoState').textContent = 'Conflict. Sẽ thử lưu lại sau 30s.';
+                if (force) {
+                     updateStatus('configStatus', 'warning', `Lỗi Conflict (Dữ liệu đã thay đổi trên GitHub). Vui lòng thử lại sau 30s.`);
+                }
             } else {
                 throw new Error(`Lỗi HTTP: ${response.status} - ${response.statusText}`);
             }
@@ -594,6 +616,9 @@ async function saveToGitHub() {
         console.error("Lỗi khi lưu lên GitHub:", error);
         document.getElementById('autoState').className = 'text-danger';
         document.getElementById('autoState').textContent = 'Lỗi Lưu';
+        if (force) {
+             updateStatus('configStatus', 'danger', `Lỗi cập nhật lên GitHub: ${error.message}.`);
+        }
     }
 }
 
@@ -639,6 +664,37 @@ function updatePreferredCourtType() {
         updateStatus('configStatus', 'success', `Đã cập nhật ưu tiên sân thành: ${select.options[select.selectedIndex].text}.`);
     }
 }
+
+/**
+ * Xuất toàn bộ dữ liệu (state) hiện tại ra file JSON
+ */
+function exportDataToJson() {
+    // Chỉ lưu các trường cần thiết, loại bỏ config và table (vì chúng được tính lại)
+    const stateToSave = {
+        mixedTeams: state.mixedTeams,
+        maleTeams: state.maleTeams,
+        matchesA: state.matchesA,
+        matchesB: state.matchesB,
+        courts: state.courts,
+        semifinals: state.semifinals,
+        final: state.final
+    };
+    const jsonString = JSON.stringify(stateToSave, null, 2);
+
+    const blob = new Blob([jsonString], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `data_tkd_export_${new Date().toISOString().slice(0, 10)}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
+    showModal('Export Dữ liệu', 'Đã xuất toàn bộ dữ liệu giải đấu hiện tại ra file JSON.');
+}
+
 
 // --- Cấu hình & Khởi tạo ---
 
@@ -856,7 +912,8 @@ function startAutoSave() {
         clearInterval(autoSaveInterval);
     }
     if (state.config.token && state.config.owner && state.config.repo) {
-        autoSaveInterval = setInterval(saveToGitHub, 60000);
+        // Cập nhật: Auto-save 30 giây
+        autoSaveInterval = setInterval(saveToGitHub, 30000); 
         document.getElementById('autoState').className = 'text-warning';
         document.getElementById('autoState').textContent = 'Hoạt động...';
     } else {
@@ -1440,6 +1497,7 @@ function tinhDiemDoiDau(teamsStat, matches) {
 
 /**
  * Tự động lên lịch và điền đội cho Vòng Bán kết và Chung kết dựa trên kết quả Vòng Bảng.
+ * Cập nhật: Nhất A vs Nhì A (SF1), Nhất B vs Nhì B (SF2)
  */
 function scheduleFinalsAuto() {
     tinhVaCapNhatXepHang(); // Đảm bảo bảng xếp hạng là mới nhất
@@ -1452,7 +1510,7 @@ function scheduleFinalsAuto() {
         return;
     }
 
-    // 1. Xác định đội Bán kết
+    // 1. Xác định đội Bán kết (Nhất A vs Nhì A, Nhất B vs Nhì B)
     const nhatA = tableA[0]?.team;
     const nhiA = tableA[1]?.team;
     const nhatB = tableB[0]?.team;
@@ -1465,32 +1523,37 @@ function scheduleFinalsAuto() {
     const FINAL_COURT = 'Sân 3';
 
     // 2. Cập nhật Vòng Bán kết (SF)
+    
+    // SF1: Nhất A vs Nhì A
     state.semifinals[0].teamA = nhatA;
     state.semifinals[0].teamB = nhiA;
     state.semifinals[0].time = SF1_TIME;
     state.semifinals[0].court = FINAL_COURT;
 
+    // SF2: Nhất B vs Nhì B
     state.semifinals[1].teamA = nhatB;
     state.semifinals[1].teamB = nhiB;
     state.semifinals[1].time = SF2_TIME;
     state.semifinals[1].court = FINAL_COURT;
 
     // Reset kết quả nếu đội thay đổi
-    if (state.semifinals.some(sf => sf.winner) || state.final.winner) {
-         // Chỉ hỏi xác nhận nếu tên đội đã thay đổi so với lần gần nhất
-        const sf1Changed = state.semifinals[0].winner && (state.semifinals[0].teamA !== nhatA || state.semifinals[0].teamB !== nhiA);
-        const sf2Changed = state.semifinals[1].winner && (state.semifinals[1].teamA !== nhatB || state.semifinals[1].teamB !== nhiB);
+    let needReset = false;
+    const sf1Changed = state.semifinals[0].winner && (state.semifinals[0].teamA !== nhatA || state.semifinals[0].teamB !== nhiA);
+    const sf2Changed = state.semifinals[1].winner && (state.semifinals[1].teamA !== nhatB || state.semifinals[1].teamB !== nhiB);
 
-        if (sf1Changed || sf2Changed || state.final.winner) {
-            if(confirm("Lịch thi đấu Vòng Bảng đã thay đổi, dẫn đến việc đổi đội vào Bán kết. Bạn có muốn xóa kết quả Bán kết và Chung kết cũ để lên lịch lại không?")) {
-                state.semifinals.forEach(sf => {
-                    sf.scoreA = null; sf.scoreB = null; sf.winner = null; sf.loser = null;
-                });
-                state.final.scoreA = null; state.final.scoreB = null; state.final.winner = null; state.final.runnerUp = null;
-                state.final.teamA = 'Thắng SF1'; 
-                state.final.teamB = 'Thắng SF2';
-            }
+    if (sf1Changed || sf2Changed || state.final.winner) {
+        if(confirm("Lịch thi đấu Vòng Bảng đã thay đổi, dẫn đến việc đổi đội vào Bán kết. Bạn có muốn xóa kết quả Bán kết và Chung kết cũ để lên lịch lại không?")) {
+            needReset = true;
         }
+    }
+    
+    if (needReset) {
+        state.semifinals.forEach(sf => {
+            sf.scoreA = null; sf.scoreB = null; sf.winner = null; sf.loser = null;
+        });
+        state.final.scoreA = null; state.final.scoreB = null; state.final.winner = null; state.final.runnerUp = null;
+        state.final.teamA = 'Thắng SF1'; 
+        state.final.teamB = 'Thắng SF2';
     }
     
     // Đảm bảo thông tin Sân/Giờ Chung kết luôn đúng
@@ -1507,8 +1570,8 @@ function scheduleFinalsAuto() {
     saveToGitHub();
     showModal('Lên Lịch Chung Kết Thành Công', `Đã lên lịch Bán kết:
         <ul class="list-unstyled small mt-2">
-            <li><strong>SF1 (${SF1_TIME}):</strong> ${nhatA} vs ${nhiA} (${FINAL_COURT})</li>
-            <li><strong>SF2 (${SF2_TIME}):</strong> ${nhatB} vs ${nhiB} (${FINAL_COURT})</li>
+            <li><strong>SF1 (${SF1_TIME}):</strong> ${nhatA} (Nhất A) vs ${nhiA} (Nhì A) (${FINAL_COURT})</li>
+            <li><strong>SF2 (${SF2_TIME}):</strong> ${nhatB} (Nhất B) vs ${nhiB} (Nhì B) (${FINAL_COURT})</li>
         </ul>
         Vòng Chung kết (${FINAL_TIME}) sẽ được cập nhật sau khi có kết quả Bán kết.
     `);
@@ -1639,7 +1702,7 @@ function renderFinalMatchTable(matches, group) {
         const matchRowClass = match.winner ? 'table-light' : '';
         
         // Kiểm tra xem có phải là trận chờ kết quả hay không
-        const isWaiting = match.teamA === 'Thắng SF1' || match.teamA === 'Thắng SF2';
+        const isWaiting = match.teamA === 'Thắng SF1' || match.teamA === 'Thắng SF2' || match.teamA === 'Nhất A';
 
         finalHtml += `
             <tr class="${matchRowClass}">
