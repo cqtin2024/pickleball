@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>TKD Championship 2025 — Quản lý giải Pickleball V24 GitHub (Tối ưu Lưu & Tải Ranking)</title>
+  <title>TKD Championship 2025 — Quản lý giải Pickleball V25 GitHub (Tối ưu Lưu & Tải Ranking + Giới hạn điểm)</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
   <style>
     body { background:#f7f9fc; font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial; color:#222; padding:18px; }
@@ -46,7 +46,7 @@
       <img class="logo" src="data/logoTKD.png" alt="Logo TKD">
       <div>
         <h3 class="mb-0">TKD Championship 2025</h3>
-        <div>Ngày thi đấu: 18/10/2025 (**V24**)</div>
+        <div>Ngày thi đấu: 18/10/2025 (**V25**)</div>
       </div>
     </div>
     <div>
@@ -124,7 +124,15 @@
       </div>
       
       <hr>
-
+      
+      <h5 class="mt-4">🧹 Công cụ Xóa Kết quả Vòng Bảng</h5>
+      <div class="d-flex gap-2 mb-4 flex-wrap">
+          <button class="btn btn-sm btn-outline-danger" onclick="clearGroupScores('A')">Xóa Kết quả Bảng A</button>
+          <button class="btn btn-sm btn-outline-danger" onclick="clearGroupScores('B')">Xóa Kết quả Bảng B</button>
+          <button class="btn btn-sm btn-danger ms-auto" onclick="clearGroupScores('ALL')">Xóa Toàn bộ Vòng Bảng</button>
+      </div>
+      <div id="clearScoreStatus"></div>
+      <hr>
       <h5 class="mt-4">⚙️ Cấu hình Sân thi đấu & Lịch Tối ưu</h5>
       <p class="text-muted small">Quản lý danh sách sân thi đấu. Sân được gán loại bảng đấu (A/B) để phục vụ chức năng tạo lịch Tối ưu.</p>
       <div class="d-flex gap-2 mb-3 flex-wrap">
@@ -714,6 +722,7 @@ function renderConfig() {
     // Chỉ cần hiển thị cấu hình sân hiện tại
     renderCourtList();
     document.getElementById('courtConfigStatus').innerHTML = '';
+    document.getElementById('clearScoreStatus').innerHTML = ''; // Clear new status div
     
     // Cập nhật UI cho preferredCourtType khi vào tab config
     const select = document.getElementById('preferredCourtType');
@@ -1286,23 +1295,41 @@ function updateScore(group, index) {
     const scoreA = scoreAInput.value === '' ? null : parseInt(scoreAInput.value);
     const scoreB = scoreBInput.value === '' ? null : parseInt(scoreBInput.value);
 
-    // Cập nhật state
+    // Cập nhật state tạm thời
     match.scoreA = scoreA;
     match.scoreB = scoreB;
     match.winner = null;
     match.loser = null;
 
     if (scoreA !== null && scoreB !== null && scoreA !== scoreB) {
-        if (scoreA > scoreB) {
-            match.winner = match.teamA;
-            match.loser = match.teamB;
+        let isValid = false;
+        // Kiểm tra luật Vòng Bảng: Thắng = 11, Thua <= 10
+        if (scoreA > scoreB) { // A là đội thắng
+            if (scoreA === 11 && scoreB <= 10 && scoreB >= 0) isValid = true;
+        } else if (scoreB > scoreA) { // B là đội thắng
+            if (scoreB === 11 && scoreA <= 10 && scoreA >= 0) isValid = true;
+        }
+
+        if (isValid) {
+            if (scoreA > scoreB) {
+                match.winner = match.teamA;
+                match.loser = match.teamB;
+            } else {
+                match.winner = match.teamB;
+                match.loser = match.teamA;
+            }
         } else {
-            match.winner = match.teamB;
-            match.loser = match.teamA;
+            // Đặt lại điểm và thông báo lỗi nếu không hợp lệ
+            match.scoreA = null;
+            match.scoreB = null;
+            scoreAInput.value = '';
+            scoreBInput.value = '';
+            showModal('Lỗi Nhập Điểm Vòng Bảng', 'Tỉ số Vòng Bảng KHÔNG HỢP LỆ. Chỉ cho phép **Đội Thắng: 11 điểm**, **Đội Thua: 0-10 điểm** (Ví dụ: 11-8 hoặc 8-11).');
+            // Cập nhật giao diện sau khi reset điểm
         }
     }
 
-    // Cập nhật lại UI sau khi tính toán
+    // Cập nhật lại UI sau khi tính toán (cần thiết để xóa highlight và cập nhật winner)
     renderMatchesView(); 
     tinhVaCapNhatXepHang(); // Cần tính lại xếp hạng
     renderFinals(); // Cập nhật Vòng Chung kết
@@ -1636,7 +1663,7 @@ function updateFinalScore(group, index) {
     const scoreA = scoreAInput.value === '' ? null : parseInt(scoreAInput.value);
     const scoreB = scoreBInput.value === '' ? null : parseInt(scoreBInput.value);
 
-    // Cập nhật state
+    // Cập nhật state tạm thời
     match.scoreA = scoreA;
     match.scoreB = scoreB;
     match.winner = null;
@@ -1644,15 +1671,37 @@ function updateFinalScore(group, index) {
     if (group === 'final') match.runnerUp = null;
 
     if (scoreA !== null && scoreB !== null && scoreA !== scoreB) {
-        if (scoreA > scoreB) {
-            match.winner = match.teamA;
-            if (group === 'final') match.runnerUp = match.teamB;
-            else match.loser = match.teamB;
-        } else {
-            match.winner = match.teamB;
-            if (group === 'final') match.runnerUp = match.teamA;
-            else match.loser = match.teamA;
+        let isValid = false;
+        // Kiểm tra luật Vòng Chung Kết/Bán Kết: Thắng = 15, Thua <= 14
+        if (scoreA > scoreB) { // A là đội thắng
+            if (scoreA === 15 && scoreB <= 14 && scoreB >= 0) isValid = true;
+        } else if (scoreB > scoreA) { // B là đội thắng
+            if (scoreB === 15 && scoreA <= 14 && scoreA >= 0) isValid = true;
         }
+
+        if (isValid) {
+            if (scoreA > scoreB) {
+                match.winner = match.teamA;
+                if (group === 'final') match.runnerUp = match.teamB;
+                else match.loser = match.teamB;
+            } else {
+                match.winner = match.teamB;
+                if (group === 'final') match.runnerUp = match.teamA;
+                else match.loser = match.teamA;
+            }
+        } else {
+            // Đặt lại điểm và thông báo lỗi nếu không hợp lệ
+            match.scoreA = null;
+            match.scoreB = null;
+            scoreAInput.value = '';
+            scoreBInput.value = '';
+            showModal('Lỗi Nhập Điểm Vòng Chung Kết', 'Tỉ số Vòng Chung Kết/Bán Kết KHÔNG HỢP LỆ. Chỉ cho phép **Đội Thắng: 15 điểm**, **Đội Thua: 0-14 điểm** (Ví dụ: 15-12 hoặc 12-15).');
+        }
+    } else {
+        // Xóa điểm hoặc điểm hòa
+        match.winner = null;
+        match.loser = null;
+        if (group === 'final') match.runnerUp = null;
     }
     
     updateFinalsFromSemifinals();
@@ -1989,7 +2038,7 @@ function taoLichThiDauCungGio() {
                 }
                 // Tiêu chí 3: Cùng mức ưu tiên và cùng giờ, chọn sân có tên nhỏ hơn (Sân 1 < Sân 2)
                 else if (currentPreferenceScore === preferenceScore && currentTime === minTime && (!bestCourt || court.name < bestCourt.name)) {
-                     minTime = currentTime;
+                     minTime = court.currentMinutes;
                      bestCourt = court;
                 }
             }
@@ -2251,20 +2300,21 @@ function exportSchedule() {
 function autoFillScores() {
     let filledCount = 0;
     
-    // Vòng bảng
+    // Vòng bảng (11-X)
     [state.matchesA, state.matchesB].forEach(matchArray => {
         matchArray.forEach(match => {
             if (!match.winner) {
-                // Điền 11 - X (X là số ngẫu nhiên từ 5 đến 9)
-                const randomLossScore = Math.floor(Math.random() * 5) + 5; // 5, 6, 7, 8, 9
+                // Điền 11 - X (X là số ngẫu nhiên từ 5 đến 10)
+                const randomLossScore = Math.floor(Math.random() * 6) + 5; // 5, 6, 7, 8, 9, 10
+                const winScore = 11;
                 
                 // Ngẫu nhiên đội thắng
                 if (Math.random() < 0.5) { // Team A thắng
-                    match.scoreA = 11;
+                    match.scoreA = winScore;
                     match.scoreB = randomLossScore;
                 } else { // Team B thắng
                     match.scoreA = randomLossScore;
-                    match.scoreB = 11;
+                    match.scoreB = winScore;
                 }
                 
                 // Tính lại winner/loser
@@ -2281,16 +2331,19 @@ function autoFillScores() {
         });
     });
 
-    // Bán kết và Chung kết (Nếu đã lên lịch)
+    // Bán kết và Chung kết (15-X)
     [...state.semifinals, state.final].forEach(match => {
         if (!match.winner && match.teamA !== 'Thắng SF1' && match.teamA !== 'Nhất A') {
-            const randomLossScore = Math.floor(Math.random() * 5) + 5; 
+            // Điền 15 - X (X là số ngẫu nhiên từ 8 đến 14)
+            const randomLossScore = Math.floor(Math.random() * 7) + 8; // 8, 9, 10, 11, 12, 13, 14
+            const winScore = 15;
+            
             if (Math.random() < 0.5) {
-                match.scoreA = 11;
+                match.scoreA = winScore;
                 match.scoreB = randomLossScore;
             } else {
                 match.scoreA = randomLossScore;
-                match.scoreB = 11;
+                match.scoreB = winScore;
             }
             
             if (match.scoreA > match.scoreB) {
@@ -2354,6 +2407,59 @@ function clearAllSchedules() {
         stateChanged = true;
         saveToGitHub();
         showModal('Thành Công', 'Đã xóa toàn bộ lịch thi đấu và kết quả.');
+    }
+}
+
+/**
+ * NEW: Xóa điểm các trận đấu Vòng Bảng theo bảng (A, B) hoặc toàn bộ (ALL).
+ * Điều kiện: Vòng Chung kết/Bán kết phải chưa có kết quả.
+ * @param {string} group - 'A', 'B', or 'ALL'
+ */
+function clearGroupScores(group) {
+    // 1. Kiểm tra điều kiện: Vòng Chung kết/Bán kết phải chưa có kết quả
+    let finalsCompleted = false;
+    state.semifinals.forEach(sf => {
+        if (sf.winner) finalsCompleted = true;
+    });
+    if (state.final.winner) finalsCompleted = true;
+
+    if (finalsCompleted) {
+        showModal('Lỗi Xóa Kết Quả', 'Không thể xóa kết quả Vòng Bảng. Vui lòng **Xóa kết quả Vòng Bán kết và Chung kết** (ví dụ, bằng cách xóa toàn bộ lịch ở tab Cấu hình) trước.');
+        return;
+    }
+    
+    const message = group === 'ALL' 
+        ? "Bạn có chắc chắn muốn XÓA TOÀN BỘ kết quả Vòng Bảng (Bảng A & B)? Hành động này không thể hoàn tác."
+        : `Bạn có chắc chắn muốn XÓA TOÀN BỘ kết quả của Bảng ${group}? Hành động này không thể hoàn tác.`;
+    
+    if (!confirm(message)) return;
+
+    let clearedCount = 0;
+    
+    const matchesToClear = [];
+    if (group === 'A' || group === 'ALL') matchesToClear.push(...state.matchesA);
+    if (group === 'B' || group === 'ALL') matchesToClear.push(...state.matchesB);
+    
+    matchesToClear.forEach(match => {
+        if (match.scoreA !== null || match.scoreB !== null) {
+            match.scoreA = null;
+            match.scoreB = null;
+            match.winner = null;
+            match.loser = null;
+            clearedCount++;
+        }
+    });
+
+    if (clearedCount > 0) {
+        tinhVaCapNhatXepHang();
+        renderMatchesView();
+        renderOverview();
+        
+        stateChanged = true;
+        saveToGitHub();
+        updateStatus('clearScoreStatus', 'success', `Đã xóa thành công ${clearedCount} kết quả trận đấu trong Bảng ${group}.`);
+    } else {
+         updateStatus('clearScoreStatus', 'info', `Không có kết quả nào để xóa trong Bảng ${group}.`);
     }
 }
 </script>
