@@ -6,9 +6,17 @@
   <title>TKD PICKLEBALL CHAMPIONSHIP 2025</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    body { background-color: #f0f4f8; overflow-x: hidden; }
+    body { background-color: #f0f4f8; overflow-x: hidden; scroll-behavior: smooth; }
     #content-carousel { display: flex; width: 300vw; transition: transform 0.35s cubic-bezier(0.25, 1, 0.5, 1); }
-    .swipe-section { width: 100vw; flex-shrink: 0; padding: 1rem; min-height: calc(100vh - 160px); overflow-y: auto; }
+    .swipe-section { 
+      width: 100vw; 
+      flex-shrink: 0; 
+      padding: 1rem; 
+      min-height: calc(100vh - 160px); 
+      overflow-y: auto; 
+      scroll-behavior: smooth; /* scroll mượt khi scroll nội dung */
+      -webkit-overflow-scrolling: touch; /* iOS mượt hơn */
+    }
     #refresh-btn { position: fixed; bottom: 20px; right: 20px; z-index: 50; background-color: #0284c7; color: white; font-weight: bold; padding: 14px; border-radius: 50%; box-shadow: 0 4px 8px rgba(0,0,0,0.3); transition: transform 0.2s; }
     #refresh-btn:hover { transform: scale(1.1); background-color: #0369a1; }
     .winner-glow { animation: glow 1s ease-in-out 2 alternate; }
