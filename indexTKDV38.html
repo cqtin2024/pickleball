@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>TKD Championship 2025 — Quản lý giải Pickleball V19 GitHub (Sửa lỗi Tải lịch & Hiển thị Danh sách đội)</title>
+  <title>TKD Championship 2025 — Quản lý giải Pickleball V20 GitHub (Sân CK là Sân 3 & Sửa Lịch mẫu)</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
   <style>
     body { background:#f7f9fc; font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial; color:#222; padding:18px; }
@@ -46,7 +46,7 @@
       <img class="logo" src="data/logoTKD.png" alt="Logo TKD">
       <div>
         <h3 class="mb-0">TKD Championship 2025</h3>
-        <div>Ngày thi đấu: 18/10/2025 (**V19**)</div>
+        <div>Ngày thi đấu: 18/10/2025 (**V20**)</div>
       </div>
     </div>
     <div>
@@ -93,10 +93,10 @@
 
     <div class="tab-pane fade p-3" id="finals">
         <div id="finalsContent">
-            <h6 class="mt-4">Vòng Bán kết (16:30, Sân 1-2)</h6>
+            <h6 class="mt-4">Vòng Bán kết (16:30, Sân 3)</h6>
             <div id="semifinalMatches">Chưa có lịch thi đấu bán kết. Kết quả Vòng Bảng sẽ tự động cập nhật lịch.</div>
 
-            <h6 class="mt-4">Trận Chung kết (17:00, Sân 1)</h6>
+            <h6 class="mt-4">Trận Chung kết (17:00, Sân 3)</h6>
             <div id="finalMatch">Chưa có lịch thi đấu chung kết.</div>
         </div>
     </div>
@@ -118,7 +118,7 @@
       <h5 class="mb-3">Công cụ Lập & Điền Lịch Thi đấu</h5>
       <div class="d-flex gap-2 mb-4 flex-wrap">
         <button class="btn btn-sm btn-primary" onclick="taoLichThiDauCungGio()">Tạo lịch thi đấu Tối ưu (Tự động)</button>
-        <button class="btn btn-sm btn-secondary" onclick="taoLichCoDinh()">Tải lịch Mẫu (**CalendarTKD36**)</button>
+        <button class="btn btn-sm btn-secondary" onclick="taoLichCoDinh()">Tải lịch Mẫu (**CalendarTKD30**)</button>
         <button class="btn btn-sm btn-success" onclick="autoFillScores()">Điền kết quả Tự động (11 - X)</button>
         <button class="btn btn-sm btn-danger" onclick="clearAllSchedules()">Xóa Toàn bộ Lịch</button>
       </div>
@@ -229,7 +229,7 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script> 
 
 <script>
-// Dữ liệu lịch cố định từ file CalendarTKD36.csv (MỚI)
+// Dữ liệu lịch cố định từ file CalendarTKD30.csv (Đã cắt xuống 30 trận)
 const FIXED_SCHEDULE_CSV = `teamA,teamB,time,court,bang,scoreA,scoreB
 Triều/Minh,Hiển/P.Hùng,14:00,Sân 1,B,,
 Giang/Long,Hường/Đạt,14:00,Sân 2,A,,
@@ -260,26 +260,7 @@ Tiệp/Thủy,Phương/Thanh,15:45,Sân 1,B,,
 Phương/Thanh,Tín/Khiêm,15:45,Sân 2,B,,
 Ánh/Toàn,Tiệp/Thủy,16:00,Sân 1,B,,
 Hiển/P.Hùng,Triều/Minh,16:00,Sân 2,B,,
-Hậu/Dũng,Giang/Long,16:15,Sân 3,A,,
-Huyền/Luân,Hạnh/Tiến,16:15,Sân7,A,,
-Hường/Đạt,Linh/M.Hùng,16:30,Sân 3,A,,
-Hậu/Dũng,Huyền/Luân,16:30,Sân7,A,,
-Giang/Long,Linh/M.Hùng,16:45,Sân 3,A,,
-Hạnh/Tiến,Hường/Đạt,16:45,Sân7,A,,
-Hậu/Dũng,Hạnh/Tiến,17:00,Sân 3,A,,
-Giang/Long,Hường/Đạt,17:00,Sân7,A,,
-Huyền/Luân,Linh/M.Hùng,17:15,Sân 3,A,,
-Hậu/Dũng,Linh/M.Hùng,17:15,Sân7,A,,
-Giang/Long,Huyền/Luân,17:30,Sân 3,A,,
-Hậu/Dũng,Hường/Đạt,17:30,Sân7,A,,
-Hạnh/Tiến,Linh/M.Hùng,17:45,Sân 3,A,,
-Huyền/Luân,Hường/Đạt,17:45,Sân7,A,,
-Hạnh/Tiến,Giang/Long,18:00,Sân 3,A,,
-Hậu/Dũng,Huyền/Luân,18:00,Sân7,A,,
-Linh/M.Hùng,Hường/Đạt,18:15,Sân 3,A,,
-Hạnh/Tiến,Hậu/Dũng,18:15,Sân7,A,,
-Giang/Long,Linh/M.Hùng,18:30,Sân 3,A,,
-Huyền/Luân,Hường/Đạt,18:30,Sân7,A,`;
+Hậu/Dũng,Giang/Long,16:15,Sân 3,A,`; // Đã cắt tại đây, còn 30 trận.
 
 // Biến state lưu trữ dữ liệu chính của ứng dụng.
 let state = { 
@@ -298,12 +279,12 @@ let state = {
     { name: 'Sân 4', startTime: '14:00', maxDurationMinutes: 180, isMixed: false } // Bảng B (Male)
   ],
   
-  // LOGIC BÁN KẾT (ĐÃ ĐIỀU CHỈNH: Nhất A vs Nhì A, Nhất B vs Nhì B)
+  // LOGIC BÁN KẾT (ĐÃ CẬP NHẬT SÂN MẶC ĐỊNH LÀ SÂN 3)
   semifinals: [
-    { id: 'SF1', teamA: 'Nhất A', teamB: 'Nhì A', scoreA: null, scoreB: null, time: '16:30', court: 'Sân 1', winner: null, loser: null },
-    { id: 'SF2', teamA: 'Nhất B', teamB: 'Nhì B', scoreA: null, scoreB: null, time: '16:30', court: 'Sân 2', winner: null, loser: null }
+    { id: 'SF1', teamA: 'Nhất A', teamB: 'Nhì A', scoreA: null, scoreB: null, time: '16:30', court: 'Sân 3', winner: null, loser: null },
+    { id: 'SF2', teamA: 'Nhất B', teamB: 'Nhì B', scoreA: null, scoreB: null, time: '16:30', court: 'Sân 3', winner: null, loser: null }
   ],
-  final: { id: 'F', teamA: 'Thắng SF1', teamB: 'Thắng SF2', scoreA: null, scoreB: null, time: '17:00', court: 'Sân 1', winner: null, runnerUp: null },
+  final: { id: 'F', teamA: 'Thắng SF1', teamB: 'Thắng SF2', scoreA: null, scoreB: null, time: '17:00', court: 'Sân 3', winner: null, runnerUp: null },
   config: {}
 };
 
@@ -461,9 +442,9 @@ async function loadFromGitHub() {
             // Xử lý logic tải cho semifinals và final (đảm bảo không ghi đè lịch tự động)
             const loadedSemifinals = loadedState.semifinals;
             
-            // Cấu trúc mặc định mới: Nhất A vs Nhì A, Nhất B vs Nhì B
-            const defaultSF1 = { teamA: 'Nhất A', teamB: 'Nhì A' };
-            const defaultSF2 = { teamA: 'Nhất B', teamB: 'Nhì B' };
+            // Cấu trúc mặc định mới: Nhất A vs Nhì A, Nhất B vs Nhì B, Sân 3
+            const defaultSF1 = { teamA: 'Nhất A', teamB: 'Nhì A', court: 'Sân 3' };
+            const defaultSF2 = { teamA: 'Nhất B', teamB: 'Nhì B', court: 'Sân 3' };
             
             if (loadedSemifinals && loadedSemifinals.length === 2 && 
                 (loadedSemifinals[0].teamA !== defaultSF1.teamA || loadedSemifinals[0].teamB !== defaultSF1.teamB ||
@@ -472,14 +453,23 @@ async function loadFromGitHub() {
                 // Nếu đã có đội thực tế được gán, giữ nguyên (đã tính từ data vòng bảng)
                 state.semifinals = loadedSemifinals;
             } else if (loadedSemifinals && loadedSemifinals.length === 2) {
-                // Nếu là trạng thái rỗng, vẫn load
-                state.semifinals = loadedSemifinals;
+                // Nếu là trạng thái rỗng, vẫn load (nhưng đảm bảo court là 'Sân 3' nếu court cũ là 'Sân 1'/'Sân 2')
+                 state.semifinals = loadedSemifinals.map(sf => {
+                    if (sf.teamA === 'Nhất A' && sf.court !== 'Sân 3') {
+                        return { ...sf, court: 'Sân 3' };
+                    }
+                    return sf;
+                });
             }
 
+            // Đảm bảo final court là 'Sân 3' nếu chưa có winner
             state.final = loadedState.final || state.final;
+            if (!state.final.winner && state.final.court !== 'Sân 3') {
+                state.final.court = 'Sân 3';
+            }
             
             // Cập nhật giao diện
-            renderMatchesView(); // <--- FIX: Sửa từ renderMatches()
+            renderMatchesView(); 
             tinhVaCapNhatXepHang();
             renderFinals();
             renderFinalResults();
@@ -830,7 +820,7 @@ window.onload = function() {
     } else {
         // Tải cấu hình sân mặc định nếu không có kết nối GitHub
         renderConfig();
-        renderMatchesView(); // <--- FIX: Sửa từ renderMatches()
+        renderMatchesView(); 
         tinhVaCapNhatXepHang();
         renderFinals();
         renderFinalResults();
@@ -1000,12 +990,12 @@ function clearAllSchedules() {
     if (confirm('Bạn có chắc chắn muốn XÓA TẤT CẢ LỊCH THI ĐẤU (Vòng Bảng và Chung Kết) và KẾT QUẢ ĐÃ NHẬP? Hành động này không thể hoàn tác.')) {
         state.matchesA = [];
         state.matchesB = [];
-        // Reset lịch chung kết về mặc định
+        // Reset lịch chung kết về mặc định (Sân 3)
         state.semifinals = [
-            { id: 'SF1', teamA: 'Nhất A', teamB: 'Nhì A', scoreA: null, scoreB: null, time: '16:30', court: 'Sân 1', winner: null, loser: null },
-            { id: 'SF2', teamA: 'Nhất B', teamB: 'Nhì B', scoreA: null, scoreB: null, time: '16:30', court: 'Sân 2', winner: null, loser: null }
+            { id: 'SF1', teamA: 'Nhất A', teamB: 'Nhì A', scoreA: null, scoreB: null, time: '16:30', court: 'Sân 3', winner: null, loser: null },
+            { id: 'SF2', teamA: 'Nhất B', teamB: 'Nhì B', scoreA: null, scoreB: null, time: '16:30', court: 'Sân 3', winner: null, loser: null }
         ];
-        state.final = { id: 'F', teamA: 'Thắng SF1', teamB: 'Thắng SF2', scoreA: null, scoreB: null, time: '17:00', court: 'Sân 1', winner: null, runnerUp: null };
+        state.final = { id: 'F', teamA: 'Thắng SF1', teamB: 'Thắng SF2', scoreA: null, scoreB: null, time: '17:00', court: 'Sân 3', winner: null, runnerUp: null };
 
         // Cập nhật lại giao diện và lưu
         renderMatchesView();
@@ -1203,7 +1193,7 @@ function taoLichCoDinh() {
         stateChanged = true;
         saveToGitHub();
         // Cập nhật thông báo để người dùng biết lịch nào đã được tải
-        showModal('Thành công', `Đã tải lịch thi đấu Mẫu **CalendarTKD36.csv** (${importedMatches.length} trận) và cập nhật thành công.`);
+        showModal('Thành công', `Đã tải lịch thi đấu Mẫu **CalendarTKD30** (${importedMatches.length} trận) và cập nhật thành công.`);
     } else {
         showModal('Cảnh báo', 'Lịch mẫu rỗng hoặc không hợp lệ.');
     }
@@ -1246,9 +1236,6 @@ function handleFileSelect(event) {
 
 /**
  * Hàm import lịch thi đấu từ nội dung CSV (CalendarTKD36 format)
- * Đã sửa lỗi:
- * 1. Dùng split(/\r?\n/) để xử lý chính xác ký tự xuống dòng (\n hoặc \r\n).
- * 2. Dùng slice(0, 7) để giới hạn số cột được xử lý, tránh lỗi treo khi CSV có quá nhiều dấu phẩy thừa.
  * * @param {string} csvContent - Nội dung file CSV
  * @returns {Array<object>} - Danh sách trận đấu đã được phân tích
  */
@@ -1278,7 +1265,7 @@ function importScheduleFromCSV(csvContent) {
         // Tách dòng bằng dấu phẩy
         const originalValues = lines[i].split(',');
         
-        // Cải tiến 2: Chỉ lấy 7 cột đầu tiên (teamA -> scoreB)
+        // Cải tiến: Chỉ lấy 7 cột đầu tiên (teamA -> scoreB)
         const values = originalValues.slice(0, 7).map(v => v.trim());
         
         // Kiểm tra số lượng cột hợp lệ (ít nhất 5 cột chính)
@@ -1304,7 +1291,6 @@ function importScheduleFromCSV(csvContent) {
         }
 
         // scores: values[5] và values[6] sẽ là undefined nếu mảng < 6 hoặc 7, 
-        // hoặc là "" nếu là giá trị rỗng. Logic cũ vẫn an toàn.
         const scoreA = values[5] ? parseInt(values[5], 10) : null;
         const scoreB = values[6] ? parseInt(values[6], 10) : null;
         
@@ -1838,6 +1824,10 @@ function scheduleFinalsAuto(onlyFinal = false) {
              state.semifinals[1].teamA = 'Nhất B';
              state.semifinals[1].teamB = 'Nhì B';
         }
+        
+        // Đảm bảo Sân là Sân 3
+        state.semifinals[0].court = 'Sân 3';
+        state.semifinals[1].court = 'Sân 3';
     }
 
     // 2. Cập nhật Chung kết
@@ -1856,6 +1846,9 @@ function scheduleFinalsAuto(onlyFinal = false) {
         state.final.teamB = 'Thắng SF2';
     }
     
+    // Đảm bảo Sân là Sân 3
+    state.final.court = 'Sân 3';
+    
     // Nếu các đội đã được gán tên thực tế, nhưng điểm số vòng bán kết bị xóa (winner = null), 
     // thì điểm số chung kết phải được reset.
     if (!winnerSF1 || !winnerSF2) {
@@ -1870,7 +1863,7 @@ function scheduleFinalsAuto(onlyFinal = false) {
     stateChanged = true;
     if (!onlyFinal) {
         saveToGitHub();
-        showModal('Cập nhật Vòng Chung kết', 'Đã gán **Nhất/Nhì Bảng A** vào Bán kết 1 và **Nhất/Nhì Bảng B** vào Bán kết 2.');
+        showModal('Cập nhật Vòng Chung kết', 'Đã gán **Nhất/Nhì Bảng A** vào Bán kết 1 và **Nhất/Nhì Bảng B** vào Bán kết 2 (Thi đấu tại Sân 3).');
     }
 }
 
