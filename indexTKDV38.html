@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>TKD Championship 2025 — Quản lý giải Pickleball V17 GitHub (W-H2H Ranking)</title>
+  <title>TKD Championship 2025 — Quản lý giải Pickleball V19 GitHub (Sửa lỗi Tải lịch & Hiển thị Danh sách đội)</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
   <style>
     body { background:#f7f9fc; font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial; color:#222; padding:18px; }
@@ -46,7 +46,7 @@
       <img class="logo" src="data/logoTKD.png" alt="Logo TKD">
       <div>
         <h3 class="mb-0">TKD Championship 2025</h3>
-        <div>Ngày thi đấu: 18/10/2025 (**V17**)</div>
+        <div>Ngày thi đấu: 18/10/2025 (**V19**)</div>
       </div>
     </div>
     <div>
@@ -479,7 +479,7 @@ async function loadFromGitHub() {
             state.final = loadedState.final || state.final;
             
             // Cập nhật giao diện
-            renderMatches(); 
+            renderMatchesView(); // <--- FIX: Sửa từ renderMatches()
             tinhVaCapNhatXepHang();
             renderFinals();
             renderFinalResults();
@@ -830,7 +830,7 @@ window.onload = function() {
     } else {
         // Tải cấu hình sân mặc định nếu không có kết nối GitHub
         renderConfig();
-        renderMatches();
+        renderMatchesView(); // <--- FIX: Sửa từ renderMatches()
         tinhVaCapNhatXepHang();
         renderFinals();
         renderFinalResults();
@@ -840,6 +840,33 @@ window.onload = function() {
 };
 
 // --- Tab Tổng quan ---
+
+/**
+ * Render danh sách đội đầy đủ cho Overview
+ */
+function renderTeamList(teams, title) {
+    if (!teams || teams.length === 0) {
+        return `<p class="small text-muted text-center">Chưa có danh sách đội cho ${title}.</p>`;
+    }
+    
+    let html = `
+        <div class="card mt-3 mb-3 shadow-sm">
+            <div class="card-header bg-secondary text-white p-2">
+                <h6 class="mb-0 small">${title} (${teams.length} đội)</h6>
+            </div>
+            <div class="card-body p-2">
+                <ul class="list-unstyled mb-0 d-flex flex-wrap gap-3">`;
+    
+    teams.forEach(team => {
+        html += `<li class="small text-nowrap"><strong>${team}</strong></li>`;
+    });
+    
+    html += `   </ul>
+            </div>
+        </div>
+    `;
+    return html;
+}
 
 function renderOverview() {
     const totalMatches = state.matchesA.length + state.matchesB.length;
@@ -890,6 +917,9 @@ function renderOverview() {
 
     // Tổng quan
     let html = `
+        ${renderTeamList(state.mixedTeams, 'Danh sách Đội Bảng A (Nam - Nữ)')}
+        ${renderTeamList(state.maleTeams, 'Danh sách Đội Bảng B (Nam)')}
+
         <div class="card mb-4 shadow-sm">
             <div class="card-header bg-primary text-white">
                 <h6>Tình hình Vòng Bảng</h6>
@@ -1191,19 +1221,24 @@ function handleFileSelect(event) {
     const reader = new FileReader();
     reader.onload = (e) => {
         const fileContent = e.target.result;
-        const importedMatches = importScheduleFromCSV(fileContent);
+        try {
+            const importedMatches = importScheduleFromCSV(fileContent);
 
-        if (importedMatches.length > 0) {
-             // Cập nhật state.matchesA và state.matchesB
-            state.matchesA = importedMatches.filter(m => m.bang === 'A');
-            state.matchesB = importedMatches.filter(m => m.bang === 'B');
-            
-            renderMatchesView();
-            stateChanged = true;
-            saveToGitHub();
-            showModal('Thành công', `Đã nhập lịch thi đấu (${importedMatches.length} trận) từ file **${file.name}**.`);
-        } else {
-             showModal('Cảnh báo', 'File CSV rỗng hoặc không hợp lệ. Vui lòng kiểm tra định dạng: teamA,teamB,time,court,bang,scoreA,scoreB');
+            if (importedMatches.length > 0) {
+                // Cập nhật state.matchesA và state.matchesB
+                state.matchesA = importedMatches.filter(m => m.bang === 'A');
+                state.matchesB = importedMatches.filter(m => m.bang === 'B');
+                
+                renderMatchesView();
+                stateChanged = true;
+                saveToGitHub();
+                showModal('Thành công', `Đã nhập lịch thi đấu (${importedMatches.length} trận) từ file **${file.name}**.`);
+            } else {
+                showModal('Cảnh báo', 'File CSV rỗng hoặc không hợp lệ. Vui lòng kiểm tra định dạng: teamA,teamB,time,court,bang,scoreA,scoreB');
+            }
+        } catch (error) {
+            console.error("Lỗi trong quá trình import và render:", error);
+            showModal('Lỗi nghiêm trọng', `Đã xảy ra lỗi trong quá trình xử lý file: ${error.message}. Vui lòng kiểm tra console log.`);
         }
     };
     reader.readAsText(file);
@@ -1211,18 +1246,21 @@ function handleFileSelect(event) {
 
 /**
  * Hàm import lịch thi đấu từ nội dung CSV (CalendarTKD36 format)
- * @param {string} csvContent - Nội dung file CSV
+ * Đã sửa lỗi:
+ * 1. Dùng split(/\r?\n/) để xử lý chính xác ký tự xuống dòng (\n hoặc \r\n).
+ * 2. Dùng slice(0, 7) để giới hạn số cột được xử lý, tránh lỗi treo khi CSV có quá nhiều dấu phẩy thừa.
+ * * @param {string} csvContent - Nội dung file CSV
  * @returns {Array<object>} - Danh sách trận đấu đã được phân tích
  */
 function importScheduleFromCSV(csvContent) {
-    // Tách các dòng
-    const lines = csvContent.split('\n').filter(line => line.trim() !== '');
+    // 1. Tách các dòng (xử lý cả \n và \r\n) và lọc bỏ dòng trống
+    const lines = csvContent.split(/\r?\n/).filter(line => line.trim() !== '');
 
     if (lines.length <= 1) {
         return [];
     }
     
-    // Lấy header (giả sử dòng đầu tiên là header)
+    // Lấy header
     const headers = lines[0].split(',').map(h => h.trim());
     
     // Kiểm tra định dạng header cơ bản
@@ -1237,16 +1275,22 @@ function importScheduleFromCSV(csvContent) {
 
     // Lặp qua từng dòng dữ liệu (bỏ qua header)
     for (let i = 1; i < lines.length; i++) {
-        const values = lines[i].split(',').map(v => v.trim());
+        // Tách dòng bằng dấu phẩy
+        const originalValues = lines[i].split(',');
         
-        // Kiểm tra số lượng cột hợp lệ (ít nhất 5 cột)
+        // Cải tiến 2: Chỉ lấy 7 cột đầu tiên (teamA -> scoreB)
+        const values = originalValues.slice(0, 7).map(v => v.trim());
+        
+        // Kiểm tra số lượng cột hợp lệ (ít nhất 5 cột chính)
         if (values.length < 5 || !values[0] || !values[1] || !values[4]) {
-            console.warn(`Bỏ qua dòng ${i+1}: Không đủ dữ liệu hoặc thiếu teamA/teamB/bang.`);
+            console.warn(`Bỏ qua dòng ${i+1}: Không đủ dữ liệu (cần ít nhất 5 cột teamA, teamB, time, court, bang).`);
             continue;
         }
 
         const teamA = values[0];
         const teamB = values[1];
+        const time = values[2] || null;
+        const court = values[3] || null;
         const group = values[4].toUpperCase(); // 'A' hoặc 'B'
         
         let matchId = '';
@@ -1259,6 +1303,8 @@ function importScheduleFromCSV(csvContent) {
             continue;
         }
 
+        // scores: values[5] và values[6] sẽ là undefined nếu mảng < 6 hoặc 7, 
+        // hoặc là "" nếu là giá trị rỗng. Logic cũ vẫn an toàn.
         const scoreA = values[5] ? parseInt(values[5], 10) : null;
         const scoreB = values[6] ? parseInt(values[6], 10) : null;
         
@@ -1266,8 +1312,8 @@ function importScheduleFromCSV(csvContent) {
             id: matchId, 
             teamA: teamA,
             teamB: teamB,
-            time: values[2],
-            court: values[3],
+            time: time,
+            court: court,
             bang: group, // Đã có trường 'bang' khi import từ CSV
             scoreA: scoreA,
             scoreB: scoreB,
@@ -1276,7 +1322,7 @@ function importScheduleFromCSV(csvContent) {
         };
         
         // Logic xác định winner/loser nếu đã có điểm
-        if (match.scoreA !== null && match.scoreB !== null) {
+        if (match.scoreA !== null && match.scoreB !== null && !isNaN(match.scoreA) && !isNaN(match.scoreB)) {
             if (match.scoreA > match.scoreB) {
                 match.winner = match.teamA;
                 match.loser = match.teamB;
@@ -1919,15 +1965,6 @@ function renderMatchesView() {
         renderMatchesByCourt();
     }
 }
-
-/**
- * Hàm render tất cả các trận đấu
- */
-function renderMatches() {
-    // Hàm này được gọi khi load data, chỉ cần gọi renderMatchesView() sau khi load xong.
-    // Logic của nó đã được chuyển vào renderMatchesByTable và renderMatchesByCourt
-}
-
 
 /**
  * Render lịch thi đấu theo chế độ Bảng đấu
