@@ -98,19 +98,26 @@
 
     // --- Navigation & UI Control ---
 
-    function goToSection(index) {
-      currentIndex = Math.max(0, Math.min(3, index));
+    function goToSection(newIndex) {
+      const oldIndex = currentIndex; // Lưu lại chỉ mục cũ
+      const normalizedIndex = Math.max(0, Math.min(3, newIndex));
+
+      currentIndex = normalizedIndex; // Cập nhật chỉ mục mới
+
       carousel.style.transition = 'transform 0.35s cubic-bezier(0.25, 1, 0.5, 1)';
       carousel.style.transform = `translateX(${currentIndex * -100}vw)`;
       updateTabs();
-      // Cuộn lên đầu trang khi chuyển tab
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+
+      // Chỉ cuộn lên đầu trang nếu tab thay đổi
+      if (normalizedIndex !== oldIndex) {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
     }
 
     function updateTabs() {
       document.querySelectorAll('.tab-btn').forEach((btn, i) => {
         // 1. Reset tất cả các active/inactive classes
-        btn.classList.remove('active-knockout', 'active-pick', 'active-blue', 'bg-blue-600', 'text-white', 'bg-green-100', 'text-green-800');
+        btn.classList.remove('active-knockout', 'active-pick', 'active-blue', 'bg-blue-600', 'text-white', 'bg-green-100', 'text-green-800', 'bg-yellow-100', 'text-yellow-800', 'bg-blue-100', 'text-blue-800');
         
         if (i === currentIndex) {
           // 2. Thiết lập trạng thái ACTIVE
@@ -156,8 +163,8 @@
         if (delta > 0) goToSection(currentIndex - 1); // Swipe phải -> Tab trái
         else goToSection(currentIndex + 1); // Swipe trái -> Tab phải
       } else {
-        // Quay lại vị trí cũ nếu không đủ ngưỡng swipe
-        goToSection(currentIndex);
+        // Quay lại vị trí cũ nếu không đủ ngưỡng swipe, không cần gọi goToSection vì nó không thay đổi currentIndex
+        goToSection(currentIndex); 
       }
     });
 
@@ -173,8 +180,6 @@
             throw new Error(`HTTP Error: ${res.status} ${res.statusText}`);
         }
         const data = await res.json();
-        
-        // Đã loại bỏ kiểm tra if (!data) nghiêm ngặt để đảm bảo tải dữ liệu bình thường
         
         msg.textContent = 'Đã tải dữ liệu (' + new Date().toLocaleTimeString('vi-VN') + ')';
         renderData(data);
