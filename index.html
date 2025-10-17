@@ -17,6 +17,7 @@
     @keyframes pulse2 { from { box-shadow: 0 0 10px #0ea5e9; } to { box-shadow: 0 0 25px #0ea5e9; } }
     .tab-btn.active-knockout { background: linear-gradient(to right, #22c55e, #16a34a); color: #fff !important; box-shadow: 0 0 10px rgba(34,197,94,0.7); }
     .tab-btn.active-pick { background: linear-gradient(to right, #f59e0b, #d97706); color: white !important; box-shadow: 0 0 10px rgba(245,158,11,0.6); }
+    pre.debug { background:#111827; color:#d1fae5; padding:8px; border-radius:6px; font-size:12px; overflow:auto; max-height:120px; }
   </style>
 </head>
 <body class="font-sans">
@@ -46,6 +47,8 @@
 
   <button id="refresh-btn" title="Tải lại dữ liệu" onclick="manualRefresh()">⟳</button>
 
+  <div style="position:fixed;left:8px;bottom:8px;z-index:60;max-width:45vw;" id="debugBox"></div>
+
   <script>
     const BASE_URL = window.location.hostname.includes('github.io') ? './data/state.json' : 'https://raw.githubusercontent.com/cqtin2024/pickleball/main/data/state.json';
     const REFRESH_INTERVAL = 10000;
@@ -73,7 +76,6 @@
       });
     }
 
-    // Vuốt ngang để đổi tab
     carousel.addEventListener('touchstart', e => startX = e.touches[0].clientX);
     carousel.addEventListener('touchend', e => {
       endX = e.changedTouches[0].clientX;
@@ -91,6 +93,9 @@
         const res = await fetch(BASE_URL, { cache: 'no-store' });
         const data = await res.json();
         msg.textContent = 'Đã tải dữ liệu (' + new Date().toLocaleTimeString('vi-VN') + ')';
+        // Debug dump to help find why team names or PF/PA are missing
+        document.getElementById('debugBox').innerHTML = `<pre class="debug">tables:\nA=${JSON.stringify(data.tableA,null,2)}\nB=${JSON.stringify(data.tableB,null,2)}\n\nmatchesA length=${(data.matchesA||[]).length} matchesB length=${(data.matchesB||[]).length}</pre>`;
+        console.debug('state.json preview', data);
         renderData(data);
       } catch (err) {
         msg.textContent = '⚠️ Lỗi tải dữ liệu: ' + err.message;
@@ -109,10 +114,31 @@
       renderPlayers(data);
     }
 
+    // compute totals from matches if table entry lacks PF/PA
+    function computeTotalsForTeam(teamName, matches) {
+      if (!Array.isArray(matches)) return { PF:0, PA:0, W:0, L:0 };
+      let PF=0, PA=0, W=0, L=0;
+      for (const m of matches) {
+        if (!m) continue;
+        const a = m.teamA, b = m.teamB;
+        // normalize names exactly as provided in matches
+        if (a === teamName) {
+          PF += Number(m.scoreA || 0);
+          PA += Number(m.scoreB || 0);
+          if (typeof m.winner !== 'undefined') { if (m.winner === a) W++; else L++; }
+        } else if (b === teamName) {
+          PF += Number(m.scoreB || 0);
+          PA += Number(m.scoreA || 0);
+          if (typeof m.winner !== 'undefined') { if (m.winner === b) W++; else L++; }
+        }
+      }
+      return { PF, PA, W, L };
+    }
+
     function renderRound(id, table, matches, label) {
       const c = document.getElementById(id);
       let html = `<h2 class='text-2xl font-bold text-blue-700 mb-3 text-center'>Vòng Bảng ${label}</h2>`;
-      html += renderTable(table, `Bảng ${label}`);
+      html += renderTable(table, `Bảng ${label}`, matches);
       html += renderMatchList(matches, `Kết quả Bảng ${label}`);
       c.innerHTML = html;
     }
@@ -132,17 +158,51 @@
       return html;
     }
 
-    function renderTable(table, title) {
-      if (!table) return '';
+    // renderTable now accepts matches to compute PF/PA if missing in table entries
+    function renderTable(table, title, matches) {
+      if (!Array.isArray(table) || table.length === 0) return `<p class='text-center text-gray-500'>Chưa có dữ liệu bảng.</p>`;
       let html = `<div class='bg-white p-4 mt-4 rounded-xl shadow'><h3 class='text-lg font-semibold text-blue-800 mb-2 text-center'>${title}</h3>`;
       const headers = ['Đội', 'Thắng', 'Thua', 'PF', 'PA', 'Hiệu số'];
       html += `<div class='overflow-x-auto'><table class='min-w-full divide-y divide-gray-200 text-sm'><thead class='bg-blue-600 text-white'><tr>` +
         headers.map(h => `<th class='px-3 py-2 text-center'>${h}</th>`).join('') + `</tr></thead><tbody class='bg-white divide-y divide-gray-100'>`;
+
       table.forEach((row, i) => {
-        const pd = row.PF - row.PA;
+        // support row as object or simple string
+        let teamName = '';
+        if (typeof row === 'string') teamName = row;
+        else if (row && typeof row === 'object') teamName = row.team || row.Team || row['Đội'] || row.name || '';
+
+        if (!teamName) {
+          // fallback: maybe row is like { team: 'Name' } under different key
+          teamName = Object.values(row).find(v => typeof v === 'string') || 'Không xác định';
+        }
+
+        // read existing stats if present
+        let wins =  row && typeof row === 'object' ? (row.W ?? row.wins ?? row.Wins ?? null) : null;
+        let losses = row && typeof row === 'object' ? (row.L ?? row.losses ?? row.Losses ?? null) : null;
+        let pf = row && typeof row === 'object' ? (row.PF ?? row.pointsFor ?? row.PF ?? null) : null;
+        let pa = row && typeof row === 'object' ? (row.PA ?? row.pointsAgainst ?? row.PA ?? null) : null;
+
+        // if pf/pa are null or NaN, compute from matches
+        if ((pf === null || pa === null) && Array.isArray(matches)) {
+          const totals = computeTotalsForTeam(teamName, matches);
+          if (pf === null) pf = totals.PF;
+          if (pa === null) pa = totals.PA;
+          if (wins === null) wins = totals.W;
+          if (losses === null) losses = totals.L;
+        }
+
+        // ensure numeric defaults
+        wins = (wins === null || typeof wins === 'undefined') ? 0 : wins;
+        losses = (losses === null || typeof losses === 'undefined') ? 0 : losses;
+        pf = (pf === null || typeof pf === 'undefined' || isNaN(Number(pf))) ? 0 : Number(pf);
+        pa = (pa === null || typeof pa === 'undefined' || isNaN(Number(pa))) ? 0 : Number(pa);
+        const pd = pf - pa;
+
         let rowClass = i === 0 ? 'top1' : i === 1 ? 'top2' : '';
-        html += `<tr class='hover:bg-blue-50 ${rowClass}'><td class='px-3 py-2 text-center'>${row.team}</td><td class='text-center'>${row.W}</td><td class='text-center'>${row.L}</td><td class='text-center'>${row.PF}</td><td class='text-center'>${row.PA}</td><td class='text-center font-semibold'>${pd>0?`+${pd}`:pd}</td></tr>`;
+        html += `<tr class='hover:bg-blue-50 ${rowClass}'><td class='px-3 py-2 text-center'>${teamName}</td><td class='text-center'>${wins}</td><td class='text-center'>${losses}</td><td class='text-center'>${pf}</td><td class='text-center'>${pa}</td><td class='text-center font-semibold'>${pd>0?`+${pd}`:pd}</td></tr>`;
       });
+
       html += '</tbody></table></div></div>';
       return html;
     }
