@@ -8,8 +8,21 @@
   <style>
     /* Base styles for mobile */
     body { background-color: #f0f4f8; overflow-x: hidden; font-family: 'Inter', sans-serif; }
-    #content-carousel { display: flex; width: 400vw; transition: transform 0.35s cubic-bezier(0.25, 1, 0.5, 1); }
-    .swipe-section { width: 100vw; flex-shrink: 0; padding: 0.5rem; min-height: calc(100vh - 160px); overflow-y: auto; }
+    #content-carousel { 
+        display: flex; 
+        width: 400vw; 
+        transition: transform 0.35s cubic-bezier(0.25, 1, 0.5, 1); 
+        will-change: transform; /* Tối ưu hóa hiệu suất chuyển đổi carousel */
+    }
+    .swipe-section { 
+        width: 100vw; 
+        flex-shrink: 0; 
+        padding: 0.5rem; 
+        min-height: calc(100vh - 160px); 
+        overflow-y: auto;
+        scroll-behavior: smooth; /* Cuộn dọc mượt hơn */
+        will-change: transform; /* Tối ưu hóa hiệu suất khi cuộn/chuyển đổi */
+    }
 
     /* Adjust padding for content on mobile to avoid header overlap */
     #main-content-wrapper { padding-top: 140px; } 
@@ -108,7 +121,7 @@
       carousel.style.transform = `translateX(${currentIndex * -100}vw)`;
       updateTabs();
 
-      // Chỉ cuộn lên đầu trang nếu tab thay đổi
+      // Chỉ cuộn lên đầu trang nếu tab thay đổi. Đã có behavior: 'smooth'
       if (normalizedIndex !== oldIndex) {
         window.scrollTo({ top: 0, behavior: 'smooth' });
       }
@@ -372,6 +385,7 @@
       }
       c.innerHTML = html;
     }
+
     // Khởi tạo đầu tiên và đặt hẹn giờ
     document.addEventListener('DOMContentLoaded', () => {
         goToSection(0); // Đảm bảo bắt đầu từ tab 0 và thiết lập vị trí carousel
