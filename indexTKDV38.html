@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>TKD Championship 2025 — Quản lý giải Pickleball V39 GitHub (Sửa lỗi Nhập điểm & Đồng bộ Ranking)</title>
+  <title>TKD Championship 2025 — Quản lý giải Pickleball V40 GitHub (Logic Bán kết: Nhất-Nhì cùng Bảng)</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
   <style>
     body { background:#f7f9fc; font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial; color:#222; padding:18px; }
@@ -46,7 +46,7 @@
       <img class="logo" src="data/logoTKD.png" alt="Logo TKD">
       <div>
         <h3 class="mb-0">TKD Championship 2025</h3>
-        <div>Ngày thi đấu: 18/10/2025 (**V39**)</div>
+        <div>Ngày thi đấu: 18/10/2025 (**V40**)</div>
       </div>
     </div>
     <div>
@@ -312,6 +312,7 @@ let state = {
   ],
   
   // LOGIC BÁN KẾT 
+  // Đã cập nhật mặc định theo luật: Nhất A vs Nhì A, Nhất B vs Nhì B
   semifinals: [
     { id: 'SF1', teamA: 'Nhất A', teamB: 'Nhì A', scoreA: null, scoreB: null, time: '16:40', court: 'Sân 3', winner: null, loser: null }, 
     { id: 'SF2', teamA: 'Nhất B', teamB: 'Nhì B', scoreA: null, scoreB: null, time: '17:05', court: 'Sân 3', winner: null, loser: null }  
@@ -480,8 +481,8 @@ async function loadFromGitHub() {
             }
             
             // Cấu trúc mặc định mới cho bán kết/chung kết
-            const defaultSF1 = { teamA: 'Nhất A', teamB: 'Nhì A', court: 'Sân 3', time: '16:40' };
-            const defaultSF2 = { teamA: 'Nhất B', teamB: 'Nhì B', court: 'Sân 3', time: '17:05' };
+            const defaultSF1 = { teamA: 'Nhất A', teamB: 'Nhì A', court: 'Sân 3', time: '16:40' }; // Đã đổi mặc định
+            const defaultSF2 = { teamA: 'Nhất B', teamB: 'Nhì B', court: 'Sân 3', time: '17:05' }; // Đã đổi mặc định
             const defaultFinal = { teamA: 'Thắng SF1', teamB: 'Thắng SF2', court: 'Sân 3', time: '17:30' };
 
             // Logic tải cho semifinals/final (giữ lại kết quả nếu đã có, reset đội nếu đội vòng bảng thay đổi)
@@ -496,10 +497,10 @@ async function loadFromGitHub() {
                     }
                 });
             } else {
-                 // Dùng default V24
+                 // Dùng default V40 (Nhất A vs Nhì A, Nhất B vs Nhì B)
                  state.semifinals = [
-                     { id: 'SF1', teamA: 'Nhất A', teamB: 'Nhì A', scoreA: null, scoreB: null, time: defaultSF1.time, court: defaultSF1.court, winner: null, loser: null },
-                     { id: 'SF2', teamA: 'Nhất B', teamB: 'Nhì B', scoreA: null, scoreB: null, time: defaultSF2.time, court: defaultSF2.court, winner: null, loser: null }
+                     { id: 'SF1', teamA: defaultSF1.teamA, teamB: defaultSF1.teamB, scoreA: null, scoreB: null, time: defaultSF1.time, court: defaultSF1.court, winner: null, loser: null },
+                     { id: 'SF2', teamA: defaultSF2.teamA, teamB: defaultSF2.teamB, scoreA: null, scoreB: null, time: defaultSF2.time, court: defaultSF2.court, winner: null, loser: null }
                  ];
             }
             
@@ -1118,19 +1119,21 @@ function capNhatDoiVaoVongChungKet(tableA, tableB) {
         const team1B = tableB[0] ? tableB[0].name : 'Nhất B';
         const team2B = tableB[1] ? tableB[1].name : 'Nhì B';
 
-        // SF1: Nhất A vs Nhì B (Index 0)
+        // SF1: Nhất A vs Nhì A (Index 0) - THEO YÊU CẦU MỚI
         state.semifinals[0].teamA = team1A;
-        state.semifinals[0].teamB = team2B;
+        state.semifinals[0].teamB = team2A; 
         
-        // SF2: Nhất B vs Nhì A (Index 1)
+        // SF2: Nhất B vs Nhì B (Index 1) - THEO YÊU CẦU MỚI
         state.semifinals[1].teamA = team1B;
-        state.semifinals[1].teamB = team2A;
+        state.semifinals[1].teamB = team2B;
     } else if (!isKnockoutStarted) {
         // Reset về giá trị mặc định nếu chưa hoàn thành Vòng Bảng và chưa đấu Bán kết
+        // SF1: Nhất A vs Nhì A (Mặc định)
         state.semifinals[0].teamA = 'Nhất A';
-        state.semifinals[0].teamB = 'Nhì B';
+        state.semifinals[0].teamB = 'Nhì A';
+        // SF2: Nhất B vs Nhì B (Mặc định)
         state.semifinals[1].teamA = 'Nhất B';
-        state.semifinals[1].teamB = 'Nhì A';
+        state.semifinals[1].teamB = 'Nhì B';
     }
 
 
@@ -1230,10 +1233,10 @@ function clearAllSchedules() {
     state.matchesA = [];
     state.matchesB = [];
 
-    // Reset lịch và kết quả chung kết
+    // Reset lịch và kết quả chung kết (ĐÃ CẬP NHẬT theo logic mới)
     state.semifinals.forEach(sf => {
-        sf.teamA = 'Nhất A'; sf.teamB = 'Nhì B'; sf.scoreA = null; sf.scoreB = null; sf.winner = null; sf.loser = null;
-        if (sf.id === 'SF2') { sf.teamA = 'Nhất B'; sf.teamB = 'Nhì A'; }
+        sf.teamA = 'Nhất A'; sf.teamB = 'Nhì A'; sf.scoreA = null; sf.scoreB = null; sf.winner = null; sf.loser = null;
+        if (sf.id === 'SF2') { sf.teamA = 'Nhất B'; sf.teamB = 'Nhì B'; }
     });
     state.final.teamA = 'Thắng SF1';
     state.final.teamB = 'Thắng SF2';
@@ -2111,7 +2114,7 @@ function taoLichThiDauCungGio() {
         if (foundMatchIndex !== -1) {
             const match = allPairs.splice(foundMatchIndex, 1)[0];
             
-            const matchTime = minutesToTime(earliestCourt.currentMinutes);
+            const matchTime = minutesToMinutes(earliestCourt.currentMinutes);
             
             const newMatch = {
                 id: `M${matchIdCounter++}`,
