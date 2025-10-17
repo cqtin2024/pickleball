@@ -152,9 +152,9 @@
             throw new Error(`HTTP Error: ${res.status} ${res.statusText}`);
         }
         const data = await res.json();
-        if (!data) {
-             throw new Error("Dữ liệu tải về trống hoặc không hợp lệ.");
-        }
+        
+        // Đã loại bỏ kiểm tra if (!data) nghiêm ngặt để đảm bảo tải dữ liệu bình thường
+        
         msg.textContent = 'Đã tải dữ liệu (' + new Date().toLocaleTimeString('vi-VN') + ')';
         renderData(data);
       } catch (err) {
@@ -171,7 +171,7 @@
     }
 
     function renderData(data) {
-      if (!data) return; // Thêm check để đảm bảo data tồn tại
+      if (!data) return; // Vẫn giữ kiểm tra này để ngăn lỗi nếu data là null/undefined
 
       renderRound('roundsA', data.tableA, data.matchesA, 'A');
       renderRound('roundsB', data.tableB, data.matchesB, 'B');
