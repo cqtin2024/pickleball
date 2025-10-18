@@ -6,169 +6,433 @@
   <title>TKD PICKLEBALL CHAMPIONSHIP 2025</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    body { background-color: #f0f4f8; overflow-x: hidden; scroll-behavior: smooth; }
-    #content-carousel { display: flex; width: 300vw; transition: transform 0.35s cubic-bezier(0.25, 1, 0.5, 1); }
-    .swipe-section { 
-      width: 100vw; flex-shrink: 0; padding: 1rem; min-height: calc(100vh - 160px); 
-      overflow-y: auto; scroll-behavior: smooth; -webkit-overflow-scrolling: touch; 
+    /* Base styles for mobile */
+    body { background-color: #f0f4f8; overflow-x: hidden; font-family: 'Inter', sans-serif; }
+    #content-carousel { 
+        display: flex; 
+        width: 400vw; 
+        transition: transform 0.35s cubic-bezier(0.25, 1, 0.5, 1); 
+        will-change: transform; /* Tối ưu hóa hiệu suất chuyển đổi carousel */
     }
+    .swipe-section { 
+        width: 100vw; 
+        flex-shrink: 0; 
+        padding: 0.5rem; 
+        min-height: calc(100vh - 160px); 
+        overflow-y: auto;
+        scroll-behavior: smooth; /* Cuộn dọc mượt hơn */
+        will-change: transform; /* Tối ưu hóa hiệu suất khi cuộn/chuyển đổi */
+    }
+
+    /* Adjust padding for content on mobile to avoid header overlap */
+    #main-content-wrapper { padding-top: 140px; } 
+    /* Adjust padding for content on desktop/large screens */
+    @media (min-width: 768px) {
+        #main-content-wrapper { padding-top: 150px; }
+        .swipe-section { padding: 1rem; }
+    }
+
+    /* Table optimization for mobile - small text, compact */
+    table.compact th, table.compact td { padding: 4px 4px !important; font-size: 12px !important; }
+    /* Table optimization for desktop - slightly larger text, more padding */
+    @media (min-width: 768px) {
+        table.compact th, table.compact td { padding: 8px 8px !important; font-size: 14px !important; }
+    }
+    
+    /* Ensure team name can wrap */
+    .team-name-cell { min-width: 70px; }
+
+    /* Custom styles for visual effects */
     #refresh-btn { position: fixed; bottom: 20px; right: 20px; z-index: 50; background-color: #0284c7; color: white; font-weight: bold; padding: 14px; border-radius: 50%; box-shadow: 0 4px 8px rgba(0,0,0,0.3); transition: transform 0.2s; }
     #refresh-btn:hover { transform: scale(1.1); background-color: #0369a1; }
-    .winner-glow { animation: glow 1s ease-in-out 2 alternate; }
-    @keyframes glow { from { box-shadow: 0 0 10px #00e676; } to { box-shadow: 0 0 25px #00e676; } }
     .top1 { background-color: #d1fae5; font-weight: 700; animation: pulse1 1s ease-in-out infinite alternate; }
     .top2 { background-color: #e0f2fe; font-weight: 600; animation: pulse2 1s ease-in-out infinite alternate; }
-    @keyframes pulse1 { from { box-shadow: 0 0 10px #22c55e; } to { box-shadow: 0 0 25px #22c55e; } }
-    @keyframes pulse2 { from { box-shadow: 0 0 10px #0ea5e9; } to { box-shadow: 0 0 25px #0ea5e9; } }
-    .tab-btn.active-knockout { background: linear-gradient(to right, #22c55e, #16a34a); color: #fff !important; box-shadow: 0 0 10px rgba(34,197,94,0.7); }
-    .tab-btn.active-pick { background: linear-gradient(to right, #f59e0b, #d97706); color: white !important; box-shadow: 0 0 10px rgba(245,158,11,0.6); }
-    header img { transform: scale(1.5); transition: transform 0.3s; }
+    @keyframes pulse1 { from { box-shadow: 0 0 5px #22c55e; } to { box-shadow: 0 0 15px #22c55e; } }
+    @keyframes pulse2 { from { box-shadow: 0 0 5px #0ea5e9; } to { box-shadow: 0 0 15px #0ea5e9; } }
+    .tab-btn.active-knockout { background: linear-gradient(to right, #22c55e, #16a34a); color: #fff !important; box-shadow: 0 0 5px rgba(34,197,94,0.7); }
+    .tab-btn.active-pick { background: linear-gradient(to right, #f59e0b, #d97706); color: white !important; box-shadow: 0 0 5px rgba(245,158,11,0.6); }
+
+    /* Inactive styles for better contrast */
+    .tab-btn:not(.active-knockout):not(.active-pick):not(.active-blue) { 
+        background-color: #eff6ff; /* Blue-50 */
+        color: #1d4ed8; /* Blue-700 */
+    }
+    .tab-btn.active-blue { 
+        background-color: #2563eb; /* Blue-600 */
+        color: white !important;
+    }
+
+
+    .champion-box { background: linear-gradient(135deg, #fef3c7, #fde68a); border: 2px solid #facc15; animation: glowGold 2s infinite alternate; }
+    .runnerup-box { background: linear-gradient(135deg, #f3f4f6, #e5e7eb); border: 2px solid #9ca3af; animation: glowSilver 2s infinite alternate; }
+    @keyframes glowGold { from { box-shadow: 0 0 5px #facc15; } to { box-shadow: 0 0 15px #fbbf24; } }
+    @keyframes glowSilver { from { box-shadow: 0 0 5px #9ca3af; } to { box-shadow: 0 0 15px #d1d5db; } }
   </style>
 </head>
 <body class="font-sans">
+
   <header class="fixed top-0 left-0 right-0 z-30 bg-white shadow-md p-4">
-    <div class="flex items-center justify-center mb-2">
-      <img src="https://raw.githubusercontent.com/cqtin2024/pickleball/main/data/logoTKD.png" alt="Logo TKD" class="h-20 w-auto mr-2" />
-      <h1 class="text-xl font-extrabold text-blue-800 text-center">TKD PICKLEBALL CHAMPIONSHIP 2025</h1>
+    <div class="flex items-center justify-center mb-1">
+      <!-- Responsive Logo & Title: H-14 trên mobile, H-16 trên desktop/md -->
+      <img src="https://raw.githubusercontent.com/cqtin2024/pickleball/main/data/logoTKD.png" alt="Logo TKD" class="h-14 md:h-16 w-auto mr-2" />
+      <!-- Text-lg trên mobile, Text-xl trên desktop/md -->
+      <h1 class="text-lg md:text-xl font-extrabold text-blue-800 text-center">TKD PICKLEBALL CHAMPIONSHIP 2025</h1>
     </div>
-    <p class="text-center text-gray-600 text-sm">Ngày 18/10/2025</p>
-    <div id="tab-controls" class="flex justify-around mt-3 mb-2 max-w-2xl mx-auto">
-      <button onclick="goToSection(0)" class="tab-btn active px-4 py-2 text-sm font-semibold rounded-full bg-blue-600 text-white">Vòng Bảng</button>
-      <button onclick="goToSection(1)" class="tab-btn px-4 py-2 text-sm font-semibold rounded-full bg-green-100 text-green-800">Knock-out</button>
-      <button onclick="goToSection(2)" class="tab-btn px-4 py-2 text-sm font-semibold rounded-full bg-yellow-100 text-yellow-800">Pick thủ</button>
+    <p class="text-center text-gray-600 text-xs">Ngày 18/10/2025</p>
+    
+    <!-- Tab Controls: Tối ưu cho mobile bằng cuộn ngang, centered trên desktop -->
+    <!-- Initial classes for default inactive state (will be overwritten by JS/Active states) -->
+    <div id="tab-controls" class="flex justify-start md:justify-center overflow-x-auto flex-nowrap mt-2 mb-2 mx-auto space-x-2 p-1">
+      <button onclick="goToSection(0)" class="tab-btn active-pick flex-shrink-0 px-3 py-2 text-sm font-semibold rounded-full">Pick thủ</button>
+      <button onclick="goToSection(1)" class="tab-btn flex-shrink-0 px-3 py-2 text-sm font-semibold rounded-full">Bảng A</button>
+      <button onclick="goToSection(2)" class="tab-btn flex-shrink-0 px-3 py-2 text-sm font-semibold rounded-full">Bảng B</button>
+      <button onclick="goToSection(3)" class="tab-btn flex-shrink-0 px-3 py-2 text-sm font-semibold rounded-full">Knock-out</button>
     </div>
-    <div id="statusMessage" class="text-center text-sm font-medium text-gray-600">Đang tải dữ liệu...</div>
+    <div id="statusMessage" class="text-center text-xs font-medium text-gray-600">Đang tải dữ liệu...</div>
   </header>
 
-  <main id="main-content-wrapper" class="pt-[180px] md:pt-[150px] overflow-hidden">
+  <!-- Main Content Wrapper: Responsive padding top -->
+  <main id="main-content-wrapper" class="overflow-hidden">
     <div id="content-carousel">
-      <section class="swipe-section" id="rounds"></section>
-      <section class="swipe-section" id="knockout"></section>
       <section class="swipe-section" id="players"></section>
+      <section class="swipe-section" id="roundsA"></section>
+      <section class="swipe-section" id="roundsB"></section>
+      <section class="swipe-section" id="knockout"></section>
     </div>
   </main>
 
   <button id="refresh-btn" title="Tải lại dữ liệu" onclick="manualRefresh()">⟳</button>
 
   <script>
-    const BASE_URL = window.location.hostname.includes('github.io')
-      ? './data/state.json'
-      : 'https://raw.githubusercontent.com/cqtin2024/pickleball/main/data/state.json';
-    const REFRESH_INTERVAL = 30000;
-
+    const BASE_URL = 'https://raw.githubusercontent.com/cqtin2024/pickleball/main/data/state.json';
+    const REFRESH_INTERVAL = 10000;
     const carousel = document.getElementById('content-carousel');
-    let currentIndex = 0;
-    let startX = 0, deltaX = 0, isSwiping = false;
+    let currentIndex = 0, startX = 0, endX = 0;
 
-    function goToSection(index) {
-      const prevIndex = currentIndex;
-      currentIndex = Math.max(0, Math.min(2, index));
-      carousel.style.transition = 'transform 0.35s cubic-bezier(0.25,1,0.5,1)';
+    // --- Navigation & UI Control ---
+
+    function goToSection(newIndex) {
+      const oldIndex = currentIndex; // Lưu lại chỉ mục cũ
+      const normalizedIndex = Math.max(0, Math.min(3, newIndex));
+
+      currentIndex = normalizedIndex; // Cập nhật chỉ mục mới
+
+      carousel.style.transition = 'transform 0.35s cubic-bezier(0.25, 1, 0.5, 1)';
       carousel.style.transform = `translateX(${currentIndex * -100}vw)`;
       updateTabs();
-      if (prevIndex !== currentIndex) {
-        document.querySelectorAll('.swipe-section')[currentIndex].scrollTop = 0;
+
+      // Chỉ cuộn lên đầu trang nếu tab thay đổi. Đã có behavior: 'smooth'
+      if (normalizedIndex !== oldIndex) {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
       }
     }
 
     function updateTabs() {
       document.querySelectorAll('.tab-btn').forEach((btn, i) => {
-        btn.classList.remove('active-knockout', 'active-pick', 'bg-blue-600', 'text-white');
+        // 1. Reset tất cả các active/inactive classes
+        btn.classList.remove('active-knockout', 'active-pick', 'active-blue', 'bg-blue-600', 'text-white', 'bg-green-100', 'text-green-800', 'bg-yellow-100', 'text-yellow-800', 'bg-blue-100', 'text-blue-800');
+        
         if (i === currentIndex) {
-          if (i === 0) btn.classList.add('bg-blue-600', 'text-white');
-          if (i === 1) btn.classList.add('active-knockout');
-          if (i === 2) btn.classList.add('active-pick');
+          // 2. Thiết lập trạng thái ACTIVE
+          if (i === 3) {
+             btn.classList.add('active-knockout'); // Màu xanh lá cây đậm
+          } else if (i === 0) {
+             btn.classList.add('active-pick'); // Màu vàng cam đậm
+          } else {
+             btn.classList.add('active-blue'); // Màu xanh dương đậm cho Bảng A, B
+          }
+        } else {
+           // 3. Thiết lập trạng thái INACTIVE (Màu nền nhạt và chữ đậm)
+           if (i === 3) {
+             btn.classList.add('bg-green-100', 'text-green-800'); // Xanh lá nhạt
+           } else if (i === 0) {
+             btn.classList.add('bg-yellow-100', 'text-yellow-800'); // Vàng nhạt
+           } else {
+             btn.classList.add('bg-blue-100', 'text-blue-800'); // Xanh dương nhạt cho Bảng A, B
+           }
         }
       });
     }
 
+    // Swipe gestures for mobile
     carousel.addEventListener('touchstart', e => {
-      startX = e.touches[0].clientX;
-      deltaX = 0;
-      isSwiping = true;
-      carousel.style.transition = 'none';
+        startX = e.touches[0].clientX;
+        // Tắt transition khi bắt đầu chạm để cuộn mượt mà hơn
+        carousel.style.transition = 'none';
     });
-
     carousel.addEventListener('touchmove', e => {
-      if (!isSwiping) return;
-      const x = e.touches[0].clientX;
-      deltaX = x - startX;
-      carousel.style.transform = `translateX(${currentIndex * -100 + deltaX / window.innerWidth * 100}vw)`;
+        const currentX = e.touches[0].clientX;
+        const delta = currentX - startX;
+        // Kéo carousel theo chuyển động chạm
+        carousel.style.transform = `translateX(calc(${currentIndex * -100}vw + ${delta}px))`;
+    });
+    carousel.addEventListener('touchend', e => {
+      endX = e.changedTouches[0].clientX;
+      const delta = endX - startX;
+      // Kích hoạt transition trở lại
+      carousel.style.transition = 'transform 0.35s cubic-bezier(0.25, 1, 0.5, 1)';
+
+      if (Math.abs(delta) > 80) { // Ngưỡng swipe 80px
+        if (delta > 0) goToSection(currentIndex - 1); // Swipe phải -> Tab trái
+        else goToSection(currentIndex + 1); // Swipe trái -> Tab phải
+      } else {
+        // Quay lại vị trí cũ nếu không đủ ngưỡng swipe, không cần gọi goToSection vì nó không thay đổi currentIndex
+        goToSection(currentIndex); 
+      }
     });
 
-    carousel.addEventListener('touchend', e => {
-      isSwiping = false;
-      carousel.style.transition = 'transform 0.35s cubic-bezier(0.25,1,0.5,1)';
-      if (deltaX > 50) goToSection(currentIndex - 1);
-      else if (deltaX < -50) goToSection(currentIndex + 1);
-      else goToSection(currentIndex);
-    });
+    // --- Data Fetching and Error Handling ---
 
     async function fetchData() {
       const msg = document.getElementById('statusMessage');
+      document.getElementById('refresh-btn').classList.add('animate-spin');
       msg.textContent = 'Đang tải dữ liệu...';
       try {
         const res = await fetch(BASE_URL, { cache: 'no-store' });
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        if (!res.ok) {
+            throw new Error(`HTTP Error: ${res.status} ${res.statusText}`);
+        }
         const data = await res.json();
-        console.log('Dữ liệu tải về:', data);
+        
         msg.textContent = 'Đã tải dữ liệu (' + new Date().toLocaleTimeString('vi-VN') + ')';
         renderData(data);
       } catch (err) {
+        // Xử lý lỗi tải dữ liệu
+        console.error("Error fetching data:", err);
         msg.textContent = '⚠️ Lỗi tải dữ liệu: ' + err.message;
-        console.error('Lỗi fetchData:', err);
+      } finally {
+        setTimeout(() => document.getElementById('refresh-btn').classList.remove('animate-spin'), 500);
       }
     }
 
     function manualRefresh() {
-      const btn = document.getElementById('refresh-btn');
-      btn.classList.add('animate-spin');
-      fetchData().finally(() => setTimeout(() => btn.classList.remove('animate-spin'), 800));
+      fetchData();
     }
 
-    setInterval(fetchData, REFRESH_INTERVAL);
-    fetchData();
-
     function renderData(data) {
-      renderRounds(data);
+      if (!data) return; // Vẫn giữ kiểm tra này để ngăn lỗi nếu data là null/undefined
+
+      renderRound('roundsA', data.tableA, data.matchesA, 'A');
+      renderRound('roundsB', data.tableB, data.matchesB, 'B');
       renderKnockout(data.semifinals, data.final);
       renderPlayers(data);
     }
 
-    function renderRounds(data) {
-      const c = document.getElementById('rounds');
-      c.innerHTML = `<h2 class='text-2xl font-bold text-blue-700 mb-3 text-center'>Vòng Bảng</h2>` +
-        renderTable(data.tableA, 'Bảng A') +
-        renderTable(data.tableB, 'Bảng B') +
-        renderMatchList(data.matchesA, 'Kết quả Bảng A') +
-        renderMatchList(data.matchesB, 'Kết quả Bảng B');
+    // --- Data Calculation Helpers (unchanged structure) ---
+
+    function computeTotalsForTeam(teamName, matches) {
+      if (!Array.isArray(matches)) return { PF: 0, PA: 0, W: 0, L: 0 };
+      let PF = 0, PA = 0, W = 0, L = 0;
+      for (const m of matches) {
+        if (!m || !m.winner) continue; // Bỏ qua trận chưa có kết quả
+        const a = m.teamA, b = m.teamB;
+        if (a === teamName) {
+          PF += Number(m.scoreA || 0);
+          PA += Number(m.scoreB || 0);
+          if (m.winner === a) W++; else if (m.winner === b) L++;
+        } else if (b === teamName) {
+          PF += Number(m.scoreB || 0);
+          PA += Number(m.scoreA || 0);
+          if (m.winner === b) W++; else if (m.winner === a) L++;
+        }
+      }
+      return { PF, PA, W, L };
     }
 
-    function renderTable(table, title) {
-      if (!table || table.length === 0) return '';
-      let html = `<div class='bg-white p-4 mt-4 rounded-xl shadow'><h3 class='text-lg font-semibold text-blue-800 mb-2 text-center'>${title}</h3>`;
-      const headers = Object.keys(table[0]).filter(h => h !== 'matchesPlayed');
-      html += `<div class='overflow-x-auto'><table class='min-w-full divide-y divide-gray-200 text-sm'><thead class='bg-blue-600 text-white'><tr>` +
-        headers.map(h => `<th class='px-3 py-2'>${h}</th>`).join('') +
-        `</tr></thead><tbody class='bg-white divide-y divide-gray-100'>`;
-      table.forEach((row, i) => {
-        let rowClass = i === 0 ? 'top1' : i === 1 ? 'top2' : '';
-        html += `<tr class='hover:bg-blue-50 ${rowClass}'>` +
-          headers.map(h => `<td class='px-3 py-2 text-center'>${row[h]}</td>`).join('') +
-          `</tr>`;
+    // --- Rendering Functions ---
+
+    function renderRound(id, table, matches, label) {
+      const c = document.getElementById(id);
+      // Responsive Title: text-xl mobile, text-2xl desktop
+      c.innerHTML = `<h2 class='text-xl md:text-2xl font-bold text-blue-700 mb-3 text-center'>Bảng ${label}</h2>`; 
+      c.innerHTML += renderTable(table, `Bảng ${label}`, matches);
+      c.innerHTML += renderMatchList(matches, `Kết quả Bảng ${label}`);
+    }
+    
+    // Hàm render Lịch Tổng Hợp
+    function renderSchedule(matchesA, matchesB) {
+      const allMatches = [...(matchesA || []), ...(matchesB || [])];
+      
+      if (allMatches.length === 0) {
+        return `<div class='bg-white p-3 md:p-4 mt-3 rounded-xl shadow'>
+                  <h3 class='text-base md:text-lg font-semibold text-blue-800 mb-2 text-center'>Lịch Tổng Hợp</h3>
+                  <p class='text-center text-gray-500'>Chưa có lịch thi đấu.</p>
+                </div>`;
+      }
+
+      // 1. Lấy thời gian và sân duy nhất
+      const uniqueTimes = Array.from(new Set(allMatches.map(m => m.time))).sort();
+      const uniqueCourts = Array.from(new Set(allMatches.map(m => m.court))).sort();
+
+      // 2. Map trận đấu vào cấu trúc grid (Thời gian x Sân)
+      const scheduleGrid = {};
+      allMatches.forEach(match => {
+        if (!scheduleGrid[match.time]) {
+          scheduleGrid[match.time] = {};
+        }
+        const group = (matchesA || []).includes(match) ? 'A' : 'B';
+        scheduleGrid[match.time][match.court] = { ...match, group };
       });
+
+      // 3. Render Table
+      // Responsive Padding & Font: p-3 mobile, p-4 desktop; text-base mobile, text-lg desktop
+      let html = `<div class='bg-white p-3 md:p-4 mt-3 rounded-xl shadow'>
+                    <h3 class='text-base md:text-lg font-semibold text-blue-800 mb-2 text-center'>Lịch Tổng Hợp</h3>
+                    <div class='overflow-x-auto'>
+                      <table class='min-w-full divide-y divide-gray-200'>
+                        <thead class='bg-gray-700 text-white'>
+                          <tr>
+                            <th class='text-sm md:text-base whitespace-nowrap px-2 py-2'>Giờ</th>` +
+                            uniqueCourts.map(c => `<th class='text-sm md:text-base whitespace-nowrap px-2 py-2'>Sân ${c}</th>`).join('') +
+                          `</tr>
+                        </thead>
+                        <tbody>`;
+      
+      uniqueTimes.forEach(time => {
+        html += `<tr class='hover:bg-gray-50'>
+                  <td class='text-center font-semibold bg-gray-100 text-gray-800 text-sm md:text-base px-2 py-2 whitespace-nowrap'>${time}</td>`;
+        
+        uniqueCourts.forEach(court => {
+          const match = scheduleGrid[time]?.[court];
+          let content = '';
+          let bgColor = 'bg-white';
+          
+          if (match) {
+            const teamA = match.teamA || '???';
+            const teamB = match.teamB || '???';
+            let statusText = `${teamA} vs ${teamB}`;
+            
+            if (match.winner) {
+              // Trận đã có kết quả
+              statusText = `🏆 ${match.winner}<br/>(${match.scoreA}-${match.scoreB})`;
+              bgColor = match.group === 'A' ? 'bg-green-100' : 'bg-blue-100'; // Đã đấu, nền nhạt
+            } else {
+              // Trận chưa đấu
+              bgColor = match.group === 'A' ? 'bg-yellow-50' : 'bg-indigo-50'; // Chưa đấu, nền màu để phân biệt bảng
+            }
+            
+            content = `<div class='text-xs md:text-sm font-medium leading-tight p-1'>
+                         <span class='font-bold text-gray-800'>Bảng ${match.group}</span><br/>
+                         <span class='text-gray-900'>${statusText}</span>
+                       </div>`;
+          } else {
+            content = '-'; // Ô trống
+          }
+          
+          html += `<td class='text-center border border-gray-200 ${bgColor} align-middle p-1'>${content}</td>`;
+        });
+
+        html += `</tr>`;
+      });
+
+      html += '</tbody></table></div></div>';
+      return html;
+    }
+
+
+    function renderPlayers(data) {
+      const c = document.getElementById('players');
+      // Responsive Title: text-xl mobile, text-2xl desktop
+      c.innerHTML = `<h2 class='text-xl md:text-2xl font-bold text-yellow-700 mb-3 text-center'>Pick thủ</h2>`;
+      c.innerHTML += renderTeamsList(data.mixedTeams, 'Bảng A - Mixed');
+      c.innerHTML += renderTeamsList(data.maleTeams, 'Bảng B - Nam');
+      // THÊM LỊCH TỔNG HỢP VÀO TAB PICK THỦ
+      c.innerHTML += renderSchedule(data.matchesA, data.matchesB); 
+    }
+
+    function renderTeamsList(teams, title) {
+      if (!teams) return '';
+      // Responsive Padding & Font: p-3 mobile, p-4 desktop; text-base mobile, text-lg desktop
+      let html = `<div class='bg-white p-3 md:p-4 mt-3 rounded-xl shadow'>
+                    <h3 class='text-base md:text-lg font-semibold text-blue-800 mb-2 text-center'>${title}</h3>
+                    <ul class='grid grid-cols-2 md:grid-cols-3 gap-2 text-center'>`;
+      // Responsive list item: py-1 mobile, py-2 desktop; text-sm mobile, text-base desktop
+      teams.forEach(t => html += `<li class='bg-yellow-50 rounded-md py-1 md:py-2 text-sm md:text-base font-medium'>${t}</li>`);
+      html += '</ul></div>';
+      return html;
+    }
+
+    function renderTable(table, title, matches) {
+      if (!Array.isArray(table) || table.length === 0) return `<p class='text-center text-gray-500'>Chưa có dữ liệu bảng.</p>`;
+      
+      // Responsive Padding & Font: p-3 mobile, p-4 desktop; text-base mobile, text-lg desktop
+      let html = `<div class='bg-white p-3 md:p-4 mt-3 rounded-xl shadow'>
+                    <h3 class='text-base md:text-lg font-semibold text-blue-800 mb-2 text-center'>${title}</h3>`;
+      const headers = ['Đội', 'T', 'B', 'PF', 'PA', '+/-'];
+      
+      // Sử dụng `overflow-x-auto` để cuộn ngang trên mobile nếu cần
+      html += `<div class='overflow-x-auto'>
+                <table class='min-w-full divide-y divide-gray-200 compact'>
+                  <thead class='bg-blue-600 text-white'>
+                    <tr>` +
+                      headers.map(h => `<th class='text-center whitespace-nowrap'>${h}</th>`).join('') + 
+                    `</tr>
+                  </thead>
+                  <tbody class='bg-white divide-y divide-gray-100'>`;
+
+      table.forEach((row, i) => {
+        let teamName = typeof row === 'string' ? row : row.team || row.Team || row.name || 'Không xác định';
+        const totals = computeTotalsForTeam(teamName, matches);
+        const pf = totals.PF, pa = totals.PA, pd = pf - pa;
+        const wins = totals.W, losses = totals.L;
+        let rowClass = i === 0 ? 'top1' : i === 1 ? 'top2' : '';
+        
+        // Cột tên đội cho phép xuống dòng (team-name-cell class)
+        html += `<tr class='hover:bg-blue-50 ${rowClass}'>
+                    <td class='text-center team-name-cell'>${teamName}</td>
+                    <td class='text-center whitespace-nowrap'>${wins}</td>
+                    <td class='text-center whitespace-nowrap'>${losses}</td>
+                    <td class='text-center whitespace-nowrap'>${pf}</td>
+                    <td class='text-center whitespace-nowrap'>${pa}</td>
+                    <td class='text-center font-semibold whitespace-nowrap'>${pd>0?`+${pd}`:pd}</td>
+                  </tr>`;
+      });
+
       html += '</tbody></table></div></div>';
       return html;
     }
 
     function renderMatchList(matches, title) {
-      if (!matches || matches.length === 0) return '';
-      let html = `<div class='bg-white p-4 mt-4 rounded-xl shadow'><h3 class='text-lg font-semibold text-blue-800 mb-2 text-center'>${title}</h3>`;
-      html += `<div class='overflow-x-auto'><table class='min-w-full divide-y divide-gray-200 text-sm'><thead class='bg-blue-600 text-white'><tr><th>Giờ</th><th>Sân</th><th>Đội A</th><th>Tỉ số</th><th>Đội B</th></tr></thead><tbody>`;
+      if (!matches) return '';
+      
+      // Responsive Padding & Font: p-3 mobile, p-4 desktop
+      let html = `<div class='bg-white p-3 md:p-4 mt-3 rounded-xl shadow'>
+                    <h3 class='text-base md:text-lg font-semibold text-blue-800 mb-2 text-center'>${title}</h3>`;
+      
+      // Header: Gộp Giờ & Sân
+      html += `<div class='overflow-x-auto'>
+                <table class='min-w-full divide-y divide-gray-200'>
+                  <thead class='bg-blue-600 text-white'>
+                    <tr>
+                        <th class='text-xs md:text-sm whitespace-nowrap'>Thời gian/Sân</th>
+                        <th class='text-sm md:text-base'>Đội A</th>
+                        <th class='text-sm md:text-base'>Tỉ số</th>
+                        <th class='text-sm md:text-base'>Đội B</th>
+                    </tr>
+                  </thead>
+                  <tbody>`;
       matches.forEach(m => {
-        const aClass = m.winner === m.teamA ? 'text-green-700 font-bold' : '';
-        const bClass = m.winner === m.teamB ? 'text-green-700 font-bold' : '';
-        html += `<tr class='hover:bg-blue-50'><td class='px-3 py-2 text-center'>${m.time}</td><td>${m.court}</td><td class='${aClass}'>${m.teamA}</td><td class='text-center'>${m.scoreA} - ${m.scoreB}</td><td class='${bClass}'>${m.teamB}</td></tr>`;
+        const hasResult = m.winner && m.scoreA !== null && m.scoreB !== null; // Xác định đã có kết quả
+        const aClass = m.winner === m.teamA ? 'text-green-700 font-bold' : hasResult ? 'text-red-700' : 'text-gray-700';
+        const bClass = m.winner === m.teamB ? 'text-green-700 font-bold' : hasResult ? 'text-red-700' : 'text-gray-700';
+        
+        // Hiển thị tỉ số: nếu có winner thì hiển thị, nếu không thì hiển thị '-'
+        const scoreDisplay = hasResult ? `${m.scoreA} - ${m.scoreB}` : '-';
+
+        // Responsive Match Row: Text size 
+        html += `<tr class='hover:bg-blue-50'>
+                    <!-- Gộp Giờ/Sân, font nhỏ hơn để tiết kiệm không gian trên mobile -->
+                    <td class='px-1 py-1 text-center text-xs md:text-sm whitespace-nowrap'>
+                        ${m.time}<br/>(${m.court})
+                    </td>
+                    <!-- Tên đội: text-sm mobile, text-base desktop -->
+                    <td class='${aClass} text-sm md:text-base'>${m.teamA}</td>
+                    <!-- Tỉ số: text-sm mobile, text-base desktop -->
+                    <td class='text-center text-sm md:text-base font-bold whitespace-nowrap'>
+                        ${scoreDisplay}
+                    </td>
+                    <td class='${bClass} text-sm md:text-base'>${m.teamB}</td>
+                  </tr>`;
       });
       html += '</tbody></table></div></div>';
       return html;
@@ -176,33 +440,45 @@
 
     function renderKnockout(semis, final) {
       const c = document.getElementById('knockout');
-      let html = `<h2 class='text-2xl font-bold text-green-700 mb-3 text-center'>Knock-out</h2>`;
+      // Responsive Title: text-xl mobile, text-2xl desktop
+      let html = `<h2 class='text-xl md:text-2xl font-bold text-green-700 mb-3 text-center'>Knock-out</h2>`; 
+      
       if (semis) html += renderMatchList(semis, 'Bán Kết');
+      
       if (final) {
-        html += `<div class='winner-box bg-white p-4 mt-4 rounded-xl shadow text-center'>
-          <h3 class='text-lg font-semibold text-green-800 mb-2'>Chung Kết</h3>
-          <p><strong>${final.teamA}</strong> (${final.scoreA}) vs (${final.scoreB}) <strong>${final.teamB}</strong></p>
-          <p class='mt-2 text-green-600 font-semibold winner-glow'>🏆 Vô địch: ${final.winner}</p>
-          <p class='text-gray-700'>Á quân: ${final.runnerUp}</p>
+        // Vô Địch Box: Responsive Padding & Font
+        html += `<div class='winner-box champion-box p-4 md:p-6 mt-4 md:mt-6 rounded-xl shadow text-center'>
+          <h3 class='text-xl md:text-2xl font-extrabold text-yellow-700 mb-2 animate-pulse'>🏆 Vô Địch</h3>
+          <p class='text-base md:text-lg font-semibold text-gray-800 mb-1'>${final.winner}</p>
+          <p class='text-xs md:text-sm text-gray-700'>${final.teamA} (${final.scoreA}) vs (${final.scoreB}) ${final.teamB}</p>
+        </div>
+        
+        <!-- Á Quân Box: Responsive Padding & Font -->
+        <div class='winner-box runnerup-box p-3 md:p-4 mt-3 md:mt-4 rounded-xl shadow text-center'>
+          <h3 class='text-lg md:text-xl font-semibold text-gray-700 mb-1'>🥈 Á Quân</h3>
+          <p class='text-base md:text-lg font-medium text-gray-800'>${final.runnerUp}</p>
         </div>`;
+      }
+      
+      if (Array.isArray(semis) && semis.length > 0) {
+        const losers = semis.map(s => s.loser).filter(l => l);
+        if (losers.length > 0) {
+          // Đồng hạng 3 Box: Responsive Padding & Font
+          html += `<div class='bg-amber-50 p-3 md:p-4 mt-3 rounded-xl shadow text-center'>
+            <h3 class='text-base md:text-lg font-semibold text-amber-700 mb-2'>🥉 Giải Đồng hạng 3</h3>
+            <p>${losers.join(' và ')}</p>
+          </div>`;
+        }
       }
       c.innerHTML = html;
     }
 
-    function renderPlayers(data) {
-      const c = document.getElementById('players');
-      c.innerHTML = `<h2 class='text-2xl font-bold text-yellow-700 mb-3 text-center'>Pick thủ</h2>`;
-      c.innerHTML += renderTeamsList(data.mixedTeams, 'Bảng A - Mixed');
-      c.innerHTML += renderTeamsList(data.maleTeams, 'Bảng B - Nam');
-    }
-
-    function renderTeamsList(teams, title) {
-      if (!teams || teams.length === 0) return '';
-      let html = `<div class='bg-white p-4 mt-4 rounded-xl shadow'><h3 class='text-lg font-semibold text-blue-800 mb-2 text-center'>${title}</h3><ul class='grid grid-cols-2 md:grid-cols-3 gap-2 text-center'>`;
-      teams.forEach(t => html += `<li class='bg-yellow-50 rounded-md py-2 font-medium'>${t}</li>`);
-      html += '</ul></div>';
-      return html;
-    }
+    // Khởi tạo đầu tiên và đặt hẹn giờ
+    document.addEventListener('DOMContentLoaded', () => {
+        goToSection(0); // Đảm bảo bắt đầu từ tab 0 và thiết lập vị trí carousel
+        setInterval(fetchData, REFRESH_INTERVAL);
+        fetchData();
+    });
   </script>
 </body>
 </html>
